@@ -18,4 +18,10 @@ export class UserService {
 
     return this.http.get<boolean>('https://localhost:7253/User/AddRemoveFavorite',{params});
   }
+  apiCheckIsFavorite(idSoggetto: number, idAttivita: number): Observable<boolean> {
+    const params = new HttpParams()
+    .set('idSoggetto', idSoggetto.toString())
+    .set('idAttivita', idAttivita.toString());
+    return this.http.get<boolean>('https://localhost:7253/User/CheckFavorite', { params });
+}
 }

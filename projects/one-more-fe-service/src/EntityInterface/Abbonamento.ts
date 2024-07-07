@@ -1,8 +1,8 @@
 export class Abbonamento {
-  IdAbbonamento:bigint;
-  IdAttivita:bigint;
-  IsAttivo:boolean;
-  DataIscrizione:Date;
-  CodAbbonamento:string;
-  DataRinnovo:Date;
+  IdAbbonamento:bigint | undefined;
+  IdAttivita:bigint | undefined;
+  IsAttivo:boolean | undefined;
+  DataIscrizione:Date | undefined;
+  CodAbbonamento:string | undefined;
+  DataRinnovo:Date | undefined;
 }

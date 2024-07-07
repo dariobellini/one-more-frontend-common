@@ -1,20 +1,20 @@
 export class Utente {
   id:number = 0;
-  uid:string;
+  uid:string | undefined;
   displayName:string | undefined;
   email:string | undefined;
   ipAddress:string = '';
-  isEmailLogin:boolean;
-  isGoogleLogin:boolean;
-  isFacebookLogin:boolean;
-  registrationDate:string | null;
-  lastLoginDate:string | null;
+  isEmailLogin:boolean | undefined;
+  isGoogleLogin:boolean | undefined;
+  isFacebookLogin:boolean | undefined;
+  registrationDate:string | undefined;
+  lastLoginDate:string | undefined;
   errore:string = '';
 }
 
 export class UserSession {
   constructor(
-    public uid : string,
+    public uid : string | undefined,
     public email : string,
     public idAttivita : number,
     public idSoggetto : number,

@@ -1,11 +1,11 @@
 
 export class Coupon {
-    Id : number;
-    IdPromo : number;
-    IdSoggetto : number;
+    Id : number| undefined;
+    IdPromo : number| undefined;
+    IdSoggetto : number| undefined;
     }
 
 export class StatusCouponUser{
-    idCoupon: number;
-    idStatus: number;
+    idCoupon: number | undefined;
+    idStatus: number| undefined;
     }

@@ -1,24 +1,23 @@
 import { DecimalPipe } from "@angular/common";
 
 export class Soggetto {
-  idSoggetto:number;
-  nome:string;
-  cognome:string;
-  codFiscale:string;
-  dataNascita:Date;
-  telefono:string;
-  cellulare:string;
-  email:string;
-  indirizzo:string;
-  isPromoAttiva:boolean;
+  idSoggetto:number | undefined;
+  nome:string | undefined;
+  cognome:string | undefined;
+  codFiscale:string | undefined;
+  dataNascita:Date | undefined;
+  telefono:string | undefined;
+  cellulare:string | undefined;
+  email:string | undefined;
+  indirizzo:string | undefined;
+  isPromoAttiva:boolean | undefined;
 }
 
 export class InsertSoggettoReqDto {
-  idSoggetto:number;
-  nome:string;
-  cognome:string;
-  dataNascita:Date;
-  cellulare:string;
-  email:string;
+  idSoggetto:number | undefined;
+  nome:string | undefined;
+  cognome:string | undefined;
+  dataNascita:Date | undefined;
+  cellulare:string | undefined;
+  email:string | undefined;
 }
-

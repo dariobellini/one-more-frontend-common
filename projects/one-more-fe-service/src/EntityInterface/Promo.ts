@@ -1,104 +1,104 @@
 import { DecimalPipe } from "@angular/common";
 
 export class Promo {
-idPromo:number;
-idAttivita:number;
-descPromo:string;
-dataInserimento:Date;
-dataDal:Date;
-dataAl:Date;
-validDays:string;
-days:number[];
-isAllDayValidita:boolean;
-orarioValiditaDa:string;
-orarioValiditaAl:string;
-listaTipologie:TipologiaOfferta[];
-numUtilizziPerPersonaMax:number;
-numCouponRichiesti:number;
-numCouponUtilizzati:number;
-numCouponRimanenti:number;
-numCouponAnnullati:number;
-numCouponMax:number;
-isAttiva:boolean;
-titoloPromo:string;
-isAbilitataForUser:boolean;
-motivazioneDisabilitata: string;
+idPromo:number | undefined;
+idAttivita:number | undefined;
+descPromo:string | undefined;
+dataInserimento:Date | undefined;
+dataDal:Date | undefined;
+dataAl:Date | undefined;
+validDays:string | undefined;
+days:number[] | undefined;
+isAllDayValidita:boolean | undefined;
+orarioValiditaDa:string | undefined;
+orarioValiditaAl:string | undefined;
+listaTipologie:TipologiaOfferta[] | undefined;
+numUtilizziPerPersonaMax:number | undefined;
+numCouponRichiesti:number | undefined;
+numCouponUtilizzati:number | undefined;
+numCouponRimanenti:number | undefined;
+numCouponAnnullati:number | undefined;
+numCouponMax:number | undefined;
+isAttiva:boolean | undefined;
+titoloPromo:string | undefined;
+isAbilitataForUser:boolean | undefined;
+motivazioneDisabilitata: string | undefined;
 }
 
 export class InsertPromoReqDto {
-idPromo:number;
-idAttivita:number;
-descPromo:string;
-dataDal:Date;
-dataAl:Date;
-validDays:string;
-days:number[];
-isAllDayValidita:boolean;
-orarioValiditaDa:string;
-orarioValiditaAl:string;
-listaTipologie:TipologiaOfferta[];
-numUtilizziPerPersonaMax:number;
-isRinnovoUtilizzo:boolean;
-numCouponMax:number;
-isAttiva:boolean;
-titoloPromo:string;    
+idPromo:number | undefined;
+idAttivita:number | undefined;
+descPromo:string | undefined;
+dataDal:Date | undefined;
+dataAl:Date | undefined;
+validDays:string | undefined;
+days:number[] | undefined;
+isAllDayValidita:boolean | undefined;
+orarioValiditaDa:string | undefined;
+orarioValiditaAl:string | undefined;
+listaTipologie:TipologiaOfferta[] | undefined;
+numUtilizziPerPersonaMax:number | undefined;
+isRinnovoUtilizzo:boolean | undefined;
+numCouponMax:number | undefined;
+isAttiva:boolean | undefined;
+titoloPromo:string | undefined;    
 }
 
 export class GiorniSettimanaPromo{
-  days:number[];
+  days:number[] | undefined;
 }
 
 export class TipologiaOfferta{
-codTipologia:number;
-descrizione:string;
+codTipologia:number | undefined;
+descrizione:string | undefined;
 }
 
 export class InsertPromoUserAttiva{
-idPromo: number;
-idSoggetto: number;
-dataAcquisizione:Date;
+idPromo: number | undefined;
+idSoggetto: number | undefined;
+dataAcquisizione:Date | undefined;
 }
 
 export class PromoUserAttive
 {
-idPromo: number;
-idAttivita: number;
-idSoggetto: number;
-titoloPromo: string;
-descPromo:string;
-dataDal: Date;
-dataAl: Date;
-ValidDays:string;
-days:number[];
-isAllDayValidita:boolean;
-orarioValiditaDa:string;
-orarioValiditaAl:string;
-isAttiva:boolean;
-dataAcquisizione:Date;
-listaTipologie: TipologiaOfferta[];
+idPromo: number | undefined;
+idAttivita: number | undefined;
+idSoggetto: number | undefined;
+titoloPromo: string | undefined;
+descPromo:string | undefined;
+dataDal: Date | undefined;
+dataAl: Date | undefined;
+ValidDays:string | undefined;
+days:number[] | undefined;
+isAllDayValidita:boolean | undefined;
+orarioValiditaDa:string | undefined;
+orarioValiditaAl:string | undefined;
+isAttiva:boolean | undefined;
+dataAcquisizione:Date | undefined;
+listaTipologie: TipologiaOfferta[] | undefined;
 }
 
 export class PromoUserUtilizzate
 {
-idPromo: number;
-idSoggetto: number;
-dataAcquisizione:Date;
-titoloPromo: string;
-descPromo: string;
+idPromo: number | undefined;
+idSoggetto: number | undefined;
+dataAcquisizione:Date | undefined;
+titoloPromo: string | undefined;
+descPromo: string | undefined;
 }
 
 export class PromoUser
 {
-listaPromoAttive: PromoUserAttive[];
-listaPromoUtilizzate: PromoUserUtilizzate[];
+listaPromoAttive: PromoUserAttive[] | undefined;
+listaPromoUtilizzate: PromoUserUtilizzate[] | undefined;
 }
 
 export class PromoUserAnnullate
 {
-idPromo: number;
-idAttivita: number;
-dataAcquisizione: Date;
-dataAnnullamento: Date;
-codAnnullamento: string;
-descMotivazione: string;
+idPromo: number | undefined;
+idAttivita: number | undefined;
+dataAcquisizione: Date | undefined;
+dataAnnullamento: Date | undefined;
+codAnnullamento: string | undefined;
+descMotivazione: string | undefined;
 }
