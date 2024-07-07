@@ -3,7 +3,7 @@ import { HttpClient} from '@angular/common/http';
 import { Observable, BehaviorSubject, firstValueFrom, Observer} from 'rxjs';
 import { filter} from 'rxjs/operators';
 import { ProfileUser, UserSession, Utente } from '../EntityInterface/Utente';
-import { User, UserCredential, createUserWithEmailAndPassword, getAdditionalUserInfo, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
+import { GoogleAuthProvider, User, UserCredential, createUserWithEmailAndPassword, getAdditionalUserInfo, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
 import { FacebookAuthProvider} from 'firebase/auth'
 import 'firebase/compat/auth';
 import { Auth, authState } from '@angular/fire/auth';

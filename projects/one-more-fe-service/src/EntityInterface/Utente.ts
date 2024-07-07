@@ -7,8 +7,8 @@ export class Utente {
   isEmailLogin:boolean | undefined;
   isGoogleLogin:boolean | undefined;
   isFacebookLogin:boolean | undefined;
-  registrationDate:string | undefined;
-  lastLoginDate:string | undefined;
+  registrationDate:string | undefined | null;
+  lastLoginDate:string | undefined| null;
   errore:string = '';
 }
 

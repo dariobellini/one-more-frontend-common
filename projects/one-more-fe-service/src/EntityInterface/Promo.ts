@@ -1,28 +1,79 @@
 import { DecimalPipe } from "@angular/common";
 
 export class Promo {
-idPromo:number | undefined;
-idAttivita:number | undefined;
-descPromo:string | undefined;
-dataInserimento:Date | undefined;
-dataDal:Date | undefined;
-dataAl:Date | undefined;
-validDays:string | undefined;
-days:number[] | undefined;
-isAllDayValidita:boolean | undefined;
-orarioValiditaDa:string | undefined;
-orarioValiditaAl:string | undefined;
-listaTipologie:TipologiaOfferta[] | undefined;
-numUtilizziPerPersonaMax:number | undefined;
-numCouponRichiesti:number | undefined;
-numCouponUtilizzati:number | undefined;
-numCouponRimanenti:number | undefined;
-numCouponAnnullati:number | undefined;
-numCouponMax:number | undefined;
-isAttiva:boolean | undefined;
-titoloPromo:string | undefined;
-isAbilitataForUser:boolean | undefined;
-motivazioneDisabilitata: string | undefined;
+  idPromo:number ;
+  idAttivita:number ;
+  descPromo:string ;
+  dataInserimento:Date ;
+  dataDal:Date ;
+  dataAl:Date ;
+  validDays:string ;
+  days:number[] ;
+  isAllDayValidita:boolean ;
+  orarioValiditaDa:string ;
+  orarioValiditaAl:string ;
+  listaTipologie:TipologiaOfferta[] ;
+  numUtilizziPerPersonaMax:number ;
+  numCouponRichiesti:number ;
+  numCouponUtilizzati:number ;
+  numCouponRimanenti:number ;
+  numCouponAnnullati:number ;
+  numCouponMax:number ;
+  isAttiva:boolean ;
+  titoloPromo:string ;
+  isAbilitataForUser:boolean ;
+  motivazioneDisabilitata: string ;
+  
+
+/**
+ *
+ */
+constructor(idPromo:number ,
+  idAttivita:number ,
+  descPromo:string ,
+  dataInserimento:Date ,
+  dataDal:Date ,
+  dataAl:Date ,
+  validDays:string ,
+  days:number[] ,
+  isAllDayValidita:boolean ,
+  orarioValiditaDa:string ,
+  orarioValiditaAl:string ,
+  listaTipologie:TipologiaOfferta[] ,
+  numUtilizziPerPersonaMax:number ,
+  numCouponRichiesti:number ,
+  numCouponUtilizzati:number ,
+  numCouponRimanenti:number ,
+  numCouponAnnullati:number ,
+  numCouponMax:number ,
+  isAttiva:boolean ,
+  titoloPromo:string ,
+  isAbilitataForUser:boolean ,
+  motivazioneDisabilitata: string
+  ) {
+    this.idAttivita = idAttivita;
+    this.idPromo = idPromo;
+    this.descPromo = descPromo;
+    this.dataInserimento = dataInserimento;
+    this.dataDal = dataDal;
+    this.dataAl = dataAl;
+    this.validDays = validDays;
+    this.days = days;
+    this.isAllDayValidita = isAllDayValidita;
+    this.orarioValiditaDa = orarioValiditaDa;
+    this.orarioValiditaAl = orarioValiditaAl;
+    this.listaTipologie = listaTipologie;
+    this.numUtilizziPerPersonaMax = numUtilizziPerPersonaMax;
+    this.numCouponAnnullati = numCouponAnnullati;
+    this.numCouponRichiesti = numCouponRichiesti;
+    this.numCouponUtilizzati = numCouponUtilizzati;
+    this.numCouponRimanenti = numCouponRimanenti;
+    this.numCouponMax = numCouponMax;
+    this.isAttiva = isAttiva;
+    this.titoloPromo = titoloPromo;
+    this.isAbilitataForUser = isAbilitataForUser;
+    this.motivazioneDisabilitata = motivazioneDisabilitata;
+}
 }
 
 export class InsertPromoReqDto {

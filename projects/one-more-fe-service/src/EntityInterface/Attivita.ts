@@ -1,102 +1,227 @@
 export class Attivita {
-  idAttivita:number | undefined;
-  idSoggetto:number | undefined;
-  nome:string = '';
-  indirizzo:string | undefined;
-  citta:string | undefined;
-  provincia:string | undefined;
-  civico:string | undefined;
-  cap:string | undefined;
-  latitudine:number | undefined;
-  longitudine:number | undefined;
-  telefono:string | undefined;
-  cellulare:string | undefined;
-  isCellPubblico:boolean | undefined;
-  email:string | undefined;
-  descrizione:string | undefined;
-  descrizioneOfferta:string | undefined;
-  isPromoPresente:boolean | undefined;
-  isOffertaVegetariana:boolean | undefined;
-  isOffertaVegana:boolean | undefined;
-  isOffertaNoGlutine:boolean | undefined;
-  listaTipoAttivita:TipoAttivita[] | undefined;
-  orari:Orari | undefined;
-  immagini:Immagini[] | undefined;
+  idAttivita:number;
+  idSoggetto:number;
+  nome:string;
+  indirizzo:string;
+  citta:string;
+  provincia:string;
+  civico:string;
+  cap:string;
+  latitudine:number;
+  longitudine:number;
+  telefono:string;
+  cellulare:string;
+  isCellPubblico:boolean;
+  email:string;
+  descrizione:string;
+  descrizioneOfferta:string;
+  isPromoPresente:boolean;
+  isOffertaVegetariana:boolean;
+  isOffertaVegana:boolean;
+  isOffertaNoGlutine:boolean;
+  listaTipoAttivita:TipoAttivita[];
+  orari:Orari;
+  immagini:Immagini[];
+
+  constructor(
+    idAttivita:number,
+    idSoggetto:number,
+    nome:string,
+    indirizzo:string,
+    citta:string,
+    provincia:string,
+    civico:string,
+    cap:string,
+    latitudine:number,
+    longitudine:number,
+    telefono:string,
+    cellulare:string,
+    isCellPubblico:boolean,
+    email:string,
+    descrizione:string,
+    descrizioneOfferta:string,
+    isPromoPresente:boolean,
+    isOffertaVegetariana:boolean,
+    isOffertaVegana:boolean,
+    isOffertaNoGlutine:boolean,
+    listaTipoAttivita:TipoAttivita[],
+    orari:Orari,
+    immagini:Immagini[],
+  ) 
+  {
+    this.idAttivita = idAttivita,
+    this.idSoggetto = idSoggetto,
+    this.nome = nome,
+    this.indirizzo = indirizzo,
+    this.citta = citta,
+    this.provincia = provincia,
+    this.civico = civico,
+    this.cap = cap,
+    this.latitudine = latitudine,
+    this.longitudine = longitudine,
+    this.telefono = telefono,
+    this.cellulare = cellulare,
+    this.isCellPubblico = isCellPubblico,
+    this.email = email,
+    this.descrizione = descrizione,
+    this.descrizioneOfferta = descrizioneOfferta,
+    this.isPromoPresente = isPromoPresente,
+    this.isOffertaVegetariana = isOffertaVegetariana,
+    this.isOffertaVegana = isOffertaVegana,
+    this.isOffertaNoGlutine = isOffertaNoGlutine,
+    this.listaTipoAttivita = listaTipoAttivita,
+    this.orari = orari,
+    this.immagini = immagini
+  }
   
 }
 
 export class AttivitaRicerca {
-  idAttivita:number | undefined;
-  nome:string = '';
-  indirizzo:string | undefined;
-  citta:string | undefined;
-  provincia:string | undefined;
-  civico:string | undefined;
-  cap:string | undefined;
-  latitudine:number | undefined;
-  longitudine:number | undefined;
-  isPromoPresente:boolean | undefined;
-  listaTipoAttivita:TipoAttivita[] | undefined;
-  immagini:Immagini[] | undefined;
+  idAttivita:number;
+  nome:string;
+  indirizzo:string;
+  citta:string;
+  provincia:string;
+  civico:string;
+  cap:string;
+  latitudine:number;
+  longitudine:number;
+  isPromoPresente:boolean;
+  listaTipoAttivita:TipoAttivita[];
+  immagini:Immagini[];
+  
+  constructor( idAttivita:number,
+    nome:string,
+    indirizzo:string,
+    citta:string,
+    provincia:string,
+    civico:string,
+    cap:string,
+    latitudine:number,
+    longitudine:number,
+    isPromoPresente:boolean,
+    listaTipoAttivita:TipoAttivita[],
+    immagini:Immagini[]) {
+      this.idAttivita = idAttivita;
+      this.nome = nome;
+      this.indirizzo = indirizzo;
+      this.citta = citta;
+      this.provincia = provincia;
+      this.civico = civico;
+      this.cap = cap;
+      this.latitudine = latitudine;
+      this.longitudine = longitudine;
+      this.isPromoPresente = isPromoPresente;
+      this.listaTipoAttivita = listaTipoAttivita;
+      this.immagini = immagini;
+  }
 }
 
 export class InsertAttivitaReqDto {
-  idSoggetto:number | undefined;
-  nome:string | undefined;
-  indirizzo:string | undefined;
-  citta:string | undefined;
-  provincia:string | undefined;
-  civico:string | undefined;
-  cap:string | undefined;
-  telefono:string | undefined;
-  cellulare:string | undefined;
-  isCellPubblico:boolean | undefined;
-  email:string | undefined;
-  descrizione:string | undefined;
-  descrizioneOfferta:string | undefined;
-  isPromoPresente:boolean | undefined;
-  isOffertaVegetariana:boolean | undefined;
-  isOffertaVegana:boolean | undefined;
-  isOffertaNoGlutine:boolean | undefined;
-  listaTipoAttivita:TipoAttivita[] | undefined;
-  orari:Orari | undefined;
-  immagini:Immagini[] | undefined;
+  idSoggetto:number ;
+  nome:string ;
+  indirizzo:string ;
+  citta:string ;
+  provincia:string ;
+  civico:string ;
+  cap:string ;
+  telefono:string ;
+  cellulare:string ;
+  isCellPubblico:boolean ;
+  email:string ;
+  descrizione:string ;
+  descrizioneOfferta:string ;
+  isPromoPresente:boolean ;
+  isOffertaVegetariana:boolean ;
+  isOffertaVegana:boolean ;
+  isOffertaNoGlutine:boolean ;
+  listaTipoAttivita:TipoAttivita[] = [];
+  orari:Orari ;
+  immagini:Immagini[] ;
+
+  constructor(idSoggetto:number ,
+    nome:string ,
+    indirizzo:string ,
+    citta:string ,
+    provincia:string ,
+    civico:string ,
+    cap:string ,
+    telefono:string ,
+    cellulare:string ,
+    isCellPubblico:boolean ,
+    email:string ,
+    descrizione:string ,
+    descrizioneOfferta:string ,
+    isPromoPresente:boolean ,
+    isOffertaVegetariana:boolean ,
+    isOffertaVegana:boolean ,
+    isOffertaNoGlutine:boolean ,
+    listaTipoAttivita:TipoAttivita[] = [],
+    orari:Orari ,
+    immagini:Immagini[]) 
+    {
+      this.idSoggetto = idSoggetto,
+      this.nome = nome,
+      this.indirizzo = indirizzo,
+      this.citta = citta,
+      this.provincia = provincia,
+      this.civico = civico,
+      this.cap = cap,
+      this.telefono = telefono,
+      this.cellulare = cellulare,
+      this.isCellPubblico = isCellPubblico,
+      this.email = email,
+      this.descrizione = descrizione,
+      this.descrizioneOfferta = descrizioneOfferta,
+      this.isPromoPresente = isPromoPresente,
+      this.isOffertaVegana = isOffertaVegana,
+      this.isOffertaVegetariana = isOffertaVegetariana,
+      this.isOffertaNoGlutine = isOffertaNoGlutine,
+      this.listaTipoAttivita =listaTipoAttivita,
+      this.orari = orari,
+      this.immagini = immagini
+  }
 }
 
 export class TipoAttivita {
-  codTipoAttivita:string | undefined;
-  descrizione:string | undefined;
+  codTipoAttivita:string ;
+  descrizione:string ;
+
+  constructor(codTipoAttivita:string, descrizione:string) {
+    this.codTipoAttivita = codTipoAttivita;
+    this.descrizione = descrizione;
+  }
 }
 
 export class Orari {
-  lunediMatDa:string | undefined;
-  lunediMatAl:string | undefined;
-  lunediPomDa:string | undefined;
-  lunediPomAl:string | undefined;
-  martediMatDa:string | undefined;
-  martediMatAl:string | undefined;
-  martediPomDa:string | undefined;
-  martediPomAl:string | undefined;
-  mercolediMatDa:string | undefined;
-  mercolediMatAl:string | undefined;
-  mercolediPomDa:string | undefined;
-  mercolediPomAl:string | undefined;
-  giovediMatDa:string | undefined;
-  giovediMatAl:string | undefined;
-  giovediPomDa:string | undefined;
-  giovediPomAl:string | undefined;
-  venerdiMatDa:string | undefined;
-  venerdiMatAl:string | undefined;
-  venerdiPomDa:string | undefined;
-  venerdiPomAl:string | undefined;
-  sabatoMatDa:string | undefined;
-  sabatoMatAl:string | undefined;
-  sabatoPomDa:string | undefined;
-  sabatoPomAl:string | undefined;
-  domenicaMatDa:string | undefined;
-  domenicaMatAl:string | undefined;
-  domenicaPomDa:string | undefined;
-  domenicaPomAl:string | undefined;
+  lunediMatDa:string;
+  lunediMatAl:string;
+  lunediPomDa:string ;
+  lunediPomAl:string ;
+  martediMatDa:string ;
+  martediMatAl:string ;
+  martediPomDa:string ;
+  martediPomAl:string ;
+  mercolediMatDa:string ;
+  mercolediMatAl:string ;
+  mercolediPomDa:string ;
+  mercolediPomAl:string ;
+  giovediMatDa:string ;
+  giovediMatAl:string ;
+  giovediPomDa:string ;
+  giovediPomAl:string ;
+  venerdiMatDa:string ;
+  venerdiMatAl:string ;
+  venerdiPomDa:string ;
+  venerdiPomAl:string ;
+  sabatoMatDa:string ;
+  sabatoMatAl:string ;
+  sabatoPomDa:string ;
+  sabatoPomAl:string ;
+  domenicaMatDa:string ;
+  domenicaMatAl:string ;
+  domenicaPomDa:string ;
+  domenicaPomAl:string ;
 
   constructor()
   {
@@ -132,81 +257,122 @@ export class Orari {
 }
 
 export class Descrizione{
-  descrizioneLocale : string | undefined;
-  menu : string | undefined;
+  descrizioneLocale : string ;
+  menu : string ;
+
+  constructor( 
+    descrizioneLocale : string,
+    menu : string ) {
+    this.descrizioneLocale = descrizioneLocale;
+    this.menu = menu;
+  }
 }
 
 export class Immagini{
-  idImmagine : number | undefined;
-  idAttivita! : number;
-  nomeUpload! : string;
-  upload! : string;
-  isImmaginePrincipale! : boolean;
-  ordinamento! : number;
+  idImmagine : number ;
+  idAttivita : number;
+  nomeUpload : string;
+  upload : string;
+  isImmaginePrincipale : boolean;
+  ordinamento : number;
+
+  constructor( 
+    idImmagine : number ,
+    idAttivita : number,
+    nomeUpload : string,
+    upload : string,
+    isImmaginePrincipale : boolean,
+    ordinamento : number
+  ) {
+    this.idImmagine =idImmagine;
+    this.idAttivita = idAttivita;
+    this.nomeUpload = nomeUpload;
+    this.upload = upload;
+    this.isImmaginePrincipale = isImmaginePrincipale;
+    this.ordinamento = ordinamento;
+  }
 }
 
 export class AttivitaHomePageResponse
 {
-    listUltimeAttReg : Attivita [] | undefined;
-    listAttivitaWithPromo : Attivita [] | undefined;
+    listUltimeAttReg : Attivita [] ;
+    listAttivitaWithPromo : Attivita [] ;
+
+    constructor( listUltimeAttReg : Attivita [],
+      listAttivitaWithPromo : Attivita [] ) {
+        this.listAttivitaWithPromo = listAttivitaWithPromo;
+        this.listUltimeAttReg = listUltimeAttReg;
+      
+    }
 }
 
 export class AttivitaSession {
   constructor(
-    public idAttivita:number | undefined,
-    public idSoggetto:number | undefined,
+    public idAttivita:number ,
+    public idSoggetto:number ,
     public nome:string,
-    public indirizzo:string | undefined,
-    public citta:string | undefined,
-    public provincia:string | undefined,
-    public civico:string | undefined,
-    public cap:string | undefined,
-    public latitudine:number | undefined,
-    public longitudine:number | undefined,
-    public telefono:string | undefined,
-    public cellulare:string | undefined,
-    public isCellPubblico:boolean | undefined,
-    public email:string | undefined,
-    public descrizione:string | undefined,
-    public descrizioneOfferta:string | undefined,
-    public isPromoPresente:boolean | undefined,
-    public isOffertaVegetariana:boolean | undefined,
-    public isOffertaVegana:boolean | undefined,
-    public isOffertaNoGlutine:boolean | undefined,
-    public listaTipoAttivita:TipoAttivita[] | undefined,
-    public orari:Orari | undefined,
-    public immagini:Immagini[] | undefined
+    public indirizzo:string ,
+    public citta:string ,
+    public provincia:string ,
+    public civico:string ,
+    public cap:string ,
+    public latitudine:number ,
+    public longitudine:number ,
+    public telefono:string ,
+    public cellulare:string ,
+    public isCellPubblico:boolean ,
+    public email:string ,
+    public descrizione:string ,
+    public descrizioneOfferta:string ,
+    public isPromoPresente:boolean ,
+    public isOffertaVegetariana:boolean ,
+    public isOffertaVegana:boolean ,
+    public isOffertaNoGlutine:boolean ,
+    public listaTipoAttivita:TipoAttivita[] ,
+    public orari:Orari ,
+    public immagini:Immagini[] 
   ){}
 }
 
 export class FiltriAttivita {
-  tipoRicerca: number | undefined;
-  latitudine: number | undefined;
-  longitudine: number | undefined;
-  isPromoPresente: boolean | undefined;
-  citta: string | undefined;
-  provincia: string | undefined;
-  nome: string | undefined;
-  indirizzo: string | undefined;
-  dataFinePromo: Date | undefined;
-  isLunedi: boolean | undefined;
-  isMartedi: boolean | undefined;
-  isMercoledi: boolean | undefined;
-  isGiovedi: boolean | undefined;
-  isVenerdi: boolean | undefined;
-  isSabato: boolean | undefined;
-  isDomenica: boolean | undefined;
-  isAllDayValidita: boolean | undefined;
-  orarioValiditaDa: string | undefined;
-  orarioValiditaAl: string | undefined;
-  codTipoAttivita: string | undefined;
-  codTipoPromo: number | undefined;
+  tipoRicerca: number |undefined ;
+  latitudine: number |undefined;
+  longitudine: number |undefined;
+  isPromoPresente: boolean |undefined;
+  citta: string |undefined;
+  provincia: string |undefined;
+  nome: string |undefined;
+  indirizzo: string |undefined;
+  dataFinePromo: Date |undefined;
+  isLunedi: boolean |undefined;
+  isMartedi: boolean |undefined;
+  isMercoledi: boolean |undefined;
+  isGiovedi: boolean |undefined;
+  isVenerdi: boolean |undefined;
+  isSabato: boolean |undefined;
+  isDomenica: boolean |undefined;
+  isAllDayValidita: boolean |undefined;
+  orarioValiditaDa: string |undefined;
+  orarioValiditaAl: string |undefined;
+  codTipoAttivita: string |undefined;
+  codTipoPromo: number |undefined;
+
 }
 
 export class AttivitaFiltrate
 {
-    listaAttivita: Attivita [] | undefined;
-    latitudine:number | undefined;
-    longitudine:number | undefined;
-    errore:string | undefined;
+    listaAttivita: Attivita [] ;
+    latitudine:number ;
+    longitudine:number ;
+    errore :string ;
+
+    constructor(  listaAttivita: Attivita [] ,
+      latitudine:number ,
+      longitudine:number ,
+      errore:string) {
+      this.listaAttivita = listaAttivita,
+      this.latitudine = latitudine
+      this.longitudine = longitudine,
+      this.errore = errore
+    }
 }

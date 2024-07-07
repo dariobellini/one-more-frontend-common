@@ -18,8 +18,8 @@ export class CouponService {
     return this.http.post<Coupon>('https://localhost:7253/Coupon/Add', coupon);
   }
 
-  ListCoupon(idSogetto: number, idStatus: number): Observable<any>{
-    return this.http.get<CouponListDto[]>('https://localhost:7253/Coupon/List?idSoggetto='+idSogetto+'&idStatus='+idStatus );
+  ListCoupon(idSogetto: number): Observable<any>{
+    return this.http.get<CouponListDto[]>('https://localhost:7253/Coupon/List?idSoggetto='+idSogetto);
   }
 
   UpdateCoupon(undoCoupon : StatusCouponUser){

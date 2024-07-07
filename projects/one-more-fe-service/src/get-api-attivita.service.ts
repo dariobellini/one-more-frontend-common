@@ -36,7 +36,8 @@ export class GetApiAttivitaService {
     let params = new HttpParams();
     
     // Aggiungi i parametri alla query solo se sono definiti
-     params = params.set('tipoRicerca', filtro.tipoRicerca.toString());
+    if(filtro.tipoRicerca)
+      params = params.set('tipoRicerca', filtro.tipoRicerca.toString());
     if (filtro.nome) 
       params = params.set('nome', filtro.nome);
     if (filtro.citta) 
@@ -46,7 +47,7 @@ export class GetApiAttivitaService {
     if (filtro.codTipoAttivita) 
       params = params.set('codTipoAttivita', filtro.codTipoAttivita);
     
-    if(filtro.latitudine == undefined && filtro.longitudine == undefined)
+    if(filtro && filtro.latitudine == undefined && filtro.longitudine == undefined)
     {
       const getPositionAsync = async (): Promise<GeolocationPosition> => {
         return new Promise((resolve, reject) => {
@@ -63,7 +64,7 @@ export class GetApiAttivitaService {
         console.error("Errore durante il recupero della posizione:", error);
       }
     }
-    else
+    else if(filtro.latitudine && filtro.longitudine)
     {
       params = params.set('latitudine', filtro.latitudine);
       params = params.set('longitudine', filtro.longitudine);
