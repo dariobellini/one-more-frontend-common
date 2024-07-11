@@ -1,5 +1,3 @@
-import { DecimalPipe } from "@angular/common";
-
 export class Soggetto {
   idSoggetto:number | undefined;
   nome:string | undefined;

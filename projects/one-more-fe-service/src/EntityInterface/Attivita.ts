@@ -73,7 +73,7 @@ export class Attivita {
     this.orari = orari,
     this.immagini = immagini
   }
-  
+
 }
 
 export class AttivitaRicerca {

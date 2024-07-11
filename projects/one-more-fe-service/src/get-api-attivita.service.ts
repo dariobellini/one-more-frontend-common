@@ -1,4 +1,4 @@
-import { Attivita, TipoAttivita, InsertAttivitaReqDto, AttivitaHomePageResponse, AttivitaSession, Orari, Immagini, AttivitaFiltrate, FiltriAttivita } from './EntityInterface/Attivita';
+import { Attivita, TipoAttivita, InsertAttivitaReqDto, AttivitaHomePageResponse, AttivitaSession, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca } from './EntityInterface/Attivita';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -7,6 +7,13 @@ import { BehaviorSubject, Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class GetApiAttivitaService {
+
+
+ 
+  listaAttivitaPerRicerca!: AttivitaRicerca[];
+  listaTipoAttivita : TipoAttivita [] | undefined;
+  listaAttivitaNearHome : Attivita[] | undefined;
+  listaAttivitaPromoHome : Attivita[] | undefined;
 
   insertAttivita !: InsertAttivitaReqDto;
   attivita !: Attivita;
@@ -30,6 +37,12 @@ export class GetApiAttivitaService {
 
   GetFavorites(idSoggetto:number): Observable<Attivita[]>{
     return this.http.get<Attivita[]>('https://localhost:7253/Attivita/get-favorites?idSoggetto='+idSoggetto);
+  }
+
+  
+  createListaTipoAttivitaSession(listaTipoAtt:TipoAttivita[]){
+    if(listaTipoAtt)
+      this.listaTipoAttivita = listaTipoAtt;
   }
 
   async apiGetListaAttivitaFiltrate(filtro: FiltriAttivita): Promise<Observable<AttivitaFiltrate>> {
@@ -121,6 +134,11 @@ export class GetApiAttivitaService {
   apiGetListaDecAttivita(): Observable<TipoAttivita[]>{
     return this.http.get<TipoAttivita[]>('https://localhost:7253/Attivita/get-lista-tipoAttivita');
   }
+  apiGetAttivitaFavorite(id:number): Observable<AttivitaRicerca[]>{
+    const params = new HttpParams()
+      .set('idSoggetto', id.toString())
+    return this.http.get<AttivitaRicerca[]>('http://192.168.8.130:7253/Attivita/get-favorites', {params});
+  }
 
   apiGetListaTipoAttivitaById(id:number): Observable<TipoAttivita[]>{
     return this.http.get<TipoAttivita[]>('https://localhost:7253/Attivita/get-lista-tipoAttivita-by-id'+id);
@@ -130,10 +148,44 @@ export class GetApiAttivitaService {
     return this.http.post<InsertAttivitaReqDto>(`https://localhost:7253/Attivita/insert-attivita`, attivita);
   }
 
+  apiGetAttivitaByIdAttivita(id:number | undefined): Observable<any>{
+    return this.http.get('http://192.168.8.130:7253/Attivita/get-attivita?idAttivita='+id);
+  }
+
+  createListAttivitaNearHomeSession(list:Attivita []){
+    this.listaAttivitaNearHome = list;
+  }
+  
+    createListaAttivitaPerRicercaSession(listaAttRicerca:AttivitaRicerca[]){
+    if(listaAttRicerca)
+      this.listaAttivitaPerRicerca = listaAttRicerca;
+  }
+  
+  apiGetListaAttivitaPerRicerca(): Observable<AttivitaRicerca[]>{
+    return this.http.get<AttivitaRicerca[]>('http://192.168.8.130:7253/Attivita/get-lista-attivita');
+  }
+  
+  GetListaAttivitaPerRicercaSession(){
+    return this.listaAttivitaPerRicerca;
+  }
+
   createAttivitaSession(idAtt: number, idSogg: number, nome: string, indirizzo: string, citta: string, provincia: string, civico: string, cap: string, latitudine: number, longitudine: number, telefono: string, cellulare: string, isCellPubblico: boolean, email: string, descrizione: string, descrizioneOfferta: string, isPromoPresente: boolean, isOffertaVegetariana: boolean, isOffertaVegana: boolean, isOffertaNoGlutine: boolean, listaTipoAttivita: TipoAttivita[], orari: Orari, immagini: Immagini[]){
     this.sessioneAttivita = new AttivitaSession(idAtt, idSogg, nome, indirizzo, citta, provincia, civico, cap, latitudine, longitudine, telefono, cellulare, isCellPubblico, email, descrizione, descrizioneOfferta, isPromoPresente, isOffertaVegetariana, isOffertaVegana, isOffertaNoGlutine, listaTipoAttivita, orari, immagini);
   }
-  
+  GetListaTipoAttivitaSession(){
+    return this.listaTipoAttivita;
+  }
+  createListAttivitaPromoHomeSession(list:Attivita []){
+    this.listaAttivitaPromoHome = list;
+  }
+
+  getListAttivitaPromoHomeSession(){
+    return this.listaAttivitaPromoHome;
+  }
+  getListAttivitaNearHomeSession(){
+    return this.listaAttivitaNearHome;
+  }
+
   GetDatiAttivitaSession() {
     if(this.sessioneAttivita)
     {
@@ -198,4 +250,6 @@ export class GetApiAttivitaService {
   getlistaAttivitaDDL(): Observable<TipoAttivita[] | null> {
     return this.listaAttivitaDDL$;
   }
+
+  
 }

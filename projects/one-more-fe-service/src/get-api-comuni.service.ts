@@ -1,8 +1,7 @@
-import { Attivita, TipoAttivita } from './EntityInterface/Attivita';
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, Subject, map } from 'rxjs';
-import { Comuni, Comuni_CAP } from './EntityInterface/Comuni_CAP';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Comuni } from './EntityInterface/Comuni_CAP';
 
 @Injectable({
   providedIn: 'root'

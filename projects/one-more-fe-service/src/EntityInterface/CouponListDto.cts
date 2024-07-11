@@ -1,3 +1,6 @@
+import { Immagini } from "./Attivita";
+import { TipologiaOfferta } from "./Promo";
+
 export class CouponListDto {
     id : number;
     idPromo : number ;
@@ -16,6 +19,14 @@ export class CouponListDto {
     latitudine:number ;
     longitudine:number ;
     idStatus:number ;
+    days: number[];
+    isAllDayValidita:boolean;
+    orarioValiditaDa:string;
+    orarioValiditaAl:string;
+    validDays: string;
+    imgPrincipale: Immagini;
+    tipologieOfferta:TipologiaOfferta[];
+    timestamp:Date;
     
 
     constructor(    id : number,
@@ -34,7 +45,15 @@ export class CouponListDto {
     cap:string ,
     latitudine:number ,
     longitudine:number ,
-    idStatus:number) 
+    idStatus:number,
+    days: number[],
+    isAllDayValidita:boolean,
+    orarioValiditaDa:string,
+    orarioValiditaAl:string,
+    validDays: string,
+    imgPrincipale: Immagini,
+    tipologieOfferta:TipologiaOfferta[],
+    timestamp:Date) 
     {
       this.id = id;
       this.idPromo = idPromo;
@@ -52,6 +71,14 @@ export class CouponListDto {
       this.cap = cap;
       this.latitudine = latitudine;
       this.longitudine = longitudine;
-      this.idStatus = idStatus;  
+      this.idStatus = idStatus;
+      this.days = days;
+      this.isAllDayValidita = isAllDayValidita,
+      this.orarioValiditaAl = orarioValiditaAl,
+      this.orarioValiditaDa = orarioValiditaDa,
+      this.validDays = validDays,
+      this.imgPrincipale = imgPrincipale,
+      this.tipologieOfferta = tipologieOfferta,
+      this.timestamp = timestamp
     }
 }

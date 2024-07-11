@@ -1,4 +1,4 @@
-import { AlertTypeEnum } from "../Enums/AlertType";
+import { AlertTypeEnum } from "../AlertType";
 
 export interface AlertInterface{
     type:AlertTypeEnum;
