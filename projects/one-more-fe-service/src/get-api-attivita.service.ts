@@ -2,13 +2,12 @@ import { Attivita, TipoAttivita, InsertAttivitaReqDto, AttivitaHomePageResponse,
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { Constants } from './Constants';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GetApiAttivitaService {
-
-
  
   listaAttivitaPerRicerca!: AttivitaRicerca[];
   listaTipoAttivita : TipoAttivita [] | undefined;
@@ -25,18 +24,18 @@ export class GetApiAttivitaService {
   private listaAttivitaDDLSubject = new BehaviorSubject<TipoAttivita[] | null>(null);
   listaAttivitaDDL$ = this.listaAttivitaDDLSubject.asObservable();
 
-  constructor(private http:HttpClient) { }
+  constructor(private http:HttpClient, private constants:Constants) { }
 
   apiGetListaAttivita(): Observable<Attivita[]>{
-    return this.http.get<Attivita[]>('https://localhost:7253/Attivita/get-attivita');
+    return this.http.get<Attivita[]>(this.constants.BasePath()+'/Attivita/get-attivita');
   }
 
   apiGetListaAttivitaHomePage(): Observable<AttivitaHomePageResponse>{
-    return this.http.get<AttivitaHomePageResponse>('https://localhost:7253/Attivita/get-attivita-home-page');
+    return this.http.get<AttivitaHomePageResponse>(this.constants.BasePath()+'/Attivita/get-attivita-home-page');
   }
 
   GetFavorites(idSoggetto:number): Observable<Attivita[]>{
-    return this.http.get<Attivita[]>('https://localhost:7253/Attivita/get-favorites?idSoggetto='+idSoggetto);
+    return this.http.get<Attivita[]>(this.constants.BasePath()+'/Attivita/get-favorites?idSoggetto='+idSoggetto);
   }
 
   
@@ -112,44 +111,44 @@ export class GetApiAttivitaService {
     if (filtro.codTipoPromo) 
       params = params.set('codTipoPromo', filtro.codTipoPromo);
 
-    return this.http.get<AttivitaFiltrate>('https://localhost:7253/Attivita/get-attivita-filtrata', { params });
+    return this.http.get<AttivitaFiltrate>(this.constants.BasePath()+'/Attivita/get-attivita-filtrata', { params });
   }
 
   apiGetListaTop3ImmaginiById(id:number): Observable<Immagini[]>{
-    return this.http.get<Immagini[]>('https://localhost:7253/Attivita/get-top3-immagini/' + id);
+    return this.http.get<Immagini[]>(this.constants.BasePath()+'/Attivita/get-top3-immagini/' + id);
   }
 
   apiGetListaImmaginiById(id:number): Observable<Immagini[]>{
-    return this.http.get<Immagini[]>('https://localhost:7253/Attivita/get-lista-immagini/' + id);
+    return this.http.get<Immagini[]>(this.constants.BasePath()+'/Attivita/get-lista-immagini/' + id);
   }
 
   apiGetOrariById(id:number): Observable<Orari>{
-    return this.http.get<Orari>('https://localhost:7253/Attivita/get-orari-attivita/' + id);
+    return this.http.get<Orari>(this.constants.BasePath()+'/Attivita/get-orari-attivita/' + id);
   }
 
   apiGetAttivitaByIdSoggetto(id:number): Observable<any>{
-    return this.http.get('https://localhost:7253/Attivita/get-attivita-by-id?idSoggetto='+id);
+    return this.http.get(this.constants.BasePath()+'/Attivita/get-attivita-by-id?idSoggetto='+id);
   }
 
   apiGetListaDecAttivita(): Observable<TipoAttivita[]>{
-    return this.http.get<TipoAttivita[]>('https://localhost:7253/Attivita/get-lista-tipoAttivita');
+    return this.http.get<TipoAttivita[]>(this.constants.BasePath()+'/Attivita/get-lista-tipoAttivita');
   }
   apiGetAttivitaFavorite(id:number): Observable<AttivitaRicerca[]>{
     const params = new HttpParams()
       .set('idSoggetto', id.toString())
-    return this.http.get<AttivitaRicerca[]>('http://192.168.8.130:7253/Attivita/get-favorites', {params});
+    return this.http.get<AttivitaRicerca[]>(this.constants.BasePath()+'/Attivita/get-favorites', {params});
   }
 
   apiGetListaTipoAttivitaById(id:number): Observable<TipoAttivita[]>{
-    return this.http.get<TipoAttivita[]>('https://localhost:7253/Attivita/get-lista-tipoAttivita-by-id'+id);
+    return this.http.get<TipoAttivita[]>(this.constants.BasePath()+'/Attivita/get-lista-tipoAttivita-by-id'+id);
   }
 
   apiInsertAttivita(attivita: InsertAttivitaReqDto): Observable<any> {
-    return this.http.post<InsertAttivitaReqDto>(`https://localhost:7253/Attivita/insert-attivita`, attivita);
+    return this.http.post<InsertAttivitaReqDto>(this.constants.BasePath()+`/Attivita/insert-attivita`, attivita);
   }
 
   apiGetAttivitaByIdAttivita(id:number | undefined): Observable<any>{
-    return this.http.get('http://192.168.8.130:7253/Attivita/get-attivita?idAttivita='+id);
+    return this.http.get(this.constants.BasePath()+'/Attivita/get-attivita?idAttivita='+id);
   }
 
   createListAttivitaNearHomeSession(list:Attivita []){
@@ -162,7 +161,7 @@ export class GetApiAttivitaService {
   }
   
   apiGetListaAttivitaPerRicerca(): Observable<AttivitaRicerca[]>{
-    return this.http.get<AttivitaRicerca[]>('http://192.168.8.130:7253/Attivita/get-lista-attivita');
+    return this.http.get<AttivitaRicerca[]>(this.constants.BasePath()+'/Attivita/get-lista-attivita');
   }
   
   GetListaAttivitaPerRicercaSession(){
