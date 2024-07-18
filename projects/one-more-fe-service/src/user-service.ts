@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { Constants } from './Constants';
 
 
 @Injectable({
@@ -8,7 +9,8 @@ import { Observable } from 'rxjs';
 })
 export class UserService {
 
-  constructor(private http:HttpClient) { }
+  constructor(private http:HttpClient, 
+              private constants:Constants) { }
 
   AddRemoveFavorite(idSoggetto: number, idAttivita: number): Observable<boolean>{
 
@@ -16,12 +18,12 @@ export class UserService {
     .set('idSoggetto', idSoggetto.toString())
     .set('idAttivita', idAttivita.toString());
 
-    return this.http.get<boolean>('https://localhost:7253/User/AddRemoveFavorite',{params});
+    return this.http.get<boolean>(this.constants.BasePath()+'/User/AddRemoveFavorite',{params});
   }
   apiCheckIsFavorite(idSoggetto: number, idAttivita: number): Observable<boolean> {
     const params = new HttpParams()
     .set('idSoggetto', idSoggetto.toString())
     .set('idAttivita', idAttivita.toString());
-    return this.http.get<boolean>('https://localhost:7253/User/CheckFavorite', { params });
+    return this.http.get<boolean>(this.constants.BasePath()+'/User/CheckFavorite', { params });
 }
 }
