@@ -2,7 +2,7 @@ import { Immagini } from "./Attivita";
 import { TipologiaOfferta } from "./Promo";
 
 export class CouponListDto {
-    id : number;
+    idCoupon : number;
     idPromo : number ;
     idSoggetto : number ;
     idAttivita: number ;
@@ -29,7 +29,8 @@ export class CouponListDto {
     timestamp:Date;
     
 
-    constructor(    id : number,
+    constructor(    
+    idCoupon : number,
     idPromo : number ,
     idSoggetto : number ,
     idAttivita: number ,
@@ -55,7 +56,7 @@ export class CouponListDto {
     tipologieOfferta:TipologiaOfferta[],
     timestamp:Date) 
     {
-      this.id = id;
+      this.idCoupon = idCoupon;
       this.idPromo = idPromo;
       this.idSoggetto = idSoggetto;
       this.idAttivita = idAttivita;
