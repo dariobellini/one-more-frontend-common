@@ -183,6 +183,14 @@ export class InsertAttivitaReqDto {
   }
 }
 
+export class InsertAttivitaResDto {
+  idAttivita:number ;
+
+  constructor(idAttivita : number) {
+    this.idAttivita = idAttivita;
+  }
+}
+
 export class TipoAttivita {
   codTipoAttivita:string ;
   descrizione:string ;

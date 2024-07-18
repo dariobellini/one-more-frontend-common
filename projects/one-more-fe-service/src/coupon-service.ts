@@ -1,4 +1,4 @@
-import { Coupon, StatusCouponUser } from './EntityInterface/Coupon';
+import { Coupon, StatusCoupon, StatusCouponUser } from './EntityInterface/Coupon';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -23,8 +23,8 @@ export class CouponService {
     return this.http.get<CouponListDto[]>(this.constants.BasePath()+'/Coupon/List?idSoggetto='+idSogetto);
   }
 
-  UpdateCoupon(undoCoupon : StatusCouponUser){
-    return this.http.put<StatusCouponUser>(this.constants.BasePath()+'/Coupon/Update',undoCoupon );
+  UpdateCoupon(coupon : StatusCoupon): Observable<any>{
+    return this.http.put<StatusCoupon>(this.constants.BasePath()+'/Coupon/Update',coupon );
   }
 
   UndoCoupon(undoCoupon : StatusCouponUser){

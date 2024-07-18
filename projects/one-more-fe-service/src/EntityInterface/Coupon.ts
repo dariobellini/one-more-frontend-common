@@ -20,3 +20,15 @@ export class StatusCouponUser{
         this.idStatus = idStatus
     }
 }
+
+export class StatusCoupon {
+    idCoupon! : number;
+    idStatus! : number;
+    idSoggetto! : number;
+
+    constructor(idCoupon: number, idStatus: number,idSoggetto : number) {
+        this.idCoupon = idCoupon
+        this.idStatus = idStatus
+        this.idSoggetto = idSoggetto
+    }
+ }
