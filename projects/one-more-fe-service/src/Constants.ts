@@ -1,4 +1,4 @@
-const BASE_PATH: string = "https://localhost:7253";
+const BASE_PATH: string = "http://192.168.8.130:7253";
 
 export class Constants {
 

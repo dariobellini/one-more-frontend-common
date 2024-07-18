@@ -9,6 +9,7 @@ import 'firebase/compat/auth';
 import { Auth, authState } from '@angular/fire/auth';
 import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
 import { CookieService } from 'ngx-cookie-service'
+import { Constants } from '../Constants';
 
 @Injectable({
   providedIn: 'root'
@@ -30,7 +31,8 @@ export class AuthService {
   constructor(private cookieService:CookieService, 
               private http:HttpClient, 
               private firebaseAut: Auth, 
-              private firestore: Firestore) { 
+              private firestore: Firestore,
+              private constants: Constants) { 
 
     this.userSession = this.getUserSessionFromCookie();
     if(this.userSession){
@@ -237,12 +239,12 @@ export class AuthService {
   }
   
   apiInsertNewUtente(utente: Utente): Observable<any> {
-    return this.http.post<Utente>(`https://localhost:7253/Soggetto/insert-utente`, utente);
+    return this.http.post<Utente>(this.constants.BasePath()+'/Soggetto/insert-utente', utente);
   }
 
   apiCheckUtenteByProvider(utente: Utente): Observable<any> {
     return new Observable((observer: Observer<Utente>) => {
-      this.http.post<Utente>(`https://localhost:7253/Soggetto/check-utente`, utente)
+      this.http.post<Utente>(this.constants.BasePath()+'/Soggetto/check-utente', utente)
         .subscribe({
           next: (response: Utente) => {
             observer.next(response);
@@ -256,6 +258,6 @@ export class AuthService {
   }
 
   apiCheckUtenteLogin(utente: Utente): Observable<any> {
-    return this.http.post<Utente>(`https://localhost:7253/Soggetto/check-utente`, utente);
+    return this.http.post<Utente>(this.constants.BasePath()+'/Soggetto/check-utente', utente);
   }
 }
