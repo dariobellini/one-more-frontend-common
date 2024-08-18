@@ -108,8 +108,11 @@ export class GetApiAttivitaService {
       params = params.set('orarioValiditaDa', filtro.orarioValiditaDa);
     if (filtro.orarioValiditaAl) 
       params = params.set('orarioValiditaAl', filtro.orarioValiditaAl);
-    if (filtro.codTipoPromo) 
-      params = params.set('codTipoPromo', filtro.codTipoPromo);
+    if (filtro.codTipoPromo && filtro.codTipoPromo.length > 0) {
+      filtro.codTipoPromo.forEach((promo) => {
+          params = params.append('codTipoPromo', promo.toString());
+      });
+    }
 
     return this.http.get<AttivitaFiltrate>(this.constants.BasePath()+'/Attivita/get-attivita-filtrata', { params });
   }
@@ -145,6 +148,10 @@ export class GetApiAttivitaService {
 
   apiInsertAttivita(attivita: InsertAttivitaReqDto): Observable<any> {
     return this.http.post<InsertAttivitaReqDto>(this.constants.BasePath()+`/Attivita/insert-attivita`, attivita);
+  }
+
+  apiUpdateAttivita(attivita: InsertAttivitaReqDto): Observable<any> {
+    return this.http.post<InsertAttivitaReqDto>(this.constants.BasePath()+`/Attivita/update-attivita`, attivita);
   }
 
   apiGetAttivitaByIdAttivita(id:number | undefined): Observable<any>{

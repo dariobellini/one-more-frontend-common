@@ -118,6 +118,7 @@ export class AttivitaRicerca {
 }
 
 export class InsertAttivitaReqDto {
+  idAttivita:number;
   idSoggetto:number ;
   nome:string ;
   indirizzo:string ;
@@ -139,7 +140,9 @@ export class InsertAttivitaReqDto {
   orari:Orari ;
   immagini:Immagini[] ;
 
-  constructor(idSoggetto:number ,
+  constructor(
+    idAttivita:number ,
+    idSoggetto:number ,
     nome:string ,
     indirizzo:string ,
     citta:string ,
@@ -160,6 +163,7 @@ export class InsertAttivitaReqDto {
     orari:Orari ,
     immagini:Immagini[]) 
     {
+      this.idAttivita = idAttivita,
       this.idSoggetto = idSoggetto,
       this.nome = nome,
       this.indirizzo = indirizzo,
@@ -363,7 +367,7 @@ export class FiltriAttivita {
   orarioValiditaDa: string |undefined;
   orarioValiditaAl: string |undefined;
   codTipoAttivita: string |undefined;
-  codTipoPromo: number |undefined;
+  codTipoPromo: number[] |undefined;
 
 }
 
