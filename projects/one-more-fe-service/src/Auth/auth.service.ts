@@ -2,14 +2,15 @@ import { Injectable} from '@angular/core';
 import { HttpClient} from '@angular/common/http';
 import { Observable, BehaviorSubject, firstValueFrom, Observer} from 'rxjs';
 import { filter} from 'rxjs/operators';
-import { ProfileUser, UserSession, Utente } from '../EntityInterface/Utente';
-import { GoogleAuthProvider, User, UserCredential, createUserWithEmailAndPassword, getAdditionalUserInfo, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
+import { DeleteUtente, ProfileUser, UserSession, Utente } from '../EntityInterface/Utente';
+import { GoogleAuthProvider, User, UserCredential, createUserWithEmailAndPassword, deleteUser, getAdditionalUserInfo, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
 import { FacebookAuthProvider} from 'firebase/auth'
 import 'firebase/compat/auth';
 import { Auth, authState } from '@angular/fire/auth';
-import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
+import { Firestore, doc, getDoc, setDoc, deleteDoc } from '@angular/fire/firestore';
 import { CookieService } from 'ngx-cookie-service'
 import { Constants } from '../Constants';
+import { inject } from '@angular/core';
 
 @Injectable({
   providedIn: 'root'
@@ -20,7 +21,7 @@ export class AuthService {
   isLoggedIn$ = this.isLoggedInSubject.asObservable();
   userSession: UserSession | null;
   position !: GeolocationPosition;
-
+  utente! : DeleteUtente;
   /////////////////////// FIREBASE ///////////////////////  
 
   private currentUser$ = authState(this.firebaseAut).pipe(
@@ -68,6 +69,10 @@ export class AuthService {
       console.error('Errore durante il recupero del documento utente:', error);
       throw error;
     }
+  }
+
+  getCurrentUserFromAuth(): User | null {
+    return this.firebaseAut.currentUser;
   }
 
   async logOut(): Promise<void>{
@@ -174,6 +179,25 @@ export class AuthService {
     }
   }
 
+  async deleteUserAccount(): Promise<void> {
+    const user = this.firebaseAut.currentUser;
+    try{
+      if (user) {
+        const userDocRef = doc(this.firestore, `users/${user.uid}`);
+        console.log(userDocRef);
+        await deleteDoc(userDocRef);
+        await signOut(this.firebaseAut);
+        await deleteUser(user);
+        this.deleteUserSessionFromCookie()
+      } else {
+        console.error('Errore: Nessun utente autenticato.');
+      }
+    }
+    catch (error) {
+      console.error('Errore:', error);
+    }
+  }
+
     /////////////////////////////////////////////////////////  
 
     //////////////////////COOKIE////////////////////////////
@@ -201,7 +225,6 @@ export class AuthService {
       // Rimuovi il cookie della sessione dell'utente
       this.cookieService.delete('userSession');
     }
-
 
     ////////////////////////////////////////////////////////////
 
@@ -241,6 +264,23 @@ export class AuthService {
   apiInsertNewUtente(utente: Utente): Observable<any> {
     return this.http.post<Utente>(this.constants.BasePath()+'/Soggetto/insert-utente', utente);
   }
+
+  apiDeleteUtente(user: UserSession | null, reason: string | null): Observable<any> {
+    const utente = new DeleteUtente();
+    console.log ('log api delete call',user);
+    if (user) {
+        utente.email = user.email ? user.email : '';
+        utente.id = user.idSoggetto ? user.idSoggetto : 0;
+        utente.uid = user.uid ? user.uid : '';
+        utente.reason = reason ? reason : '';
+    }
+
+    const options = {
+        body: utente
+    };
+
+    return this.http.delete<DeleteUtente>(this.constants.BasePath() + '/Soggetto/delete-utente', options);
+}
 
   apiCheckUtenteByProvider(utente: Utente): Observable<any> {
     return new Observable((observer: Observer<Utente>) => {

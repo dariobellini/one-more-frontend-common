@@ -12,6 +12,13 @@ export class Utente {
   errore:string = '';
 }
 
+export class DeleteUtente {
+  id:number = 0;
+  uid:string | undefined;
+  email:string | undefined;
+  reason:string = '';
+}
+
 export class UserSession {
   constructor(
     public uid : string | undefined,
