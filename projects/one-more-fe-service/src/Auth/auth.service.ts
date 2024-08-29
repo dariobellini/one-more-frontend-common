@@ -184,7 +184,6 @@ export class AuthService {
     try{
       if (user) {
         const userDocRef = doc(this.firestore, `users/${user.uid}`);
-        console.log(userDocRef);
         await deleteDoc(userDocRef);
         await signOut(this.firebaseAut);
         await deleteUser(user);
@@ -267,7 +266,6 @@ export class AuthService {
 
   apiDeleteUtente(user: UserSession | null, reason: string | null): Observable<any> {
     const utente = new DeleteUtente();
-    console.log ('log api delete call',user);
     if (user) {
         utente.email = user.email ? user.email : '';
         utente.id = user.idSoggetto ? user.idSoggetto : 0;

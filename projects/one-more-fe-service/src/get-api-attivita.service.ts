@@ -1,4 +1,4 @@
-import { Attivita, TipoAttivita, InsertAttivitaReqDto, AttivitaHomePageResponse, AttivitaSession, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca } from './EntityInterface/Attivita';
+import { Attivita, TipoAttivita, InsertAttivitaReqDto, AttivitaHomePageResponse, AttivitaSession, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita } from './EntityInterface/Attivita';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -129,13 +129,14 @@ export class GetApiAttivitaService {
     return this.http.get<Orari>(this.constants.BasePath()+'/Attivita/get-orari-attivita/' + id);
   }
 
-  apiGetAttivitaByIdSoggetto(id:number): Observable<any>{
-    return this.http.get(this.constants.BasePath()+'/Attivita/get-attivita-by-id?idSoggetto='+id);
+  apiGetAttivitaByIdSoggetto(id: number): Observable<any> {
+    return this.http.get(this.constants.BasePath() + '/Attivita/get-attivita-by-id?idSoggetto=' + id);
   }
 
   apiGetListaDecAttivita(): Observable<TipoAttivita[]>{
     return this.http.get<TipoAttivita[]>(this.constants.BasePath()+'/Attivita/get-lista-tipoAttivita');
   }
+
   apiGetAttivitaFavorite(id:number): Observable<AttivitaRicerca[]>{
     const params = new HttpParams()
       .set('idSoggetto', id.toString())
@@ -147,11 +148,11 @@ export class GetApiAttivitaService {
   }
 
   apiInsertAttivita(attivita: InsertAttivitaReqDto): Observable<any> {
-    return this.http.post<InsertAttivitaReqDto>(this.constants.BasePath()+`/Attivita/insert-attivita`, attivita);
+    return this.http.post<InsertAttivitaReqDto>(this.constants.BasePath() + `/Attivita/insert-attivita`, attivita);
   }
 
   apiUpdateAttivita(attivita: InsertAttivitaReqDto): Observable<any> {
-    return this.http.post<InsertAttivitaReqDto>(this.constants.BasePath()+`/Attivita/update-attivita`, attivita);
+    return this.http.post<InsertAttivitaReqDto>(this.constants.BasePath() + `/Attivita/update-attivita`, attivita);
   }
 
   apiGetAttivitaByIdAttivita(id:number | undefined): Observable<any>{
@@ -162,7 +163,7 @@ export class GetApiAttivitaService {
     this.listaAttivitaNearHome = list;
   }
   
-    createListaAttivitaPerRicercaSession(listaAttRicerca:AttivitaRicerca[]){
+  createListaAttivitaPerRicercaSession(listaAttRicerca:AttivitaRicerca[]){
     if(listaAttRicerca)
       this.listaAttivitaPerRicerca = listaAttRicerca;
   }
@@ -175,8 +176,8 @@ export class GetApiAttivitaService {
     return this.listaAttivitaPerRicerca;
   }
 
-  createAttivitaSession(idAtt: number, idSogg: number, nome: string, indirizzo: string, citta: string, provincia: string, civico: string, cap: string, latitudine: number, longitudine: number, telefono: string, cellulare: string, isCellPubblico: boolean, email: string, descrizione: string, descrizioneOfferta: string, isPromoPresente: boolean, isOffertaVegetariana: boolean, isOffertaVegana: boolean, isOffertaNoGlutine: boolean, listaTipoAttivita: TipoAttivita[], orari: Orari, immagini: Immagini[]){
-    this.sessioneAttivita = new AttivitaSession(idAtt, idSogg, nome, indirizzo, citta, provincia, civico, cap, latitudine, longitudine, telefono, cellulare, isCellPubblico, email, descrizione, descrizioneOfferta, isPromoPresente, isOffertaVegetariana, isOffertaVegana, isOffertaNoGlutine, listaTipoAttivita, orari, immagini);
+  createAttivitaSession(idAtt: number, idSogg: number, nome: string, indirizzo: string, citta: string, provincia: string, civico: string, cap: string, latitudine: number, longitudine: number, telefono: string, cellulare: string, isCellPubblico: boolean, email: string, descrizione: string, descrizioneOfferta: string, isPromoPresente: boolean, isOffertaVegetariana: boolean, isOffertaVegana: boolean, isOffertaNoGlutine: boolean, listaTipoAttivita: TipoAttivita[], orari: Orari, isVerificata:boolean, esitoVerifica:boolean, immagini: Immagini[], motivo: string){
+    this.sessioneAttivita = new AttivitaSession(idAtt, idSogg, nome, indirizzo, citta, provincia, civico, cap, latitudine, longitudine, telefono, cellulare, isCellPubblico, email, descrizione, descrizioneOfferta, isPromoPresente, isOffertaVegetariana, isOffertaVegana, isOffertaNoGlutine, listaTipoAttivita, orari, isVerificata, esitoVerifica, immagini, motivo);
   }
   GetListaTipoAttivitaSession(){
     return this.listaTipoAttivita;
@@ -257,5 +258,19 @@ export class GetApiAttivitaService {
     return this.listaAttivitaDDL$;
   }
 
+  apiDeleteAttivita(idAttivita: number, idSoggetto: number): Observable<any> {
+
+    const attivita = new DeleteAttivita();
+    if (idAttivita && idSoggetto) {
+        attivita.idAttivita = idAttivita ? idAttivita : 0;
+        attivita.idSoggetto = idSoggetto ? idSoggetto : 0;
+    }
+
+    const options = {
+      body: attivita
+  };
+
+    return this.http.delete<DeleteAttivita>(this.constants.BasePath() + '/Attivita/delete-attivita', options);
+  }
   
 }

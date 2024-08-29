@@ -22,6 +22,9 @@ export class Attivita {
   listaTipoAttivita:TipoAttivita[];
   orari:Orari;
   immagini:Immagini[];
+  isVerificata:boolean;
+  esitoVerifica:boolean;
+  motivo:string;
 
   constructor(
     idAttivita:number,
@@ -47,6 +50,9 @@ export class Attivita {
     listaTipoAttivita:TipoAttivita[],
     orari:Orari,
     immagini:Immagini[],
+    isVerificata:boolean,
+    esitoVerifica:boolean,
+    motivo:string
   ) 
   {
     this.idAttivita = idAttivita,
@@ -71,7 +77,10 @@ export class Attivita {
     this.isOffertaNoGlutine = isOffertaNoGlutine,
     this.listaTipoAttivita = listaTipoAttivita,
     this.orari = orari,
-    this.immagini = immagini
+    this.immagini = immagini,
+    this.isVerificata = isVerificata,
+    this.esitoVerifica = esitoVerifica,
+    this.motivo = motivo
   }
 
 }
@@ -89,6 +98,8 @@ export class AttivitaRicerca {
   isPromoPresente:boolean;
   listaTipoAttivita:TipoAttivita[];
   immagini:Immagini[];
+  isVerificata:boolean;
+  esitoVerifica:boolean;
   
   constructor( idAttivita:number,
     nome:string,
@@ -101,7 +112,12 @@ export class AttivitaRicerca {
     longitudine:number,
     isPromoPresente:boolean,
     listaTipoAttivita:TipoAttivita[],
-    immagini:Immagini[]) {
+    immagini:Immagini[],
+    isVerificata:boolean,
+    esitoVerifica:boolean
+  ) 
+    
+    {
       this.idAttivita = idAttivita;
       this.nome = nome;
       this.indirizzo = indirizzo;
@@ -114,6 +130,8 @@ export class AttivitaRicerca {
       this.isPromoPresente = isPromoPresente;
       this.listaTipoAttivita = listaTipoAttivita;
       this.immagini = immagini;
+      this.isVerificata = isVerificata;
+      this.esitoVerifica = esitoVerifica;
   }
 }
 
@@ -138,7 +156,9 @@ export class InsertAttivitaReqDto {
   isOffertaNoGlutine:boolean ;
   listaTipoAttivita:TipoAttivita[] = [];
   orari:Orari ;
-  immagini:Immagini[] ;
+  immagini:Immagini[];
+  isVerificata:boolean;
+  esitoVerifica:boolean;
 
   constructor(
     idAttivita:number ,
@@ -161,7 +181,9 @@ export class InsertAttivitaReqDto {
     isOffertaNoGlutine:boolean ,
     listaTipoAttivita:TipoAttivita[] = [],
     orari:Orari ,
-    immagini:Immagini[]) 
+    immagini:Immagini[],
+    isVerificata: boolean,
+    esitoVerifica: boolean) 
     {
       this.idAttivita = idAttivita,
       this.idSoggetto = idSoggetto,
@@ -183,7 +205,9 @@ export class InsertAttivitaReqDto {
       this.isOffertaNoGlutine = isOffertaNoGlutine,
       this.listaTipoAttivita =listaTipoAttivita,
       this.orari = orari,
-      this.immagini = immagini
+      this.immagini = immagini,
+      this.isVerificata = isVerificata,
+      this.esitoVerifica = esitoVerifica
   }
 }
 
@@ -287,6 +311,7 @@ export class Immagini{
   upload : string;
   isImmaginePrincipale : boolean;
   ordinamento : number;
+  isVerificata : boolean;
 
   constructor( 
     idImmagine : number ,
@@ -294,7 +319,8 @@ export class Immagini{
     nomeUpload : string,
     upload : string,
     isImmaginePrincipale : boolean,
-    ordinamento : number
+    ordinamento : number,
+    isVerificata : boolean
   ) {
     this.idImmagine =idImmagine;
     this.idAttivita = idAttivita;
@@ -302,6 +328,7 @@ export class Immagini{
     this.upload = upload;
     this.isImmaginePrincipale = isImmaginePrincipale;
     this.ordinamento = ordinamento;
+    this.isVerificata = isVerificata;
   }
 }
 
@@ -314,36 +341,92 @@ export class AttivitaHomePageResponse
       listAttivitaWithPromo : Attivita [] ) {
         this.listAttivitaWithPromo = listAttivitaWithPromo;
         this.listUltimeAttReg = listUltimeAttReg;
-      
     }
 }
 
 export class AttivitaSession {
+  idAttivita:number;
+  idSoggetto:number;
+  nome:string;
+  indirizzo:string;
+  citta:string;
+  provincia:string;
+  civico:string;
+  cap:string;
+  latitudine:number;
+  longitudine:number;
+  telefono:string;
+  cellulare:string;
+  isCellPubblico:boolean;
+  email:string;
+  descrizione:string;
+  descrizioneOfferta:string;
+  isPromoPresente:boolean;
+  isOffertaVegetariana:boolean;
+  isOffertaVegana:boolean;
+  isOffertaNoGlutine:boolean;
+  listaTipoAttivita:TipoAttivita[];
+  orari:Orari;
+  immagini:Immagini[]; 
+  isVerificata:boolean;
+  esitoVerifica:boolean;
+  motivo:string;
+  
   constructor(
-    public idAttivita:number ,
-    public idSoggetto:number ,
-    public nome:string,
-    public indirizzo:string ,
-    public citta:string ,
-    public provincia:string ,
-    public civico:string ,
-    public cap:string ,
-    public latitudine:number ,
-    public longitudine:number ,
-    public telefono:string ,
-    public cellulare:string ,
-    public isCellPubblico:boolean ,
-    public email:string ,
-    public descrizione:string ,
-    public descrizioneOfferta:string ,
-    public isPromoPresente:boolean ,
-    public isOffertaVegetariana:boolean ,
-    public isOffertaVegana:boolean ,
-    public isOffertaNoGlutine:boolean ,
-    public listaTipoAttivita:TipoAttivita[] ,
-    public orari:Orari ,
-    public immagini:Immagini[] 
-  ){}
+    idAttivita:number ,
+    idSoggetto:number ,
+    nome:string,
+    indirizzo:string ,
+    citta:string ,
+    provincia:string ,
+    civico:string ,
+    cap:string ,
+    latitudine:number ,
+    longitudine:number ,
+    telefono:string ,
+    cellulare:string ,
+    isCellPubblico:boolean ,
+    email:string ,
+    descrizione:string ,
+    descrizioneOfferta:string ,
+    isPromoPresente:boolean ,
+    isOffertaVegetariana:boolean ,
+    isOffertaVegana:boolean ,
+    isOffertaNoGlutine:boolean ,
+    listaTipoAttivita:TipoAttivita[] ,
+    orari:Orari ,
+    isVerificata:boolean ,
+    esitoVerifica:boolean ,
+    immagini:Immagini[], 
+    motivo:string,
+  ){
+    this.idAttivita = idAttivita;
+    this.idSoggetto = idSoggetto;
+    this.nome = nome;
+    this.indirizzo = indirizzo;
+    this.citta = citta;
+    this.provincia = provincia;
+    this.civico = civico;
+    this.cap = cap;
+    this.latitudine = latitudine;
+    this.longitudine = longitudine;
+    this.telefono = telefono;
+    this.cellulare = cellulare;
+    this.isCellPubblico = isCellPubblico;
+    this.email = email;
+    this.descrizione = descrizione;
+    this.descrizioneOfferta = descrizioneOfferta;
+    this.isPromoPresente = isPromoPresente;
+    this.isOffertaVegetariana = isOffertaVegetariana;
+    this.isOffertaVegana = isOffertaVegana;
+    this.isOffertaNoGlutine = isOffertaNoGlutine;
+    this.listaTipoAttivita = listaTipoAttivita;
+    this.orari = orari;
+    this.immagini = immagini;
+    this.isVerificata = isVerificata;
+    this.esitoVerifica = esitoVerifica;
+    this.motivo = motivo;
+  }
 }
 
 export class FiltriAttivita {
@@ -387,4 +470,9 @@ export class AttivitaFiltrate
       this.longitudine = longitudine,
       this.errore = errore
     }
+}
+
+export class DeleteAttivita {
+  idAttivita :number = 0;
+  idSoggetto :number = 0;
 }
