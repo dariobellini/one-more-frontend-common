@@ -1,4 +1,4 @@
-import { Attivita, TipoAttivita, InsertAttivitaReqDto, AttivitaHomePageResponse, AttivitaSession, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita } from './EntityInterface/Attivita';
+import { Attivita, TipoAttivita, InsertAttivitaReqDto, AttivitaHomePageResponse, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita } from './EntityInterface/Attivita';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
@@ -20,7 +20,6 @@ export class GetApiAttivitaService {
   attivitaFiltrateResult !: AttivitaFiltrate | null;
   filtroAttivita !: FiltriAttivita;
   private attivitaSubject = new BehaviorSubject<Attivita | null>(null);
-  sessioneAttivita !: AttivitaSession | null;
   private listaAttivitaDDLSubject = new BehaviorSubject<TipoAttivita[] | null>(null);
   listaAttivitaDDL$ = this.listaAttivitaDDLSubject.asObservable();
 
@@ -129,8 +128,17 @@ export class GetApiAttivitaService {
     return this.http.get<Orari>(this.constants.BasePath()+'/Attivita/get-orari-attivita/' + id);
   }
 
-  apiGetAttivitaByIdSoggetto(id: number): Observable<any> {
-    return this.http.get(this.constants.BasePath() + '/Attivita/get-attivita-by-id?idSoggetto=' + id);
+  apiGetAttivitaByIdSoggettoAndAtt(idSoggetto: number, idAttivita: number): Observable<any> {
+    return this.http.get(this.constants.BasePath() + '/Attivita/get-attivita-by-id', {
+        params: {
+            idSoggetto: idSoggetto.toString(),
+            idAttivita: idAttivita.toString()
+        }
+    });
+}
+
+  apiGetAttivitaByIdSoggetto(idSoggetto: number): Observable<any> {
+    return this.http.get(this.constants.BasePath() + '/Attivita/get-lista-attivita-by-id?idSoggetto=' + idSoggetto);
   }
 
   apiGetListaDecAttivita(): Observable<TipoAttivita[]>{
@@ -176,9 +184,6 @@ export class GetApiAttivitaService {
     return this.listaAttivitaPerRicerca;
   }
 
-  createAttivitaSession(idAtt: number, idSogg: number, nome: string, indirizzo: string, citta: string, provincia: string, civico: string, cap: string, latitudine: number, longitudine: number, telefono: string, cellulare: string, isCellPubblico: boolean, email: string, descrizione: string, descrizioneOfferta: string, isPromoPresente: boolean, isOffertaVegetariana: boolean, isOffertaVegana: boolean, isOffertaNoGlutine: boolean, listaTipoAttivita: TipoAttivita[], orari: Orari, isVerificata:boolean, esitoVerifica:boolean, immagini: Immagini[], motivo: string){
-    this.sessioneAttivita = new AttivitaSession(idAtt, idSogg, nome, indirizzo, citta, provincia, civico, cap, latitudine, longitudine, telefono, cellulare, isCellPubblico, email, descrizione, descrizioneOfferta, isPromoPresente, isOffertaVegetariana, isOffertaVegana, isOffertaNoGlutine, listaTipoAttivita, orari, isVerificata, esitoVerifica, immagini, motivo);
-  }
   GetListaTipoAttivitaSession(){
     return this.listaTipoAttivita;
   }
@@ -193,36 +198,6 @@ export class GetApiAttivitaService {
     return this.listaAttivitaNearHome;
   }
 
-  GetDatiAttivitaSession() {
-    if(this.sessioneAttivita)
-    {
-      this.attivita.idAttivita = this.sessioneAttivita.idAttivita;
-      this.attivita.idSoggetto = this.sessioneAttivita.idSoggetto;
-      this.attivita.nome = this.sessioneAttivita.nome;
-      this.attivita.indirizzo = this.sessioneAttivita.indirizzo;
-      this.attivita.citta = this.sessioneAttivita.citta;
-      this.attivita.provincia = this.sessioneAttivita.provincia;
-      this.attivita.civico = this.sessioneAttivita.civico;
-      this.attivita.cap = this.sessioneAttivita.cap;
-      this.attivita.latitudine = this.sessioneAttivita.latitudine;
-      this.attivita.longitudine = this.sessioneAttivita.longitudine;
-      this.attivita.telefono = this.sessioneAttivita.telefono;
-      this.attivita.cellulare = this.sessioneAttivita.cellulare;
-      this.attivita.isCellPubblico = this.sessioneAttivita.isCellPubblico;
-      this.attivita.email = this.sessioneAttivita.email;
-      this.attivita.descrizione = this.sessioneAttivita.descrizione;
-      this.attivita.descrizioneOfferta = this.sessioneAttivita.descrizioneOfferta;
-      this.attivita.isPromoPresente = this.sessioneAttivita.isPromoPresente;
-      this.attivita.isOffertaVegetariana = this.sessioneAttivita.isOffertaVegetariana;
-      this.attivita.isOffertaVegana = this.sessioneAttivita.isOffertaVegana;
-      this.attivita.isOffertaNoGlutine = this.sessioneAttivita.isOffertaNoGlutine;
-      this.attivita.listaTipoAttivita = this.sessioneAttivita.listaTipoAttivita;
-      this.attivita.orari = this.sessioneAttivita.orari;
-      this.attivita.immagini = this.sessioneAttivita.immagini;
-    }
-    return this.attivita;
-  }
-  
   deleteSession(){
     this.attivitaSubject.next(null);
   }
