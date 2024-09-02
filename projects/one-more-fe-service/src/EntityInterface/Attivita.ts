@@ -25,6 +25,7 @@ export class Attivita {
   isVerificata:boolean;
   esitoVerifica:boolean;
   motivo:string;
+  distanza: string;
 
   constructor(
     idAttivita:number,
@@ -52,7 +53,8 @@ export class Attivita {
     immagini:Immagini[],
     isVerificata:boolean,
     esitoVerifica:boolean,
-    motivo:string
+    motivo:string,
+    distanza:string
   ) 
   {
     this.idAttivita = idAttivita,
@@ -80,7 +82,8 @@ export class Attivita {
     this.immagini = immagini,
     this.isVerificata = isVerificata,
     this.esitoVerifica = esitoVerifica,
-    this.motivo = motivo
+    this.motivo = motivo,
+    this.distanza = distanza
   }
 
 }
