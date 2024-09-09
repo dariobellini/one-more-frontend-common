@@ -22,6 +22,7 @@ export class AuthService {
   userSession: UserSession | null;
   position !: GeolocationPosition;
   utente! : DeleteUtente;
+  isShowedSplash : boolean = false;
   /////////////////////// FIREBASE ///////////////////////  
 
   private currentUser$ = authState(this.firebaseAut).pipe(
@@ -184,10 +185,13 @@ export class AuthService {
     try{
       if (user) {
         const userDocRef = doc(this.firestore, `users/${user.uid}`);
-        await deleteDoc(userDocRef);
-        await signOut(this.firebaseAut);
-        await deleteUser(user);
-        this.deleteUserSessionFromCookie()
+        if(userDocRef)
+        {
+          await deleteDoc(userDocRef);
+          await signOut(this.firebaseAut);
+          await deleteUser(user);
+          this.deleteUserSessionFromCookie()
+        }
       } else {
         console.error('Errore: Nessun utente autenticato.');
       }
@@ -297,5 +301,13 @@ export class AuthService {
 
   apiCheckUtenteLogin(utente: Utente): Observable<any> {
     return this.http.post<Utente>(this.constants.BasePath()+'/Soggetto/check-utente', utente);
+  }
+
+  setIsShowedSplash(isVisible : boolean){
+    this.isShowedSplash = isVisible;
+  }
+
+  getIsShowedSplash(){
+    return this.isShowedSplash;
   }
 }
