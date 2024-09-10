@@ -11,6 +11,7 @@ import { Firestore, doc, getDoc, setDoc, deleteDoc } from '@angular/fire/firesto
 import { CookieService } from 'ngx-cookie-service'
 import { Constants } from '../Constants';
 import { inject } from '@angular/core';
+import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 
 @Injectable({
   providedIn: 'root'
@@ -23,6 +24,9 @@ export class AuthService {
   position !: GeolocationPosition;
   utente! : DeleteUtente;
   isShowedSplash : boolean = false;
+  isReautenticated : boolean = false;
+  idPage! : number;
+
   /////////////////////// FIREBASE ///////////////////////  
 
   private currentUser$ = authState(this.firebaseAut).pipe(
@@ -63,11 +67,9 @@ export class AuthService {
         };
         return user;
       } else {
-        console.log('Il documento utente non esiste');
         return undefined;
       }
     } catch (error) {
-      console.error('Errore durante il recupero del documento utente:', error);
       throw error;
     }
   }
@@ -180,26 +182,59 @@ export class AuthService {
     }
   }
 
+  async reauthenticateUser(userEmail: string, userPassword: string): Promise<boolean> {
+      const user = this.firebaseAut.currentUser;
+      this.isReautenticated = false;
+      if (user) {
+          const credential = EmailAuthProvider.credential(userEmail, userPassword);
+          try {
+              await reauthenticateWithCredential(user, credential);
+              this.isReautenticated = true;
+          } catch (error) {
+              console.error('Errore durante la ri-autenticazione:', error);
+              this.isReautenticated = false;
+          }
+      }
+      return this.isReautenticated;
+  }
+
   async deleteUserAccount(): Promise<void> {
     const user = this.firebaseAut.currentUser;
-    try{
-      if (user) {
-        const userDocRef = doc(this.firestore, `users/${user.uid}`);
-        if(userDocRef)
-        {
-          await deleteDoc(userDocRef);
-          await signOut(this.firebaseAut);
-          await deleteUser(user);
-          this.deleteUserSessionFromCookie()
+    let userDocData: any; // Variabile per tenere i dati del documento utente
+    try {
+        if (user) {
+            const userDocRef = doc(this.firestore, `users/${user.uid}`);
+            
+            // Controlla se il documento esiste e ottieni i dati per un possibile ripristino
+            const userDocSnap = await getDoc(userDocRef);
+            if (userDocSnap.exists()) {
+                userDocData = userDocSnap.data(); // Salva i dati in caso di rollback
+            } else {
+                throw new Error('Documento utente non trovato.');
+            }
+
+            // Elimina il documento
+            await deleteDoc(userDocRef);
+
+            // Prova a fare il signOut e a eliminare l'utente
+            await signOut(this.firebaseAut);
+            await deleteUser(user);
+
+            // Elimina la sessione se tutto è andato a buon fine
+            this.deleteUserSessionFromCookie();
+        } else {
+            throw new Error('Errore: Nessun utente autenticato.');
         }
-      } else {
-        console.error('Errore: Nessun utente autenticato.');
-      }
+    } catch (error) {
+
+        // Rollback: ripristina il documento se il deleteUser fallisce
+        if (user && userDocData) {
+            const userDocRef = doc(this.firestore, `users/${user.uid}`);
+            await setDoc(userDocRef, userDocData);
+        }
+        throw error; // Rilancia l'errore per gestirlo nel metodo chiamante
     }
-    catch (error) {
-      console.error('Errore:', error);
-    }
-  }
+}
 
     /////////////////////////////////////////////////////////  
 
@@ -309,5 +344,13 @@ export class AuthService {
 
   getIsShowedSplash(){
     return this.isShowedSplash;
+  }
+
+  setLastIdPageInSession(idPage: number){
+    this.idPage = idPage;
+  }
+
+  getLastIdPageFromSession(){
+    return this.idPage;
   }
 }
