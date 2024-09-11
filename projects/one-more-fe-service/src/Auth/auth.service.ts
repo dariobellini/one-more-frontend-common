@@ -273,6 +273,7 @@ export class AuthService {
 
   createUserSession(email: string, uid : string, token : string, idAttivita : number, idUser: number, photoURL:string, typeLog: number, displayName: string, nome:string, cognome:string){
     this.userSession = new UserSession(uid, email, idAttivita, idUser, token, photoURL, typeLog, displayName, nome, cognome);
+    console.log(this.userSession);
     this.saveUserSessionToCookie(this.userSession);
     this.isLoggedInSubject.next(true);
   }
