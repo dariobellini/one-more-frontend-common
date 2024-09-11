@@ -3,7 +3,7 @@ import { HttpClient} from '@angular/common/http';
 import { Observable, BehaviorSubject, firstValueFrom, Observer} from 'rxjs';
 import { filter} from 'rxjs/operators';
 import { DeleteUtente, ProfileUser, UserSession, Utente } from '../EntityInterface/Utente';
-import { GoogleAuthProvider, User, UserCredential, createUserWithEmailAndPassword, deleteUser, getAdditionalUserInfo, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
+import { GoogleAuthProvider, User, UserCredential, createUserWithEmailAndPassword, deleteUser, getAdditionalUserInfo, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
 import { FacebookAuthProvider} from 'firebase/auth'
 import 'firebase/compat/auth';
 import { Auth, authState } from '@angular/fire/auth';
@@ -26,6 +26,7 @@ export class AuthService {
   isShowedSplash : boolean = false;
   isReautenticated : boolean = false;
   idPage! : number;
+  esito!: string;
 
   /////////////////////// FIREBASE ///////////////////////  
 
@@ -234,7 +235,25 @@ export class AuthService {
         }
         throw error; // Rilancia l'errore per gestirlo nel metodo chiamante
     }
-}
+  }
+
+  async resendVerificationEmail(): Promise<string> {
+    try {
+      const user = await this.getCurrentUserFromAuth();
+      console.log(user);
+      if (user && !user.emailVerified) {
+        await sendEmailVerification(user);
+        this.esito = "Email di verifica inviata";
+        // Mostra un messaggio di conferma all'utente, ad esempio con un alert
+      } else {
+        this.esito = "L'utente è già verificato o non è autenticato.";
+      }
+    } catch (error) {
+      this.esito = "Errore durante il reinvio dell'email di verifica si prega di riprovare tra qualche istante";
+      console.log(error);
+    }
+    return this.esito;
+  }
 
     /////////////////////////////////////////////////////////  
 
