@@ -31,15 +31,19 @@ export class GetApiPromoService {
     return this.http.get<Promo[]>(this.constants.BasePath()+'/Promo/get-promo-attive-by-idattivita-user?idAttivita=' + id + '&idSoggetto=' + idSoggetto);
   }
 
-  apiDeletePromoByIdPromo(id: number): Observable<number> {
+  apiDeletePromoByIdPromo(idPromo: number, idAttivita: number): Observable<number> {
     const httpOptions = {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json'
-      })
+        headers: new HttpHeaders({
+            'Content-Type': 'application/json'
+        })
     };
-    
-    return this.http.post<number>(this.constants.BasePath()+'/Promo/delete-promo-by-idpromo', JSON.stringify(id), httpOptions);
-  }
+
+    return this.http.post<number>(
+        this.constants.BasePath() + '/Promo/delete-promo-by-idpromo?idAttivita=' + idAttivita + '&idPromo=' + idPromo,
+        null, // Corpo della richiesta vuoto poiché stiamo passando i parametri nella query string
+        httpOptions
+    );
+}
 
   apiInsertPromo(promo: InsertPromoReqDto): Observable<any> {
     return this.http.post<InsertPromoReqDto>(this.constants.BasePath()+`/Promo/insert-promo`, promo);
