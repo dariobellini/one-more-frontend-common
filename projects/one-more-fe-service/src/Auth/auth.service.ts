@@ -240,7 +240,6 @@ export class AuthService {
   async resendVerificationEmail(): Promise<string> {
     try {
       const user = await this.getCurrentUserFromAuth();
-      console.log(user);
       if (user && !user.emailVerified) {
         await sendEmailVerification(user);
         this.esito = "Email di verifica inviata";
@@ -250,7 +249,6 @@ export class AuthService {
       }
     } catch (error) {
       this.esito = "Errore durante il reinvio dell'email di verifica si prega di riprovare tra qualche istante";
-      console.log(error);
     }
     return this.esito;
   }
@@ -292,7 +290,6 @@ export class AuthService {
 
   createUserSession(email: string, uid : string, token : string, idAttivita : number, idUser: number, photoURL:string, typeLog: number, displayName: string, nome:string, cognome:string){
     this.userSession = new UserSession(uid, email, idAttivita, idUser, token, photoURL, typeLog, displayName, nome, cognome);
-    console.log(this.userSession);
     this.saveUserSessionToCookie(this.userSession);
     this.isLoggedInSubject.next(true);
   }

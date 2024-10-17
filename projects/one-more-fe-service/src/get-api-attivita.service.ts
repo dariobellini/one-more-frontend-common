@@ -13,7 +13,8 @@ export class GetApiAttivitaService {
   listaTipoAttivita : TipoAttivita [] | undefined;
   listaAttivitaNearHome : Attivita[] | undefined;
   listaAttivitaPromoHome : Attivita[] | undefined;
-
+  isListaAttModalOpen : boolean = false;
+  filter: FiltriAttivita | undefined;
   insertAttivita !: InsertAttivitaReqDto;
   attivita !: Attivita;
   attivitaFiltrate !: AttivitaFiltrate;
@@ -47,8 +48,6 @@ export class GetApiAttivitaService {
     let params = new HttpParams();
     
     // Aggiungi i parametri alla query solo se sono definiti
-    if(filtro.tipoRicerca)
-      params = params.set('tipoRicerca', filtro.tipoRicerca.toString());
     if (filtro.nome) 
       params = params.set('nome', filtro.nome);
     if (filtro.citta) 
@@ -112,6 +111,10 @@ export class GetApiAttivitaService {
           params = params.append('codTipoPromo', promo.toString());
       });
     }
+
+    params = params.set('isMovingMap', filtro.isMovingMap ? filtro.isMovingMap : false);
+      
+    params = params.set('range', filtro.range ? filtro.range : 10);
 
     return this.http.get<AttivitaFiltrate>(this.constants.BasePath()+'/Attivita/get-attivita-filtrata', { params });
   }
@@ -204,6 +207,25 @@ export class GetApiAttivitaService {
 
   setListaAttivitaFiltrate(data: AttivitaFiltrate) {
     this.attivitaFiltrateResult = data;
+  }
+
+  setIsListaAttModalOpen(isOpen: boolean){
+    this.isListaAttModalOpen = isOpen;
+  }
+
+  setFilter(filtro: FiltriAttivita | undefined){
+    if(filtro)
+      this.filter = filtro;
+    else
+      this.filter = undefined;
+  }
+
+  getFilter(){
+    return this.filter;
+  }
+
+  getIsListaModalOpen(){
+    return this.isListaAttModalOpen;
   }
 
   resetListaAttivitaFiltrate() {

@@ -26,6 +26,8 @@ export class Attivita {
   esitoVerifica:boolean;
   motivo:string;
   distanza: string;
+  affidabilita:number;
+  hasCoupon:boolean;
 
   constructor(
     idAttivita:number,
@@ -54,7 +56,9 @@ export class Attivita {
     isVerificata:boolean,
     esitoVerifica:boolean,
     motivo:string,
-    distanza:string
+    distanza:string,
+    affidabilita:number,
+    hasCoupon:boolean
   ) 
   {
     this.idAttivita = idAttivita,
@@ -83,7 +87,9 @@ export class Attivita {
     this.isVerificata = isVerificata,
     this.esitoVerifica = esitoVerifica,
     this.motivo = motivo,
-    this.distanza = distanza
+    this.distanza = distanza,
+    this.affidabilita = affidabilita,
+    this.hasCoupon = hasCoupon
   }
 
 }
@@ -348,7 +354,6 @@ export class AttivitaHomePageResponse
 }
 
 export class FiltriAttivita {
-  tipoRicerca: number |undefined ;
   latitudine: number |undefined;
   longitudine: number |undefined;
   isPromoPresente: boolean |undefined;
@@ -369,7 +374,8 @@ export class FiltriAttivita {
   orarioValiditaAl: string |undefined;
   codTipoAttivita: string |undefined;
   codTipoPromo: number[] |undefined;
-
+  isMovingMap: boolean | undefined;
+  range: number = 0;
 }
 
 export class AttivitaFiltrate
@@ -379,15 +385,17 @@ export class AttivitaFiltrate
     longitudine:number ;
     errore :string ;
 
-    constructor(  listaAttivita: Attivita [] ,
+    constructor(  
+      listaAttivita: Attivita [] ,
       latitudine:number ,
       longitudine:number ,
-      errore:string) {
+      errore:string) 
+      {
       this.listaAttivita = listaAttivita,
       this.latitudine = latitudine
       this.longitudine = longitudine,
       this.errore = errore
-    }
+      }
 }
 
 export class DeleteAttivita {
