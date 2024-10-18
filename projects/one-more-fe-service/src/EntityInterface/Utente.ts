@@ -10,6 +10,7 @@ export class Utente {
   registrationDate:string | undefined | null;
   lastLoginDate:string | undefined| null;
   errore:string = '';
+  fcmToken:string | undefined;
 }
 
 export class DeleteUtente {
