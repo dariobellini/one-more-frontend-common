@@ -345,11 +345,17 @@ export class AttivitaHomePageResponse
 {
     listUltimeAttReg : Attivita [] ;
     listAttivitaWithPromo : Attivita [] ;
+    listNearbyAttivita : Attivita [];
+    listCitta : string [];
 
     constructor( listUltimeAttReg : Attivita [],
-      listAttivitaWithPromo : Attivita [] ) {
+      listAttivitaWithPromo : Attivita [],
+      listNearbyAttivita : Attivita [],
+      listCitta : string [] ) {
         this.listAttivitaWithPromo = listAttivitaWithPromo;
         this.listUltimeAttReg = listUltimeAttReg;
+        this.listNearbyAttivita = listNearbyAttivita;
+        this.listCitta = listCitta
     }
 }
 

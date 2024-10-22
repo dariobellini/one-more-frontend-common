@@ -11,8 +11,10 @@ export class GetApiAttivitaService {
  
   listaAttivitaPerRicerca!: AttivitaRicerca[];
   listaTipoAttivita : TipoAttivita [] | undefined;
-  listaAttivitaNearHome : Attivita[] | undefined;
+  listaAttivitaNewHome : Attivita[] | undefined;
   listaAttivitaPromoHome : Attivita[] | undefined;
+  listaAttivitaVicine : Attivita[] | undefined;
+  listaCitta : string[] | undefined;
   isListaAttModalOpen : boolean = false;
   filter: FiltriAttivita | undefined;
   insertAttivita !: InsertAttivitaReqDto;
@@ -30,8 +32,16 @@ export class GetApiAttivitaService {
     return this.http.get<Attivita[]>(this.constants.BasePath()+'/Attivita/get-attivita');
   }
 
-  apiGetListaAttivitaHomePage(): Observable<AttivitaHomePageResponse>{
-    return this.http.get<AttivitaHomePageResponse>(this.constants.BasePath()+'/Attivita/get-attivita-home-page');
+  apiGetListaAttivitaHomePage(latitudine: number, longitudine: number): Observable<AttivitaHomePageResponse> {
+    const params = {
+      latitudine: latitudine.toString(),
+      longitudine: longitudine.toString()
+    };
+  
+    return this.http.get<AttivitaHomePageResponse>(
+      this.constants.BasePath() + '/Attivita/get-attivita-home-page', 
+      { params: params }
+    );
   }
 
   GetFavorites(idSoggetto:number): Observable<Attivita[]>{
@@ -170,8 +180,8 @@ export class GetApiAttivitaService {
     return this.http.get(this.constants.BasePath()+'/Attivita/get-attivita?idAttivita='+id);
   }
 
-  createListAttivitaNearHomeSession(list:Attivita []){
-    this.listaAttivitaNearHome = list;
+  createListAttivitaNewHomeSession(list:Attivita []){
+    this.listaAttivitaNewHome = list;
   }
   
   createListaAttivitaPerRicercaSession(listaAttRicerca:AttivitaRicerca[]){
@@ -193,12 +203,21 @@ export class GetApiAttivitaService {
   createListAttivitaPromoHomeSession(list:Attivita []){
     this.listaAttivitaPromoHome = list;
   }
+  createListAttivitaVicineSession(list:Attivita []){
+    this.listaAttivitaPromoHome = list;
+  }
+  createListCittaIconSession(list:string []){
+    this.listaCitta = list;
+  }
 
   getListAttivitaPromoHomeSession(){
     return this.listaAttivitaPromoHome;
   }
-  getListAttivitaNearHomeSession(){
-    return this.listaAttivitaNearHome;
+  getListAttivitaNewSession(){
+    return this.listaAttivitaNewHome;
+  }
+  getListAttivitaVicineHomeSession(){
+    return this.listaAttivitaVicine;
   }
 
   deleteSession(){
