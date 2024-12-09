@@ -37,7 +37,6 @@ export class GetApiAttivitaService {
       latitudine: latitudine.toString(),
       longitudine: longitudine.toString()
     };
-  
     return this.http.get<AttivitaHomePageResponse>(
       this.constants.BasePath() + '/Attivita/get-attivita-home-page', 
       { params: params }
@@ -124,7 +123,9 @@ export class GetApiAttivitaService {
 
     params = params.set('isMovingMap', filtro.isMovingMap ? filtro.isMovingMap : false);
       
-    params = params.set('range', filtro.range ? filtro.range : 10);
+    params = params.set('isHomePage', filtro.isHomePage ? filtro.isHomePage : false);
+
+    params = params.set('typeFilterHomePage', filtro.typeFilterHomePage ? filtro.typeFilterHomePage : 0);
 
     return this.http.get<AttivitaFiltrate>(this.constants.BasePath()+'/Attivita/get-attivita-filtrata', { params });
   }
