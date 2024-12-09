@@ -26,8 +26,4 @@ export class CouponService {
   UpdateCoupon(coupon : StatusCoupon): Observable<any>{
     return this.http.put<StatusCoupon>(this.constants.BasePath()+'/Coupon/Update',coupon );
   }
-
-  UndoCoupon(undoCoupon : StatusCouponUser){
-    return this.http.put<StatusCouponUser>(this.constants.BasePath()+'/Coupon/Update',undoCoupon );
-  }
 }
