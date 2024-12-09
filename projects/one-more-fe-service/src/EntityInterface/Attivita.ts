@@ -382,6 +382,8 @@ export class FiltriAttivita {
   codTipoPromo: number[] |undefined;
   isMovingMap: boolean | undefined;
   range: number = 0;
+  isHomePage: boolean | undefined;
+  typeFilterHomePage: number | undefined;
 }
 
 export class AttivitaFiltrate

@@ -9,6 +9,7 @@ export class CouponListDto {
     titoloPromo: string ;
     displayName:string ;
     descPromo:string ;
+    dataAcquisizione: Date ;
     dataDal: Date ;
     dataAl:Date ;
     nome:string = '';
@@ -37,6 +38,7 @@ export class CouponListDto {
     titoloPromo: string ,
     displayName:string ,
     descPromo:string ,
+    dataAcquisizione: Date ,
     dataDal: Date ,
     dataAl:Date ,
     nome:string = '',
@@ -63,6 +65,7 @@ export class CouponListDto {
       this.titoloPromo = titoloPromo;
       this.displayName = displayName;
       this.descPromo = descPromo;
+      this.dataAcquisizione = dataAcquisizione;
       this.dataDal = dataDal;
       this.dataAl = dataAl;
       this.nome = nome;
