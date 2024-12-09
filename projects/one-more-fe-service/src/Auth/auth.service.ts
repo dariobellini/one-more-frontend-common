@@ -28,6 +28,11 @@ export class AuthService {
   idPage! : number;
   esito!: string;
 
+
+
+
+
+
   /////////////////////// FIREBASE ///////////////////////  
 
   private currentUser$ = authState(this.firebaseAut).pipe(
@@ -87,6 +92,8 @@ export class AuthService {
   async login(email: string, password: string): Promise<{ userCredential: UserCredential, token: string }> {
     const userCredential = await signInWithEmailAndPassword(this.firebaseAut, email, password);
     const token = await userCredential.user.getIdToken();
+    const apiJwt = await this.GetUserJwt(userCredential.user.uid).toPromise();
+    localStorage.setItem(this.constants.UserApiJwt(), apiJwt ?? '');
     return { userCredential, token };
   }
 
@@ -129,12 +136,17 @@ export class AuthService {
 
     const token = await userCredential.user.getIdToken();
 
+
+
     const newProfile = {
       uid,
       email: email ?? '',
       displayName: displayName ?? '',
       token: token ?? ''
     }
+
+    const apiJwt = await this.GetUserJwt(userCredential.user.uid).toPromise();
+    localStorage.setItem(this.constants.UserApiJwt(), apiJwt ?? '');
 
     return Promise.resolve(newProfile);
   }
@@ -158,6 +170,9 @@ export class AuthService {
         token: token ?? ''
       }
       
+    const apiJwt = await this.GetUserJwt(userCredential.user.uid).toPromise();
+    localStorage.setItem(this.constants.UserApiJwt(), apiJwt ?? '');
+
     return Promise.resolve(newProfile);
   }
 
@@ -318,6 +333,10 @@ export class AuthService {
   
   apiInsertNewUtente(utente: Utente): Observable<any> {
     return this.http.post<Utente>(this.constants.BasePath()+'/Soggetto/insert-utente', utente);
+  }
+
+  GetUserJwt(uId : string): Observable<string> {
+    return this.http.get<string>(this.constants.BasePath()+'/auth/get-jwt?uId='+uId);
   }
 
   apiDeleteUtente(user: UserSession | null, reason: string | null): Observable<any> {
