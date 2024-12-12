@@ -28,11 +28,6 @@ export class AuthService {
   idPage! : number;
   esito!: string;
 
-
-
-
-
-
   /////////////////////// FIREBASE ///////////////////////  
 
   private currentUser$ = authState(this.firebaseAut).pipe(

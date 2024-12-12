@@ -1,6 +1,6 @@
 import { Attivita, TipoAttivita, InsertAttivitaReqDto, AttivitaHomePageResponse, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita } from './EntityInterface/Attivita';
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Constants } from './Constants';
 
@@ -25,29 +25,29 @@ export class GetApiAttivitaService {
   private attivitaSubject = new BehaviorSubject<Attivita | null>(null);
   private listaAttivitaDDLSubject = new BehaviorSubject<TipoAttivita[] | null>(null);
   listaAttivitaDDL$ = this.listaAttivitaDDLSubject.asObservable();
-
+  
   constructor(private http:HttpClient, private constants:Constants) { }
 
-  apiGetListaAttivita(): Observable<Attivita[]>{
-    return this.http.get<Attivita[]>(this.constants.BasePath()+'/Attivita/get-attivita');
+  async apiGetListaAttivita(): Promise<Observable<Attivita[]>> {
+    return this.http.get<Attivita[]>(this.constants.BasePath() + '/Attivita/get-attivita');
   }
 
-  apiGetListaAttivitaHomePage(latitudine: number, longitudine: number): Observable<AttivitaHomePageResponse> {
+  async apiGetListaAttivitaHomePage(latitudine: number, longitudine: number): Promise<Observable<AttivitaHomePageResponse>> {
     const params = {
       latitudine: latitudine.toString(),
-      longitudine: longitudine.toString()
+      longitudine: longitudine.toString(),
     };
+  
     return this.http.get<AttivitaHomePageResponse>(
-      this.constants.BasePath() + '/Attivita/get-attivita-home-page', 
-      { params: params }
+      this.constants.BasePath() + '/Attivita/get-attivita-home-page',
+      { params }
     );
   }
 
-  GetFavorites(idSoggetto:number): Observable<Attivita[]>{
+  async GetFavorites(idSoggetto:number): Promise<Observable<Attivita[]>>{
     return this.http.get<Attivita[]>(this.constants.BasePath()+'/Attivita/get-favorites?idSoggetto='+idSoggetto);
   }
 
-  
   createListaTipoAttivitaSession(listaTipoAtt:TipoAttivita[]){
     if(listaTipoAtt)
       this.listaTipoAttivita = listaTipoAtt;
@@ -149,14 +149,14 @@ export class GetApiAttivitaService {
             idAttivita: idAttivita.toString()
         }
     });
-}
+  }
 
   apiGetAttivitaByIdSoggetto(idSoggetto: number): Observable<any> {
     return this.http.get(this.constants.BasePath() + '/Attivita/get-lista-attivita-by-id?idSoggetto=' + idSoggetto);
   }
 
-  apiGetListaDecAttivita(): Observable<TipoAttivita[]>{
-    return this.http.get<TipoAttivita[]>(this.constants.BasePath()+'/Attivita/get-lista-tipoAttivita');
+  async apiGetListaDecAttivita(): Promise<Observable<TipoAttivita[]>>{
+    return this.http.get<TipoAttivita[]>(this.constants.BasePath()+'/Attivita/get-lista-tipoAttivita',);
   }
 
   apiGetAttivitaFavorite(id:number): Observable<AttivitaRicerca[]>{
