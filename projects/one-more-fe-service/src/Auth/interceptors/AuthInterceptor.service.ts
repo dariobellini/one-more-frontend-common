@@ -14,7 +14,7 @@ export class AuthInterceptor implements HttpInterceptor {
        
       // Ottieni il token JWT dal servizio Auth (ad esempio, dal localStorage)
       const token = localStorage.getItem(this.constants.UserApiJwt());;
-
+ 
       if (token) {
         // Se il token esiste, aggiungi l'header Authorization alla richiesta
         const cloned = req.clone({

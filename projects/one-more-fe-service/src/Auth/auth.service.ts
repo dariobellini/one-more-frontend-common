@@ -131,8 +131,6 @@ export class AuthService {
 
     const token = await userCredential.user.getIdToken();
 
-
-
     const newProfile = {
       uid,
       email: email ?? '',
@@ -330,9 +328,11 @@ export class AuthService {
     return this.http.post<Utente>(this.constants.BasePath()+'/Soggetto/insert-utente', utente);
   }
 
-  GetUserJwt(uId : string): Observable<string> {
-    return this.http.get<string>(this.constants.BasePath()+'/auth/get-jwt?uId='+uId);
-  }
+  GetUserJwt(uId: string): Observable<string> {
+    return this.http.get(this.constants.BasePath() + '/auth/get-jwt?uId=' + uId, {
+      responseType: 'text' // Specifica che la risposta è una stringa
+    });
+  }  
 
   apiDeleteUtente(user: UserSession | null, reason: string | null): Observable<any> {
     const utente = new DeleteUtente();
