@@ -190,8 +190,8 @@ export class GetApiAttivitaService {
       this.listaAttivitaPerRicerca = listaAttRicerca;
   }
   
-  apiGetListaAttivitaPerRicerca(): Observable<AttivitaRicerca[]>{
-    return this.http.get<AttivitaRicerca[]>(this.constants.BasePath()+'/Attivita/get-lista-attivita');
+  apiGetListaAttivitaPreSearch(): Observable<AttivitaRicerca[]>{
+    return this.http.get<AttivitaRicerca[]>(this.constants.BasePath()+'/Attivita/get-lista-attivita-pre-search');
   }
   
   GetListaAttivitaPerRicercaSession(){
