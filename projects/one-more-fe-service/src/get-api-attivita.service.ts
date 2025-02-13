@@ -43,6 +43,42 @@ export class GetApiAttivitaService {
       { params }
     );
   }
+  async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Promise<Observable<Attivita[]>> {
+    const params = {
+      latitudine: latitudine.toString(),
+      longitudine: longitudine.toString(),
+    };
+  
+    return this.http.get<Attivita[]>(
+      this.constants.BasePath() + '/Attivita/get-top-activities-just-signed',
+      { params }
+    );
+  }
+
+  async apiGetListaAttivitaNear(latitudine: number, longitudine: number): Promise<Observable<Attivita[]>> {
+    const params = {
+      latitudine: latitudine.toString(),
+      longitudine: longitudine.toString(),
+    };
+  
+    return this.http.get<Attivita[]>(
+      this.constants.BasePath() + '/Attivita/get-top-activities-near',
+      { params }
+    );
+  }
+
+  async apiGetListaAttivitaWhitPromo(latitudine: number, longitudine: number): Promise<Observable<Attivita[]>> {
+    const params = {
+      latitudine: latitudine.toString(),
+      longitudine: longitudine.toString(),
+    };
+  
+    return this.http.get<Attivita[]>(
+      this.constants.BasePath() + '/Attivita/get-top-activities-whit-promo',
+      { params }
+    );
+  }
+
 
   async GetFavorites(idSoggetto:number): Promise<Observable<Attivita[]>>{
     return this.http.get<Attivita[]>(this.constants.BasePath()+'/Attivita/get-favorites?idSoggetto='+idSoggetto);

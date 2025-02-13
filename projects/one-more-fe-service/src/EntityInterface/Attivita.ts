@@ -319,7 +319,6 @@ export class Immagini{
   nomeUpload : string;
   upload : string;
   isImmaginePrincipale : boolean;
-  isImmaginePrincipaleTemp : boolean;
   ordinamento : number;
   isVerificata : boolean;
 
@@ -329,7 +328,6 @@ export class Immagini{
     nomeUpload : string,
     upload : string,
     isImmaginePrincipale : boolean,
-    isImmaginePrincipaleTemp : boolean,
     ordinamento : number,
     isVerificata : boolean
   ) {
@@ -338,7 +336,6 @@ export class Immagini{
     this.nomeUpload = nomeUpload;
     this.upload = upload;
     this.isImmaginePrincipale = isImmaginePrincipale;
-    this.isImmaginePrincipaleTemp = isImmaginePrincipaleTemp;
     this.ordinamento = ordinamento;
     this.isVerificata = isVerificata;
   }
@@ -347,7 +344,6 @@ export class Immagini{
 export class AttivitaHomePageResponse
 {
     listUltimeAttReg : Attivita [] ;
-    listAttivitaWithPromo : Attivita [] ;
     listNearbyAttivita : Attivita [];
     listCitta : string [];
 
@@ -355,7 +351,6 @@ export class AttivitaHomePageResponse
       listAttivitaWithPromo : Attivita [],
       listNearbyAttivita : Attivita [],
       listCitta : string [] ) {
-        this.listAttivitaWithPromo = listAttivitaWithPromo;
         this.listUltimeAttReg = listUltimeAttReg;
         this.listNearbyAttivita = listNearbyAttivita;
         this.listCitta = listCitta
