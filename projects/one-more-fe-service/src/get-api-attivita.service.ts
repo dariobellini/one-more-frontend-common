@@ -28,9 +28,7 @@ export class GetApiAttivitaService {
   
   constructor(private http:HttpClient, private constants:Constants) { }
 
-  async apiGetListaAttivita(): Promise<Observable<Attivita[]>> {
-    return this.http.get<Attivita[]>(this.constants.BasePath() + '/Attivita/get-attivita');
-  }
+
 
   async apiGetListaAttivitaHomePage(latitudine: number, longitudine: number): Promise<Observable<AttivitaHomePageResponse>> {
     const params = {
