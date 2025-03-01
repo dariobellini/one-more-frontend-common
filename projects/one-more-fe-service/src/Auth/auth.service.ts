@@ -8,7 +8,6 @@ import { FacebookAuthProvider} from 'firebase/auth'
 import 'firebase/compat/auth';
 import { Auth, authState } from '@angular/fire/auth';
 import { Firestore, doc, getDoc, setDoc, deleteDoc } from '@angular/fire/firestore';
-import { CookieService } from 'ngx-cookie-service'
 import { Constants } from '../Constants';
 import { inject } from '@angular/core';
 import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
@@ -35,13 +34,12 @@ export class AuthService {
   )
   authService: any;
   
-  constructor(private cookieService:CookieService, 
-              private http:HttpClient, 
+  constructor(private http:HttpClient, 
               private firebaseAut: Auth, 
               private firestore: Firestore,
               private constants: Constants) { 
 
-    this.userSession = this.getUserSessionFromCookie();
+    this.userSession = this.getUserSession();
     if(this.userSession){
       this.isLoggedInSubject.next(true);
     }
@@ -80,7 +78,7 @@ export class AuthService {
   }
 
   async logOut(): Promise<void>{
-    this.deleteUserSessionFromCookie();
+    this.deleteUserSession();
     return signOut(this.firebaseAut);
   }
 
@@ -177,7 +175,7 @@ export class AuthService {
         const refreshedToken = await currentUser.getIdToken(true);
         if (refreshedToken) {
           userSession.token = refreshedToken;
-          this.saveUserSessionToCookie(userSession);
+          this.saveUserSession(userSession);
           return true;  
         } else {
           return false;
@@ -230,7 +228,7 @@ export class AuthService {
             await deleteUser(user);
 
             // Elimina la sessione se tutto è andato a buon fine
-            this.deleteUserSessionFromCookie();
+            this.deleteUserSession();
         } else {
             throw new Error('Errore: Nessun utente autenticato.');
         }
@@ -263,33 +261,20 @@ export class AuthService {
 
     /////////////////////////////////////////////////////////  
 
-    //////////////////////COOKIE////////////////////////////
-
-    saveUserSessionToCookie(userSession: UserSession) {
-      // Salva i dati della sessione dell'utente nei cookie come un unico oggetto JSON
-      this.cookieService.set('userSession', JSON.stringify(userSession));
-    }
-    
-    getUserSessionFromCookie(): UserSession | null { 
-      // Verifica se il cookie della sessione dell'utente esiste
-      if (this.cookieService.check('userSession')) {
-        // Recupera i dati della sessione dell'utente dai cookie
-        const userSessionString = this.cookieService.get('userSession');
-        // Deserializza l'oggetto JSON in un oggetto UserSession
-        const userSession: UserSession = JSON.parse(userSessionString);
-        return userSession;
-      } else {
-        // Se il cookie non esiste, restituisci null
-        return null;
-      }
-    }
-    
-    deleteUserSessionFromCookie() {
-      // Rimuovi il cookie della sessione dell'utente
-      this.cookieService.delete('userSession');
+    saveUserSession(userSession: UserSession) {
+      localStorage.setItem('userSession', JSON.stringify(userSession));
     }
 
-    ////////////////////////////////////////////////////////////
+    getUserSession(): UserSession | null {
+      const userSessionString = localStorage.getItem('userSession');
+      return userSessionString ? JSON.parse(userSessionString) : null;
+    }
+
+    deleteUserSession() {
+      this.userSession = null;
+      localStorage.removeItem('userSession');
+      this.isLoggedInSubject.next(false);
+    }
 
 
   isAuthenticated() {
@@ -298,7 +283,7 @@ export class AuthService {
 
   createUserSession(email: string, uid : string, token : string, idAttivita : number, idUser: number, photoURL:string, typeLog: number, displayName: string, nome:string, cognome:string){
     this.userSession = new UserSession(uid, email, idAttivita, idUser, token, photoURL, typeLog, displayName, nome, cognome);
-    this.saveUserSessionToCookie(this.userSession);
+    this.saveUserSession(this.userSession);
     this.isLoggedInSubject.next(true);
   }
 
@@ -306,7 +291,7 @@ export class AuthService {
     if (this.userSession != null && this.userSession != undefined) {
       this.userSession.idAttivita = id;
       try {
-        this.saveUserSessionToCookie(this.userSession);
+        this.saveUserSession(this.userSession);
         this.isLoggedInSubject.next(true);
       } catch (error) {
         console.error('Errore durante il salvataggio della sessione:', error);
@@ -314,14 +299,8 @@ export class AuthService {
     }
   }
 
-  deleteUserSession(){
-    this.userSession = null;
-    this.deleteUserSessionFromCookie();
-    this.isLoggedInSubject.next(false);
-  }
-
   getUser(){
-      return this.userSession = this.getUserSessionFromCookie();
+      return this.userSession = this.getUserSession();
   }
   
   apiInsertNewUtente(utente: Utente): Observable<any> {

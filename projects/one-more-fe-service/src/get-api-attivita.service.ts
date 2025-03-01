@@ -41,7 +41,8 @@ export class GetApiAttivitaService {
       { params }
     );
   }
-  async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Promise<Observable<Attivita[]>> {
+  
+async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Promise<Observable<Attivita[]>> {
     const params = {
       latitudine: latitudine.toString(),
       longitudine: longitudine.toString(),
