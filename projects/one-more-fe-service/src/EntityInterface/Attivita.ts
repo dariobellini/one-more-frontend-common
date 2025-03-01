@@ -28,6 +28,8 @@ export class Attivita {
   distanza: string;
   affidabilita:number;
   hasCoupon:boolean;
+  rating:number;
+  numberOfRating:number;
 
   constructor(
     idAttivita:number,
@@ -58,7 +60,9 @@ export class Attivita {
     motivo:string,
     distanza:string,
     affidabilita:number,
-    hasCoupon:boolean
+    hasCoupon:boolean,
+    rating:number,
+    numberOfRating:number
   ) 
   {
     this.idAttivita = idAttivita,
@@ -89,7 +93,9 @@ export class Attivita {
     this.motivo = motivo,
     this.distanza = distanza,
     this.affidabilita = affidabilita,
-    this.hasCoupon = hasCoupon
+    this.hasCoupon = hasCoupon,
+    this.rating = rating,
+    this.numberOfRating = numberOfRating
   }
 
 }
