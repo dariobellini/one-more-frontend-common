@@ -20,6 +20,7 @@ export class AuthService {
   private isLoggedInSubject = new BehaviorSubject<boolean>(false);
   isLoggedIn$ = this.isLoggedInSubject.asObservable();
   userSession: UserSession | null;
+  language: string | undefined;
   position !: GeolocationPosition;
   utente! : DeleteUtente;
   isShowedSplash : boolean = false;
@@ -46,6 +47,8 @@ export class AuthService {
     else {
       this.isLoggedInSubject.next(false);
     }
+
+    this.language = this.getLanguageSession();
   }
 
   async getCurrentUser(uid: string): Promise<ProfileUser | undefined> {
@@ -273,6 +276,21 @@ export class AuthService {
     deleteUserSession() {
       this.userSession = null;
       localStorage.removeItem('userSession');
+      this.isLoggedInSubject.next(false);
+    }
+
+    saveLanguageSession(language: string) {
+      localStorage.setItem('language', JSON.stringify(language));
+    }
+
+    getLanguageSession(): string | undefined {
+      const language = localStorage.getItem('language');
+      return language ? JSON.parse(language) : undefined;
+    }
+
+    deleteLanguageSession() {
+      this.userSession = null;
+      localStorage.removeItem('language');
       this.isLoggedInSubject.next(false);
     }
 

@@ -10,11 +10,8 @@ export class Attivita {
   latitudine:number;
   longitudine:number;
   telefono:string;
-  cellulare:string;
-  isCellPubblico:boolean;
   email:string;
-  descrizione:string;
-  descrizioneOfferta:string;
+  description:string;
   isPromoPresente:boolean;
   isOffertaVegetariana:boolean;
   isOffertaVegana:boolean;
@@ -43,11 +40,8 @@ export class Attivita {
     latitudine:number,
     longitudine:number,
     telefono:string,
-    cellulare:string,
-    isCellPubblico:boolean,
     email:string,
-    descrizione:string,
-    descrizioneOfferta:string,
+    description:string,
     isPromoPresente:boolean,
     isOffertaVegetariana:boolean,
     isOffertaVegana:boolean,
@@ -76,11 +70,8 @@ export class Attivita {
     this.latitudine = latitudine,
     this.longitudine = longitudine,
     this.telefono = telefono,
-    this.cellulare = cellulare,
-    this.isCellPubblico = isCellPubblico,
     this.email = email,
-    this.descrizione = descrizione,
-    this.descrizioneOfferta = descrizioneOfferta,
+    this.description = description,
     this.isPromoPresente = isPromoPresente,
     this.isOffertaVegetariana = isOffertaVegetariana,
     this.isOffertaVegana = isOffertaVegana,
@@ -160,11 +151,8 @@ export class InsertAttivitaReqDto {
   civico:string ;
   cap:string ;
   telefono:string ;
-  cellulare:string ;
-  isCellPubblico:boolean ;
   email:string ;
-  descrizione:string ;
-  descrizioneOfferta:string ;
+  description:string ;
   isPromoPresente:boolean ;
   isOffertaVegetariana:boolean ;
   isOffertaVegana:boolean ;
@@ -185,11 +173,8 @@ export class InsertAttivitaReqDto {
     civico:string ,
     cap:string ,
     telefono:string ,
-    cellulare:string ,
-    isCellPubblico:boolean ,
     email:string ,
-    descrizione:string ,
-    descrizioneOfferta:string ,
+    description:string ,
     isPromoPresente:boolean ,
     isOffertaVegetariana:boolean ,
     isOffertaVegana:boolean ,
@@ -209,11 +194,8 @@ export class InsertAttivitaReqDto {
       this.civico = civico,
       this.cap = cap,
       this.telefono = telefono,
-      this.cellulare = cellulare,
-      this.isCellPubblico = isCellPubblico,
       this.email = email,
-      this.descrizione = descrizione,
-      this.descrizioneOfferta = descrizioneOfferta,
+      this.description = description,
       this.isPromoPresente = isPromoPresente,
       this.isOffertaVegana = isOffertaVegana,
       this.isOffertaVegetariana = isOffertaVegetariana,

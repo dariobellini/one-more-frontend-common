@@ -1,14 +1,16 @@
 import { Attivita, TipoAttivita, InsertAttivitaReqDto, AttivitaHomePageResponse, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita } from './EntityInterface/Attivita';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { Constants } from './Constants';
+import { AuthService } from './Auth/auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GetApiAttivitaService {
  
+  language : string | undefined;
   listaAttivitaPerRicerca!: AttivitaRicerca[];
   listaTipoAttivita : TipoAttivita [] | undefined;
   listaAttivitaNewHome : Attivita[] | undefined;
@@ -26,21 +28,9 @@ export class GetApiAttivitaService {
   private listaAttivitaDDLSubject = new BehaviorSubject<TipoAttivita[] | null>(null);
   listaAttivitaDDL$ = this.listaAttivitaDDLSubject.asObservable();
   
-  constructor(private http:HttpClient, private constants:Constants) { }
-
-
-
-  async apiGetListaAttivitaHomePage(latitudine: number, longitudine: number): Promise<Observable<AttivitaHomePageResponse>> {
-    const params = {
-      latitudine: latitudine.toString(),
-      longitudine: longitudine.toString(),
-    };
-  
-    return this.http.get<AttivitaHomePageResponse>(
-      this.constants.BasePath() + '/Attivita/get-attivita-home-page',
-      { params }
-    );
-  }
+  constructor(private http:HttpClient, 
+              private constants:Constants,
+              private authService: AuthService) { }
   
 async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Promise<Observable<Attivita[]>> {
     const params = {
@@ -178,10 +168,14 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
   }
 
   apiGetAttivitaByIdSoggettoAndAtt(idSoggetto: number, idAttivita: number): Observable<any> {
+    this.language = this.authService.getLanguageSession();
+    if(this.language == undefined)
+      this.language = "ITA";
     return this.http.get(this.constants.BasePath() + '/Attivita/get-attivita-by-id', {
         params: {
             idSoggetto: idSoggetto.toString(),
-            idAttivita: idAttivita.toString()
+            idAttivita: idAttivita.toString(),
+            lang: this.language,
         }
     });
   }
@@ -212,8 +206,20 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
     return this.http.post<InsertAttivitaReqDto>(this.constants.BasePath() + `/Attivita/update-attivita`, attivita);
   }
 
-  apiGetAttivitaByIdAttivita(id:number | undefined): Observable<any>{
-    return this.http.get(this.constants.BasePath()+'/Attivita/get-attivita?idAttivita='+id);
+  async apiGetAttivitaByIdAttivita(id: number | undefined): Promise<any> {
+    this.language = this.authService.getLanguageSession();
+    if (!this.language) {
+        this.language = "IT";
+    }
+    
+    return await firstValueFrom(
+        this.http.get(this.constants.BasePath() + '/Attivita/get-attivita', {
+            params: {
+                idAttivita: id?.toString() || '',
+                lang: this.language
+            }
+        })
+    );
   }
 
   createListAttivitaNewHomeSession(list:Attivita []){
