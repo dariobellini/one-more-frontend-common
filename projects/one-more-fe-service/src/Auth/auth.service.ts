@@ -10,13 +10,15 @@ import { Auth, authState } from '@angular/fire/auth';
 import { Firestore, doc, getDoc, setDoc, deleteDoc } from '@angular/fire/firestore';
 import { Constants } from '../Constants';
 import { inject } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-
+  private languageSubject = new BehaviorSubject<string>('IT'); // Stato iniziale
+  language$ = this.languageSubject.asObservable(); // Observable per ascoltare i cambiamenti
   private isLoggedInSubject = new BehaviorSubject<boolean>(false);
   isLoggedIn$ = this.isLoggedInSubject.asObservable();
   userSession: UserSession | null;
@@ -38,7 +40,8 @@ export class AuthService {
   constructor(private http:HttpClient, 
               private firebaseAut: Auth, 
               private firestore: Firestore,
-              private constants: Constants) { 
+              private constants: Constants,
+              private translate: TranslateService) { 
 
     this.userSession = this.getUserSession();
     if(this.userSession){
@@ -48,7 +51,10 @@ export class AuthService {
       this.isLoggedInSubject.next(false);
     }
 
-    this.language = this.getLanguageSession();
+    const savedLang = this.getLanguageSession();
+    this.translate.setDefaultLang(savedLang);
+    this.translate.use(savedLang);
+    this.languageSubject.next(savedLang);
   }
 
   async getCurrentUser(uid: string): Promise<ProfileUser | undefined> {
@@ -280,20 +286,18 @@ export class AuthService {
     }
 
     saveLanguageSession(language: string) {
-      localStorage.setItem('language', JSON.stringify(language));
+      localStorage.setItem('language', language);
+      this.translate.use(language); // Cambia la lingua
+      this.languageSubject.next(language); // Notifica i componenti che la lingua è cambiata
     }
-
-    getLanguageSession(): string | undefined {
-      const language = localStorage.getItem('language');
-      return language ? JSON.parse(language) : undefined;
+  
+    getLanguageSession(): string {
+      return localStorage.getItem('language') || 'it';
     }
-
+  
     deleteLanguageSession() {
-      this.userSession = null;
       localStorage.removeItem('language');
-      this.isLoggedInSubject.next(false);
     }
-
 
   isAuthenticated() {
     return this.isLoggedInSubject.value;

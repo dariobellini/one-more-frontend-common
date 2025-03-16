@@ -170,12 +170,12 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
   apiGetAttivitaByIdSoggettoAndAtt(idSoggetto: number, idAttivita: number): Observable<any> {
     this.language = this.authService.getLanguageSession();
     if(this.language == undefined)
-      this.language = "ITA";
+      this.language = "it";
     return this.http.get(this.constants.BasePath() + '/Attivita/get-attivita-by-id', {
         params: {
             idSoggetto: idSoggetto.toString(),
             idAttivita: idAttivita.toString(),
-            lang: this.language,
+            lang: this.language.toUpperCase(),
         }
     });
   }
@@ -209,14 +209,14 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
   async apiGetAttivitaByIdAttivita(id: number | undefined): Promise<any> {
     this.language = this.authService.getLanguageSession();
     if (!this.language) {
-        this.language = "IT";
+        this.language = "it";
     }
     
     return await firstValueFrom(
         this.http.get(this.constants.BasePath() + '/Attivita/get-attivita', {
             params: {
                 idAttivita: id?.toString() || '',
-                lang: this.language
+                lang: this.language.toUpperCase()
             }
         })
     );
