@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable} from 'rxjs';
 import { InsertPromoReqDto, InsertPromoUserAttiva, Promo } from './EntityInterface/Promo';
 import { Constants } from './Constants';
-
+import { AuthService } from './Auth/auth.service';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,7 @@ export class GetApiPromoService {
   promo !: Promo;
   promoData !: Promo;
   
-  constructor(private http:HttpClient, private constants: Constants) { }
+  constructor(private http:HttpClient, private constants: Constants, private authService: AuthService) { }
 
   setPromoData(promo: Promo) {
     this.promoData = promo;
@@ -28,8 +29,15 @@ export class GetApiPromoService {
   }
 
   apiGetListaPromoByIdAttivitaAndUser(id: number, idSoggetto: number): Observable<Promo[]> {
-    return this.http.get<Promo[]>(this.constants.BasePath()+'/Promo/get-promo-attive-by-idattivita-user?idAttivita=' + id + '&idSoggetto=' + idSoggetto);
-  }
+    const lang = this.authService.getLanguageSession() || 'IT'; // Recupera la lingua
+
+    const params = new HttpParams()
+        .set('idAttivita', id.toString())
+        .set('idSoggetto', idSoggetto.toString())
+        .set('lang', lang.toUpperCase());
+
+    return this.http.get<Promo[]>(this.constants.BasePath() + '/Promo/get-promo-attive-by-idattivita-user', { params });
+}
 
   apiDeletePromoByIdPromo(idPromo: number, idAttivita: number): Observable<number> {
     const httpOptions = {
