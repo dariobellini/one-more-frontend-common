@@ -1,3 +1,4 @@
+import { TipoRicercaAttivita } from '../Enum/TipoRicercaAttivita';
 export class Attivita {
   idAttivita:number;
   idSoggetto:number;
@@ -373,6 +374,7 @@ export class FiltriAttivita {
   range: number = 0;
   isHomePage: boolean | undefined;
   typeFilterHomePage: number | undefined;
+  tipoRicercaAttivita: TipoRicercaAttivita | undefined;
 }
 
 export class AttivitaFiltrate

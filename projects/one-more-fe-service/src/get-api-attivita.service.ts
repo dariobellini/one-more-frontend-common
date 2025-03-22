@@ -151,7 +151,8 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
     params = params.set('isHomePage', filtro.isHomePage ? filtro.isHomePage : false);
 
     params = params.set('typeFilterHomePage', filtro.typeFilterHomePage ? filtro.typeFilterHomePage : 0);
-
+    if(filtro.tipoRicercaAttivita)
+      params = params.set('tipoRicercaAttivita',filtro.tipoRicercaAttivita ? filtro.tipoRicercaAttivita : 0);
     return this.http.get<AttivitaFiltrate>(this.constants.BasePath()+'/Attivita/get-attivita-filtrata', { params });
   }
 
