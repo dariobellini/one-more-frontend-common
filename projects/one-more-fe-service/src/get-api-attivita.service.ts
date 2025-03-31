@@ -4,6 +4,7 @@ import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { Constants } from './Constants';
 import { AuthService } from './Auth/auth.service';
+import { LocationService } from './location.service';
 
 @Injectable({
   providedIn: 'root'
@@ -30,7 +31,8 @@ export class GetApiAttivitaService {
   
   constructor(private http:HttpClient, 
               private constants:Constants,
-              private authService: AuthService) { }
+              private authService: AuthService,
+              private locationService: LocationService) { }
   
 async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Promise<Observable<Attivita[]>> {
     const params = {
@@ -91,21 +93,16 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
     if (filtro.codTipoAttivita) 
       params = params.set('codTipoAttivita', filtro.codTipoAttivita);
     
-    if(filtro && filtro.latitudine == undefined && filtro.longitudine == undefined)
-    {
-      const getPositionAsync = async (): Promise<GeolocationPosition> => {
-        return new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        });
-      };
+    if (filtro && filtro.latitudine === undefined && filtro.longitudine === undefined) {
       try {
-        const position = await getPositionAsync();
-        if (position.coords.latitude != null && position.coords.longitude != null) {
-          params = params.set('latitudine', position.coords.latitude.toString());
-          params = params.set('longitudine', position.coords.longitude.toString());
+        const position = await this.locationService.getCurrentLocation();
+    
+        if (position.latitudine != null && position.longitudine != null) {
+          params = params.set('latitudine', position.latitudine.toString());
+          params = params.set('longitudine', position.longitudine.toString());
         }
       } catch (error) {
-        console.error("Errore durante il recupero della posizione:", error);
+        console.error('Errore durante il recupero della posizione:', error);
       }
     }
     else if(filtro.latitudine && filtro.longitudine)
