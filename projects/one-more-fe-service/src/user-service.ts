@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Constants } from './Constants';
 import { firstValueFrom } from 'rxjs';
+import { StorageService } from './storage.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,8 @@ import { firstValueFrom } from 'rxjs';
 export class UserService {
 
   constructor(private http:HttpClient, 
-              private constants:Constants) { }
+              private constants:Constants,
+              private storageService:StorageService) { }
 
   async AddRemoveFavorite(idSoggetto: number, idAttivita: number): Promise<boolean> {
     const params = new HttpParams()
@@ -29,10 +31,10 @@ export class UserService {
     }
   }
   
-  apiCheckIsFavorite(idSoggetto: number, idAttivita: number): Observable<boolean> {
+  async apiCheckIsFavorite(idSoggetto: number, idAttivita: number): Promise<Observable<boolean>> {
     const params = new HttpParams()
     .set('idSoggetto', idSoggetto.toString())
     .set('idAttivita', idAttivita.toString());
     return this.http.get<boolean>(this.constants.BasePath()+'/User/CheckFavorite', { params });
-}
+  }
 }
