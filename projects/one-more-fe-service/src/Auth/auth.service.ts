@@ -368,6 +368,10 @@ export class AuthService {
     return this.http.post<Utente>(this.constants.BasePath()+'/Soggetto/check-utente', utente);
   }
 
+  setIsShowedSplashFalse(){
+    localStorage.setItem('splashShown', "false");
+  }
+
   setIsShowedSplash(){
     localStorage.setItem('splashShown', "true");
   }
