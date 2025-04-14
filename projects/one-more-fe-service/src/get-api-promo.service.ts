@@ -13,6 +13,7 @@ export class GetApiPromoService {
 
   promo !: Promo;
   promoData !: Promo;
+  language : string | undefined;
   
   constructor(private http:HttpClient, private constants: Constants, private authService: AuthService) { }
 
@@ -24,8 +25,35 @@ export class GetApiPromoService {
     return this.promoData;
   }
 
-  apiGetListaPromoByIdAttivita(id:number): Observable<Promo[]>{
-    return this.http.get<Promo[]>(this.constants.BasePath()+'/Promo/get-promo-attive-by-idattivita?idAttivita='+id);
+  async apiGetAttivitaByIdAttivita(id: number | undefined): Promise<any> {
+    this.language = this.authService.getLanguageSession();
+    if (!this.language) {
+        this.language = "it";
+    }
+    
+    return await firstValueFrom(
+        this.http.get(this.constants.BasePath() + '/Attivita/get-attivita', {
+            params: {
+                idAttivita: id?.toString() || '',
+                lang: this.language.toUpperCase()
+            }
+        })
+    );
+  }
+
+  async apiGetListaPromoByIdAttivita(idAttivita:number): Promise<Promo[]>{
+    this.language = this.authService.getLanguageSession();
+    if (!this.language) {
+        this.language = "it";
+    }
+    return await firstValueFrom(
+      this.http.get<Promo[]>(this.constants.BasePath() + '/Promo/get-promo-attive-by-idattivita', {
+          params: {
+              idAttivita: idAttivita?.toString() || '',
+              lang: this.language.toUpperCase()
+          }
+      })
+    );
   }
 
   apiGetListaPromoByIdAttivitaAndUser(id: number, idSoggetto: number): Observable<Promo[]> {
@@ -39,29 +67,35 @@ export class GetApiPromoService {
     return this.http.get<Promo[]>(this.constants.BasePath() + '/Promo/get-promo-attive-by-idattivita-user', { params });
 }
 
-  apiDeletePromoByIdPromo(idPromo: number, idAttivita: number): Observable<number> {
-    const httpOptions = {
-        headers: new HttpHeaders({
-            'Content-Type': 'application/json'
-        })
-    };
+  async apiDeletePromoByIdPromo(idPromo: number | undefined, idAttivita: number | undefined): Promise<number> {
+  const httpOptions = {
+    headers: new HttpHeaders({
+      'Content-Type': 'application/json'
+    })
+  };
 
-    return this.http.post<number>(
-        this.constants.BasePath() + '/Promo/delete-promo-by-idpromo?idAttivita=' + idAttivita + '&idPromo=' + idPromo,
-        null, // Corpo della richiesta vuoto poiché stiamo passando i parametri nella query string
-        httpOptions
-    );
+  const url = `${this.constants.BasePath()}/Promo/delete-promo-by-idpromo?idAttivita=${idAttivita}&idPromo=${idPromo}`;
+
+  return await firstValueFrom(
+    this.http.post<number>(url, null, httpOptions)
+  );
 }
 
-  apiInsertPromo(promo: InsertPromoReqDto): Observable<any> {
-    return this.http.post<InsertPromoReqDto>(this.constants.BasePath()+`/Promo/insert-promo`, promo);
+  async apiInsertPromo(promo: InsertPromoReqDto): Promise<any> {
+    return await firstValueFrom(
+      this.http.post<any>(this.constants.BasePath() + `/Promo/insert-promo`, promo)
+    );
   }
-
-  apiInsertPromoAttiva(promo: InsertPromoUserAttiva): Observable<any> {
-    return this.http.post<InsertPromoUserAttiva>(this.constants.BasePath()+`/Promo/insert-promo-user-attiva`, promo);
+  
+  async apiInsertPromoAttiva(promo: InsertPromoUserAttiva): Promise<any> {
+    return await firstValueFrom(
+      this.http.post<any>(this.constants.BasePath() + `/Promo/insert-promo-user-attiva`, promo)
+    );
   }
-
-  apiUpdatePromo(promo: InsertPromoReqDto): Observable<any> {
-    return this.http.post<InsertPromoReqDto>(this.constants.BasePath()+`/Promo/update-promo`, promo);
+  
+  async apiUpdatePromo(promo: InsertPromoReqDto): Promise<any> {
+    return await firstValueFrom(
+      this.http.post<any>(this.constants.BasePath() + `/Promo/update-promo`, promo)
+    );
   }
 }

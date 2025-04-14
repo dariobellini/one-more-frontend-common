@@ -9,7 +9,6 @@ import 'firebase/compat/auth';
 import { Auth, authState } from '@angular/fire/auth';
 import { Firestore, doc, getDoc, setDoc, deleteDoc } from '@angular/fire/firestore';
 import { Constants } from '../Constants';
-import { inject } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 
@@ -25,7 +24,6 @@ export class AuthService {
   language: string | undefined;
   position !: GeolocationPosition;
   utente! : DeleteUtente;
-  isShowedSplash : boolean = false;
   isReautenticated : boolean = false;
   idPage! : number;
   esito!: string;
@@ -370,12 +368,12 @@ export class AuthService {
     return this.http.post<Utente>(this.constants.BasePath()+'/Soggetto/check-utente', utente);
   }
 
-  setIsShowedSplash(isVisible : boolean){
-    this.isShowedSplash = isVisible;
+  setIsShowedSplash(){
+    localStorage.setItem('splashShown', "true");
   }
 
-  getIsShowedSplash(){
-    return this.isShowedSplash;
+  getIsShowedSplash() {
+    return localStorage.getItem('splashShown') === "true";
   }
 
   setLastIdPageInSession(idPage: number){

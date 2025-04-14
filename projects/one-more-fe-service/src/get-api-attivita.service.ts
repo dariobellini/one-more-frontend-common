@@ -229,8 +229,10 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
       this.listaAttivitaPerRicerca = listaAttRicerca;
   }
   
-  apiGetListaAttivitaPreSearch(): Observable<AttivitaRicerca[]>{
-    return this.http.get<AttivitaRicerca[]>(this.constants.BasePath()+'/Attivita/get-lista-attivita-pre-search');
+  async apiGetListaAttivitaPreSearch(): Promise<AttivitaRicerca[]> {
+    return await firstValueFrom(
+      this.http.get<AttivitaRicerca[]>(this.constants.BasePath() + '/Attivita/get-lista-attivita-pre-search')
+    );
   }
   
   GetListaAttivitaPerRicercaSession(){
