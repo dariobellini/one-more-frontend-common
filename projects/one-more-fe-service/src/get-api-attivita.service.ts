@@ -183,7 +183,13 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
   }
 
   async apiGetListaDecAttivita(): Promise<Observable<TipoAttivita[]>>{
-    return this.http.get<TipoAttivita[]>(this.constants.BasePath()+'/Attivita/get-lista-tipoAttivita',);
+    this.language = this.authService.getLanguageSession() || 'it';
+
+    return this.http.get<TipoAttivita[]>(this.constants.BasePath()+'/Attivita/get-lista-tipoAttivita',{
+              params: {
+                  lang: this.language.toUpperCase()
+              }
+          })
   }
 
   apiGetAttivitaFavorite(id:number): Observable<AttivitaRicerca[]>{
