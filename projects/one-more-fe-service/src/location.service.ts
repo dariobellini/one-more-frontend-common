@@ -12,7 +12,6 @@ export class LocationService {
   async getCurrentLocation(): Promise<{ latitudine: number; longitudine: number }> {
     // Controlla la cache
     const cachedLocation = await Storage.get({ key: this.cacheKey });
-    console.log(cachedLocation.value);
     if (cachedLocation.value) {
       try {
         const { latitudine, longitudine, timestamp } = JSON.parse(cachedLocation.value);
