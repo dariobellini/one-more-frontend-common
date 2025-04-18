@@ -5,7 +5,6 @@ import { filter} from 'rxjs/operators';
 import { DeleteUtente, ProfileUser, UserSession, Utente } from '../EntityInterface/Utente';
 import { GoogleAuthProvider, User, UserCredential, createUserWithEmailAndPassword, deleteUser, getAdditionalUserInfo, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
 import { FacebookAuthProvider} from 'firebase/auth'
-import 'firebase/compat/auth';
 import { Auth, authState } from '@angular/fire/auth';
 import { Firestore, doc, getDoc, setDoc, deleteDoc } from '@angular/fire/firestore';
 import { Constants } from '../Constants';
