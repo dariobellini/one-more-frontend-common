@@ -1,4 +1,4 @@
-import { Attivita, TipoAttivita, InsertAttivitaReqDto, AttivitaHomePageResponse, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita, ReqAttivitaAutocomplete } from './EntityInterface/Attivita';
+import { Attivita, TipoAttivita, InsertAttivitaReqDto, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita, ReqAttivitaAutocomplete } from './EntityInterface/Attivita';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
@@ -368,5 +368,5 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
 
     return this.http.delete<DeleteAttivita>(this.constants.BasePath() + '/Attivita/delete-attivita', options);
   }
-  
+
 }
