@@ -244,6 +244,20 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
     );
   }
 
+  async apiGetListaAttivitaAutocomplete(datiAttivita: ReqAttivitaAutocomplete): Promise<Attivita[]> {
+    console.log(datiAttivita);
+    return await firstValueFrom(
+      this.http.get<Attivita[]>(this.constants.BasePath() + '/Attivita/get-Lista-attivita-autocomplete', {
+        params: {
+          nome: datiAttivita.nome || '',
+          citta: datiAttivita.citta || '',
+          indirizzo: datiAttivita.indirizzo || ''
+        }
+      })
+    );
+  }
+  
+
   createListAttivitaNewHomeSession(list:Attivita []){
     this.listaAttivitaNewHome = list;
   }
