@@ -245,18 +245,17 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
   }
 
   async apiGetListaAttivitaAutocomplete(datiAttivita: ReqAttivitaAutocomplete): Promise<Attivita[]> {
-    console.log(datiAttivita);
+    this.language = this.authService.getLanguageSession();
     return await firstValueFrom(
-      this.http.get<Attivita[]>(this.constants.BasePath() + '/Attivita/get-Lista-attivita-autocomplete', {
+      this.http.get<Attivita[]>(this.constants.BasePath() + '/Attivita/get-lista-attivita-autocomplete', {
         params: {
           nome: datiAttivita.nome || '',
           citta: datiAttivita.citta || '',
-          indirizzo: datiAttivita.indirizzo || ''
+          lang: this.language || 'IT'
         }
       })
     );
   }
-  
 
   createListAttivitaNewHomeSession(list:Attivita []){
     this.listaAttivitaNewHome = list;
