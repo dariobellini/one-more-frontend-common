@@ -28,6 +28,7 @@ export class Attivita {
   hasCoupon:boolean;
   rating:number;
   numberOfRating:number;
+  placeId:string;
 
   constructor(
     idAttivita:number,
@@ -57,7 +58,8 @@ export class Attivita {
     affidabilita:number,
     hasCoupon:boolean,
     rating:number,
-    numberOfRating:number
+    numberOfRating:number,
+    placeId: string
   ) 
   {
     this.idAttivita = idAttivita,
@@ -87,7 +89,8 @@ export class Attivita {
     this.affidabilita = affidabilita,
     this.hasCoupon = hasCoupon,
     this.rating = rating,
-    this.numberOfRating = numberOfRating
+    this.numberOfRating = numberOfRating,
+    this.placeId = placeId
   }
 
 }
@@ -163,6 +166,9 @@ export class InsertAttivitaReqDto {
   immagini:Immagini[];
   isVerificata:boolean;
   esitoVerifica:boolean;
+  rating:number;
+  numberOfRating:number;
+  placeId: string;
 
   constructor(
     idAttivita:number ,
@@ -184,7 +190,10 @@ export class InsertAttivitaReqDto {
     orari:Orari ,
     immagini:Immagini[],
     isVerificata: boolean,
-    esitoVerifica: boolean) 
+    esitoVerifica: boolean,
+    rating:number,
+    numberOfRating:number,
+    placeId: string) 
     {
       this.idAttivita = idAttivita,
       this.idSoggetto = idSoggetto,
@@ -206,6 +215,9 @@ export class InsertAttivitaReqDto {
       this.immagini = immagini,
       this.isVerificata = isVerificata,
       this.esitoVerifica = esitoVerifica
+      this.rating = rating;
+      this.numberOfRating = numberOfRating;
+      this.placeId = placeId;
   }
 }
 

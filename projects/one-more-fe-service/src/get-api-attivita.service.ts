@@ -226,18 +226,12 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
     );
   }
 
-  async apiGetAttivitaAutocomplete(datiAttivita: ReqAttivitaAutocomplete): Promise<any> {
+  async apiGetAttivitaAutocomplete(placeId: string): Promise<any> {
     this.language = this.authService.getLanguageSession();
-    if (!this.language) {
-        this.language = "it";
-    }
-    
     return await firstValueFrom(
-        this.http.get(this.constants.BasePath() + '/Attivita/get-attivita-autocomplete', {
+        this.http.get(this.constants.BasePath() + '/Attivita/get-detail-attivita-autocomplete', {
             params: {
-              nome: datiAttivita.nome || '',
-              citta: datiAttivita.citta || '',
-              indirizzo: datiAttivita.indirizzo || '',
+              placeId: placeId || '',
               lang: this.language.toUpperCase()
             }
         })
