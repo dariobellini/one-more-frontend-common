@@ -240,11 +240,13 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
 
   async apiGetListaAttivitaAutocomplete(datiAttivita: ReqAttivitaAutocomplete): Promise<Attivita[]> {
     this.language = this.authService.getLanguageSession();
+    console.log(datiAttivita);
     return await firstValueFrom(
       this.http.get<Attivita[]>(this.constants.BasePath() + '/Attivita/get-lista-attivita-autocomplete', {
         params: {
           nome: datiAttivita.nome || '',
           citta: datiAttivita.citta || '',
+          indirizzo: datiAttivita.indirizzo || '',
           lang: this.language || 'IT'
         }
       })

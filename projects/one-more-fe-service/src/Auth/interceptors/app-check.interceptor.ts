@@ -49,9 +49,6 @@ export class AppCheckInterceptor implements HttpInterceptor {
 
     this.appCheckToken = tokenResult.token;
     this.appCheckTokenRefreshTime = now + this.TOKEN_VALIDITY_DURATION;
-
-    console.log('🔥 Token AppCheck:', this.appCheckToken);
-
     return this.appCheckToken;
   }
 }
