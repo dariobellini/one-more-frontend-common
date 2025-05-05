@@ -34,10 +34,11 @@ export class GetApiAttivitaService {
               private authService: AuthService,
               private locationService: LocationService) { }
   
-async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Promise<Observable<Attivita[]>> {
+  async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number, isHomePage: boolean): Promise<Observable<Attivita[]>> {
     const params = {
       latitudine: latitudine.toString(),
       longitudine: longitudine.toString(),
+      isHomePage: isHomePage
     };
   
     return this.http.get<Attivita[]>(
@@ -46,10 +47,11 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
     );
   }
 
-  async apiGetListaAttivitaNear(latitudine: number, longitudine: number): Promise<Observable<Attivita[]>> {
+  async apiGetListaAttivitaNear(latitudine: number, longitudine: number, isHomePage: boolean): Promise<Observable<Attivita[]>> {
     const params = {
       latitudine: latitudine.toString(),
       longitudine: longitudine.toString(),
+      isHomePage: isHomePage
     };
   
     return this.http.get<Attivita[]>(
@@ -58,10 +60,11 @@ async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number): Pr
     );
   }
 
-  async apiGetListaAttivitaWhitPromo(latitudine: number, longitudine: number): Promise<Observable<Attivita[]>> {
+  async apiGetListaAttivitaWhitPromo(latitudine: number, longitudine: number, isHomePage: boolean): Promise<Observable<Attivita[]>> {
     const params = {
       latitudine: latitudine.toString(),
       longitudine: longitudine.toString(),
+      isHomePage: isHomePage
     };
   
     return this.http.get<Attivita[]>(
