@@ -79,8 +79,8 @@ export class AuthService {
     }
   }
 
-  getCurrentUserFromAuth(): User | null {
-    return this.firebaseAut.currentUser;
+  async getCurrentUserFromAuth(): Promise<User | null> {
+    return await this.firebaseAut.currentUser;
   }
 
   async logOut(): Promise<void>{

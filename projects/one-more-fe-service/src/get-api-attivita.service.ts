@@ -1,4 +1,4 @@
-import { Attivita, TipoAttivita, InsertAttivitaReqDto, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita, ReqAttivitaAutocomplete } from './EntityInterface/Attivita';
+import { Attivita, TipoAttivita, InsertAttivitaReqDto, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita, ReqAttivitaAutocomplete, InsertAttivitaResponse } from './EntityInterface/Attivita';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
@@ -205,12 +205,16 @@ export class GetApiAttivitaService {
     return this.http.get<TipoAttivita[]>(this.constants.BasePath()+'/Attivita/get-lista-tipoAttivita-by-id'+id);
   }
 
-  apiInsertAttivita(attivita: InsertAttivitaReqDto): Observable<any> {
-    return this.http.post<InsertAttivitaReqDto>(this.constants.BasePath() + `/Attivita/insert-attivita`, attivita);
+  async apiInsertAttivita(attivita: InsertAttivitaReqDto): Promise<InsertAttivitaResponse> {
+    return await firstValueFrom(
+      this.http.post<InsertAttivitaResponse>(this.constants.BasePath() + `/Attivita/insert-attivita`, attivita)
+    );
   }
 
-  apiUpdateAttivita(attivita: InsertAttivitaReqDto): Observable<any> {
-    return this.http.post<InsertAttivitaReqDto>(this.constants.BasePath() + `/Attivita/update-attivita`, attivita);
+  async apiUpdateAttivita(attivita: InsertAttivitaReqDto): Promise<any> {
+    return await firstValueFrom(
+      this.http.post<InsertAttivitaReqDto>(this.constants.BasePath() + `/Attivita/update-attivita`, attivita)
+    );
   }
 
   async apiGetAttivitaByIdAttivita(id: number | undefined): Promise<any> {

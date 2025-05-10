@@ -145,6 +145,24 @@ export class AttivitaRicerca {
   }
 }
 
+export class InsertAttivitaResponse {
+  idAttivita: number;
+  attivita: InsertAttivitaReqDto;
+  isError : boolean;
+  errorMessage : string;
+  constructor(
+    idAttivita:number ,
+    attivita: InsertAttivitaReqDto,
+    isError: boolean,
+    errorMessage: string
+  ){
+    this.idAttivita = idAttivita,
+    this.attivita = attivita,
+    this.isError = isError
+    this.errorMessage = errorMessage
+  }
+}
+
 export class InsertAttivitaReqDto {
   idAttivita:number;
   idSoggetto:number ;
