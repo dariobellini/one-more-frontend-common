@@ -164,10 +164,6 @@ export class GetApiAttivitaService {
     return this.http.get<Immagini[]>(this.constants.BasePath()+'/Attivita/get-lista-immagini/' + id);
   }
 
-  apiGetOrariById(id:number): Observable<Orari>{
-    return this.http.get<Orari>(this.constants.BasePath()+'/Attivita/get-orari-attivita/' + id);
-  }
-
   apiGetAttivitaByIdSoggettoAndAtt(idSoggetto: number, idAttivita: number): Observable<any> {
     this.language = this.authService.getLanguageSession();
     if(this.language == undefined)

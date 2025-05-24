@@ -29,6 +29,7 @@ export class Attivita {
   rating:number;
   numberOfRating:number;
   placeId:string;
+  uploadImgPrincipale : string;
 
   constructor(
     idAttivita:number,
@@ -59,7 +60,8 @@ export class Attivita {
     hasCoupon:boolean,
     rating:number,
     numberOfRating:number,
-    placeId: string
+    placeId: string,
+    uploadImgPrincipale : string
   ) 
   {
     this.idAttivita = idAttivita,
@@ -90,7 +92,8 @@ export class Attivita {
     this.hasCoupon = hasCoupon,
     this.rating = rating,
     this.numberOfRating = numberOfRating,
-    this.placeId = placeId
+    this.placeId = placeId,
+    this.uploadImgPrincipale = uploadImgPrincipale
   }
 
 }
