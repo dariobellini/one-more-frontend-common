@@ -23,7 +23,10 @@ export class Promo {
   titoloPromo:string ;
   isAbilitataForUser:boolean ;
   motivazioneDisabilitata: string ;
-  
+  periodo:string ;
+  descrizioniPeriodi:string ;
+  codTipoConsumazione: number ;
+  descTipoConsumazione:string ;
 
 /**
  *
@@ -49,7 +52,11 @@ constructor(idPromo:number ,
   isAttiva:boolean ,
   titoloPromo:string ,
   isAbilitataForUser:boolean ,
-  motivazioneDisabilitata: string
+  motivazioneDisabilitata: string,
+  periodo:string,
+  descrizioniPeriodi:string,
+  codTipoConsumazione: number,
+  descTipoConsumazione:string
   ) {
     this.idAttivita = idAttivita;
     this.idPromo = idPromo;
@@ -73,6 +80,10 @@ constructor(idPromo:number ,
     this.titoloPromo = titoloPromo;
     this.isAbilitataForUser = isAbilitataForUser;
     this.motivazioneDisabilitata = motivazioneDisabilitata;
+    this.periodo = periodo;
+    this.descrizioniPeriodi = descrizioniPeriodi;
+    this.codTipoConsumazione = codTipoConsumazione;
+    this.descTipoConsumazione = descTipoConsumazione;
 }
 }
 
@@ -92,7 +103,11 @@ numUtilizziPerPersonaMax:number | undefined;
 isRinnovoUtilizzo:boolean | undefined;
 numCouponMax:number | undefined;
 isAttiva:boolean | undefined;
-titoloPromo:string | undefined;    
+titoloPromo:string | undefined;  
+periodo:string | undefined;
+descrizioniPeriodi:string | undefined;
+codTipoConsumazione: number | undefined;
+descTipoConsumazione:string | undefined;
 }
 
 export class GiorniSettimanaPromo{
@@ -127,29 +142,41 @@ orarioValiditaAl:string | undefined;
 isAttiva:boolean | undefined;
 dataAcquisizione:Date | undefined;
 listaTipologie: TipologiaOfferta[] | undefined;
+periodo:string | undefined;
+descrizioniPeriodi:string | undefined;
+codTipoConsumazione: number | undefined;
+descTipoConsumazione:string | undefined;
 }
 
 export class PromoUserUtilizzate
 {
-idPromo: number | undefined;
-idSoggetto: number | undefined;
-dataAcquisizione:Date | undefined;
-titoloPromo: string | undefined;
-descPromo: string | undefined;
+  idPromo: number | undefined;
+  idSoggetto: number | undefined;
+  dataAcquisizione:Date | undefined;
+  titoloPromo: string | undefined;
+  descPromo: string | undefined;
+  periodo:string | undefined;
+  descrizioniPeriodi:string | undefined;
+  codTipoConsumazione: number | undefined;
+  descTipoConsumazione:string | undefined;
 }
 
 export class PromoUser
 {
-listaPromoAttive: PromoUserAttive[] | undefined;
-listaPromoUtilizzate: PromoUserUtilizzate[] | undefined;
+  listaPromoAttive: PromoUserAttive[] | undefined;
+  listaPromoUtilizzate: PromoUserUtilizzate[] | undefined;
 }
 
 export class PromoUserAnnullate
 {
-idPromo: number | undefined;
-idAttivita: number | undefined;
-dataAcquisizione: Date | undefined;
-dataAnnullamento: Date | undefined;
-codAnnullamento: string | undefined;
-descMotivazione: string | undefined;
+  idPromo: number | undefined;
+  idAttivita: number | undefined;
+  dataAcquisizione: Date | undefined;
+  dataAnnullamento: Date | undefined;
+  codAnnullamento: string | undefined;
+  descMotivazione: string | undefined;
+  periodo:string | undefined;
+  descrizioniPeriodi:string | undefined;
+  codTipoConsumazione: number | undefined;
+  descTipoConsumazione:string | undefined;
 }
