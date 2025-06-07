@@ -1,4 +1,5 @@
 import { TipoRicercaAttivita } from '../Enum/TipoRicercaAttivita';
+import { Promo } from './Promo';
 export class Attivita {
   idAttivita:number;
   idSoggetto:number;
@@ -30,7 +31,7 @@ export class Attivita {
   numberOfRating:number;
   placeId:string;
   uploadImgPrincipale : string;
-
+  promo: Promo[] | undefined;
   constructor(
     idAttivita:number,
     idSoggetto:number,
@@ -96,6 +97,18 @@ export class Attivita {
     this.uploadImgPrincipale = uploadImgPrincipale
   }
 
+}
+
+export class AttivitaWithPromos{
+  attivita: Attivita;
+  promo: Promo [];
+  constructor(
+    attivita: Attivita,
+    promo: Promo []
+  ){
+    this.attivita = attivita,
+    this.promo = promo
+  }
 }
 
 export class AttivitaRicerca {

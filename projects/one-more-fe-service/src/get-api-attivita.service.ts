@@ -1,4 +1,4 @@
-import { Attivita, TipoAttivita, InsertAttivitaReqDto, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita, ReqAttivitaAutocomplete, InsertAttivitaResponse } from './EntityInterface/Attivita';
+import { Attivita, TipoAttivita, InsertAttivitaReqDto, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita, ReqAttivitaAutocomplete, InsertAttivitaResponse, AttivitaWithPromos } from './EntityInterface/Attivita';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
@@ -73,6 +73,19 @@ export class GetApiAttivitaService {
     );
   }
 
+  async apiGetListaAttivitaFoodDrinkPromo(latitudine: number, longitudine: number, codConsumazione:number, isHomePage: boolean): Promise<Observable<Attivita[]>> {
+    const params = {
+      latitudine: latitudine.toString(),
+      longitudine: longitudine.toString(),
+      codConsumazione : codConsumazione,
+      isHomePage: isHomePage
+    };
+  
+    return this.http.get<Attivita[]>(
+      this.constants.BasePath() + '/Attivita/get-top-activities-food-drink-Promo',
+      { params }
+    );
+  }
 
   async GetFavorites(idSoggetto:number): Promise<Observable<Attivita[]>>{
     return this.http.get<Attivita[]>(this.constants.BasePath()+'/Attivita/get-favorites?idSoggetto='+idSoggetto);
@@ -243,7 +256,6 @@ export class GetApiAttivitaService {
 
   async apiGetListaAttivitaAutocomplete(datiAttivita: ReqAttivitaAutocomplete): Promise<Attivita[]> {
     this.language = this.authService.getLanguageSession();
-    console.log(datiAttivita);
     return await firstValueFrom(
       this.http.get<Attivita[]>(this.constants.BasePath() + '/Attivita/get-lista-attivita-autocomplete', {
         params: {
