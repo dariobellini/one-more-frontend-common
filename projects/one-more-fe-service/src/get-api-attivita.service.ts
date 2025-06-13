@@ -100,6 +100,8 @@ export class GetApiAttivitaService {
     let params = new HttpParams();
     
     // Aggiungi i parametri alla query solo se sono definiti
+    if (filtro.idAttivita) 
+      params = params.set('idAttivita', filtro.idAttivita);
     if (filtro.nome) 
       params = params.set('nome', filtro.nome);
     if (filtro.citta) 

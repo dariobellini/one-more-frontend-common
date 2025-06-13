@@ -396,6 +396,7 @@ export class AttivitaHomePageResponse
 }
 
 export class FiltriAttivita {
+  idAttivita:number | undefined;
   latitudine: number |undefined;
   longitudine: number |undefined;
   isPromoPresente: boolean |undefined;
