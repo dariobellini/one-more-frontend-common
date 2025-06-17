@@ -25,22 +25,6 @@ export class GetApiPromoService {
     return this.promoData;
   }
 
-  async apiGetAttivitaByIdAttivita(id: number | undefined): Promise<any> {
-    this.language = this.authService.getLanguageSession();
-    if (!this.language) {
-        this.language = "it";
-    }
-    
-    return await firstValueFrom(
-        this.http.get(this.constants.BasePath() + '/Attivita/get-attivita', {
-            params: {
-                idAttivita: id?.toString() || '',
-                lang: this.language.toUpperCase()
-            }
-        })
-    );
-  }
-
   async apiGetListaPromoByIdAttivita(idAttivita:number): Promise<Promo[]>{
     this.language = this.authService.getLanguageSession();
     if (!this.language) {

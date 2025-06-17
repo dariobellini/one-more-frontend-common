@@ -5,6 +5,7 @@ import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { Constants } from './Constants';
 import { AuthService } from './Auth/auth.service';
 import { LocationService } from './location.service';
+import { StorageService } from './storage.service';
 
 @Injectable({
   providedIn: 'root'
@@ -32,7 +33,8 @@ export class GetApiAttivitaService {
   constructor(private http:HttpClient, 
               private constants:Constants,
               private authService: AuthService,
-              private locationService: LocationService) { }
+              private locationService: LocationService,
+              private storageService: StorageService) { }
   
   async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number, isHomePage: boolean): Promise<Observable<Attivita[]>> {
     const params = {
@@ -69,6 +71,17 @@ export class GetApiAttivitaService {
   
     return this.http.get<Attivita[]>(
       this.constants.BasePath() + '/Attivita/get-top-activities-whit-promo',
+      { params }
+    );
+  }
+
+  async apiGetListaAttivitaRecentView(idSoggetto: number): Promise<Observable<Attivita[]>> {
+    const params = {
+      id: idSoggetto.toString()
+    };
+  
+    return this.http.get<Attivita[]>(
+      this.constants.BasePath() + '/Attivita/get-top-activities-recent-view',
       { params }
     );
   }
@@ -228,21 +241,54 @@ export class GetApiAttivitaService {
     );
   }
 
-  async apiGetAttivitaByIdAttivita(id: number | undefined): Promise<any> {
-    this.language = this.authService.getLanguageSession();
-    if (!this.language) {
+    async apiGetAttivitaByIdAttivita(
+      id: number | undefined,
+      idSoggetto: number | undefined
+    ): Promise<any> {
+      this.language = this.authService.getLanguageSession();
+      if (!this.language) {
         this.language = "it";
-    }
+      }
     
-    return await firstValueFrom(
-        this.http.get(this.constants.BasePath() + '/Attivita/get-attivita', {
-            params: {
-                idAttivita: id?.toString() || '',
-                lang: this.language.toUpperCase()
-            }
+      const params: any = {
+        idAttivita: id?.toString() || '',
+        lang: this.language.toUpperCase()
+      };
+    
+      if (idSoggetto !== undefined && idSoggetto !== null) {
+        params.idSoggetto = idSoggetto.toString();
+      }
+    
+      // Fai la GET normalmente
+      const attivita = await firstValueFrom(
+        this.http.get<Attivita>(this.constants.BasePath() + '/Attivita/get-attivita', {
+          params: params
         })
-    );
-  }
+      );
+    
+      // Dopo la GET: aggiorna la cache "attivita_recent_view"
+      const cacheKey = `attivita_recent_view`;
+      const cachedData: Attivita[] = await this.storageService.getItem(cacheKey) || [];
+    
+      // Rimuovi l'attività se già presente (per evitare duplicati)
+      const updatedList = cachedData.filter(a => a.idAttivita !== attivita.idAttivita);
+
+      // Recupero l'immagine principale
+      const immaginePrincipale = attivita.immagini?.find(img => (img.isImmaginePrincipale && img.isVerificata) || img.isImmaginePrincipaleTemp);
+      attivita.uploadImgPrincipale = immaginePrincipale ? immaginePrincipale.upload : 'URL_IMMAGINE_FALLBACK';
+      // Inserisci l'attività in testa
+      updatedList.unshift(attivita);
+
+      // Se superi 15 elementi, rimuovi l'ultimo
+      if (updatedList.length > 15) {
+        updatedList.pop();
+      }
+    
+      // Salva di nuovo la lista aggiornata
+      await this.storageService.setItem(cacheKey, updatedList, 8640000);
+    
+      return attivita;
+    }
 
   async apiGetAttivitaAutocomplete(placeId: string): Promise<any> {
     this.language = this.authService.getLanguageSession();
