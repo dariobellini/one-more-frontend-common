@@ -417,6 +417,8 @@ export class FiltriAttivita {
   orarioValiditaAl: string |undefined;
   codTipoAttivita: string |undefined;
   codTipoPromo: number[] |undefined;
+  codTipoPeriodoList: number[] |undefined;
+  codTipoConsumazione: number |undefined;
   isMovingMap: boolean | undefined;
   range: number = 0;
   isHomePage: boolean | undefined;
