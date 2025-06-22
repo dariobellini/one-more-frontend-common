@@ -81,8 +81,11 @@ export class GetApiPromoService {
   }
   
   async apiUpdatePromo(promo: InsertPromoReqDto): Promise<any> {
+    const lang = this.authService.getLanguageSession() || 'IT';
     return await firstValueFrom(
-      this.http.post<any>(this.constants.BasePath() + `/Promo/update-promo`, promo)
-    );
+      this.http.post<any>(this.constants.BasePath() + `/Promo/update-promo`, promo, {params: {
+        lang: lang.toUpperCase(),
+    }
+  }));
   }
 }
