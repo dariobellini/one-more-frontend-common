@@ -181,6 +181,10 @@ export class GetApiAttivitaService {
     params = params.set('typeFilterHomePage', filtro.typeFilterHomePage ? filtro.typeFilterHomePage : 0);
     if(filtro.tipoRicercaAttivita)
       params = params.set('tipoRicercaAttivita',filtro.tipoRicercaAttivita ? filtro.tipoRicercaAttivita : 0);
+    
+    if(filtro.codTipoPeriodoList)
+      params =params.set('CodTipoPeriodoList', filtro.codTipoPeriodoList.join(','))
+
     return this.http.get<AttivitaFiltrate>(this.constants.BasePath()+'/Attivita/get-attivita-filtrata', { params });
   }
 

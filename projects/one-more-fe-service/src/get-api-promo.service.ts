@@ -5,6 +5,7 @@ import { InsertPromoReqDto, InsertPromoUserAttiva, Promo } from './EntityInterfa
 import { Constants } from './Constants';
 import { AuthService } from './Auth/auth.service';
 import { firstValueFrom } from 'rxjs';
+import { TipoPeriodo } from './EntityInterface/TipoPeriodo';
 
 @Injectable({
   providedIn: 'root'
@@ -23,6 +24,15 @@ export class GetApiPromoService {
 
   getPromoData(): Promo {
     return this.promoData;
+  }
+async apiGetListaTipoPeriodo(): Promise<TipoPeriodo[]>{
+    this.language = this.authService.getLanguageSession();
+    if (!this.language) {
+        this.language = "it";
+    }
+    return await firstValueFrom(
+      this.http.get<TipoPeriodo[]>(this.constants.BasePath() + '/Promo/get-tipi-periodo')
+    );
   }
 
   async apiGetListaPromoByIdAttivita(idAttivita:number): Promise<Promo[]>{
