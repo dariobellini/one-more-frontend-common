@@ -421,6 +421,7 @@ export class FiltriAttivita {
   codTipoConsumazione: number |undefined;
   isMovingMap: boolean | undefined;
   range: number = 0;
+  days:number[] = [];
   isHomePage: boolean | undefined;
   typeFilterHomePage: number | undefined;
   tipoRicercaAttivita: TipoRicercaAttivita | undefined;
