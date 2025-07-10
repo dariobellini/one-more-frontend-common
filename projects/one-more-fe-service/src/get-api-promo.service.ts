@@ -31,7 +31,11 @@ async apiGetListaTipoPeriodo(): Promise<TipoPeriodo[]>{
         this.language = "it";
     }
     return await firstValueFrom(
-      this.http.get<TipoPeriodo[]>(this.constants.BasePath() + '/Promo/get-tipi-periodo')
+      this.http.get<TipoPeriodo[]>(this.constants.BasePath() + '/Promo/get-tipi-periodo', {
+          params: {
+              lang: this.language.toUpperCase()
+          }
+      })
     );
   }
 

@@ -25,12 +25,9 @@ export class Promo {
   motivazioneDisabilitata: string ;
   periodo:string ;
   descrizioniPeriodi:string ;
-  codTipoConsumazione: number ;
+  codTipoConsumazione: number;
   descTipoConsumazione:string ;
 
-/**
- *
- */
 constructor(idPromo:number ,
   idAttivita:number ,
   descPromo:string ,

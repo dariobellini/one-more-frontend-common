@@ -115,16 +115,19 @@ export class GetApiAttivitaService {
     // Aggiungi i parametri alla query solo se sono definiti
     if (filtro.idAttivita) 
       params = params.set('idAttivita', filtro.idAttivita);
+
     if (filtro.nome) 
       params = params.set('nome', filtro.nome);
+
     if (filtro.citta) 
       params = params.set('citta', filtro.citta);
-    if (filtro.provincia) 
-      params = params.set('provincia', filtro.provincia);
+
     if (filtro.codTipoAttivita) 
       params = params.set('codTipoAttivita', filtro.codTipoAttivita);
-    
+
+   
     if (filtro && filtro.latitudine === undefined && filtro.longitudine === undefined) {
+
       try {
         const position = await this.locationService.getCurrentLocation();
     
@@ -142,32 +145,6 @@ export class GetApiAttivitaService {
       params = params.set('longitudine', filtro.longitudine);
     }
     
-    if (filtro.isPromoPresente) 
-      params = params.set('isPromoPresente', filtro.isPromoPresente);
-    if (filtro.dataFinePromo) 
-      params = params.set('dataFinePromo', filtro.dataFinePromo.toDateString());
-
-    if (filtro.isLunedi) 
-      params = params.set('isLunedi', filtro.isLunedi);
-    if (filtro.isMartedi) 
-      params = params.set('isMartedi', filtro.isMartedi);
-    if (filtro.isMercoledi) 
-      params = params.set('isMercoledi', filtro.isMercoledi);
-    if (filtro.isGiovedi) 
-      params = params.set('isGiovedi', filtro.isGiovedi);
-    if (filtro.isVenerdi) 
-      params = params.set('isVenerdi', filtro.isVenerdi);
-    if (filtro.isSabato) 
-      params = params.set('isSabato', filtro.isSabato);
-    if (filtro.isDomenica) 
-      params = params.set('isDomenica', filtro.isDomenica);
-    if (filtro.isAllDayValidita) 
-      params = params.set('isAllDayValidita', filtro.isAllDayValidita);
-
-    if (filtro.orarioValiditaDa) 
-      params = params.set('orarioValiditaDa', filtro.orarioValiditaDa);
-    if (filtro.orarioValiditaAl) 
-      params = params.set('orarioValiditaAl', filtro.orarioValiditaAl);
     if (filtro.codTipoPromo && filtro.codTipoPromo.length > 0) {
       filtro.codTipoPromo.forEach((promo) => {
           params = params.append('codTipoPromo', promo.toString());
@@ -329,11 +306,6 @@ export class GetApiAttivitaService {
       this.listaAttivitaPerRicerca = listaAttRicerca;
   }
   
-  async apiGetListaAttivitaPreSearch(): Promise<AttivitaRicerca[]> {
-    return await firstValueFrom(
-      this.http.get<AttivitaRicerca[]>(this.constants.BasePath() + '/Attivita/get-lista-attivita-pre-search')
-    );
-  }
   
   GetListaAttivitaPerRicercaSession(){
     return this.listaAttivitaPerRicerca;

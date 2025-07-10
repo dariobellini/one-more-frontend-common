@@ -404,17 +404,6 @@ export class FiltriAttivita {
   provincia: string |undefined;
   nome: string |undefined;
   indirizzo: string |undefined;
-  dataFinePromo: Date |undefined;
-  isLunedi: boolean |undefined;
-  isMartedi: boolean |undefined;
-  isMercoledi: boolean |undefined;
-  isGiovedi: boolean |undefined;
-  isVenerdi: boolean |undefined;
-  isSabato: boolean |undefined;
-  isDomenica: boolean |undefined;
-  isAllDayValidita: boolean |undefined;
-  orarioValiditaDa: string |undefined;
-  orarioValiditaAl: string |undefined;
   codTipoAttivita: string |undefined;
   codTipoPromo: number[] |undefined;
   codTipoPeriodoList: number[] |undefined;
