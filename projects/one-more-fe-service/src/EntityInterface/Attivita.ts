@@ -32,6 +32,7 @@ export class Attivita {
   placeId:string;
   uploadImgPrincipale : string;
   promo: Promo[] | undefined;
+  error : string;
   constructor(
     idAttivita:number,
     idSoggetto:number,
@@ -62,7 +63,8 @@ export class Attivita {
     rating:number,
     numberOfRating:number,
     placeId: string,
-    uploadImgPrincipale : string
+    uploadImgPrincipale : string,
+    error : string
   ) 
   {
     this.idAttivita = idAttivita,
@@ -95,6 +97,7 @@ export class Attivita {
     this.numberOfRating = numberOfRating,
     this.placeId = placeId,
     this.uploadImgPrincipale = uploadImgPrincipale
+    this.error = error;
   }
 
 }
