@@ -211,14 +211,22 @@ export class GetApiAttivitaService {
   }
 
   async apiInsertAttivita(attivita: InsertAttivitaReqDto): Promise<InsertAttivitaResponse> {
+    const lang = this.authService.getLanguageSession() || 'IT'; 
     return await firstValueFrom(
-      this.http.post<InsertAttivitaResponse>(this.constants.BasePath() + `/Attivita/insert-attivita`, attivita)
+      this.http.post<InsertAttivitaResponse>(this.constants.BasePath() + `/Attivita/insert-attivita`,attivita, {params: {
+        lang: lang.toUpperCase(),
+        }
+      })
     );
   }
 
   async apiUpdateAttivita(attivita: InsertAttivitaReqDto): Promise<any> {
+    const lang = this.authService.getLanguageSession() || 'IT'; 
     return await firstValueFrom(
-      this.http.post<InsertAttivitaReqDto>(this.constants.BasePath() + `/Attivita/update-attivita`, attivita)
+      this.http.post<InsertAttivitaReqDto>(this.constants.BasePath() + `/Attivita/update-attivita`,attivita, {params: {
+        lang: lang.toUpperCase(),
+        }
+      })
     );
   }
 
