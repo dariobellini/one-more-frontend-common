@@ -101,7 +101,14 @@ export class GetApiAttivitaService {
   }
 
   async GetFavorites(idSoggetto:number): Promise<Observable<Attivita[]>>{
-    return this.http.get<Attivita[]>(this.constants.BasePath()+'/Attivita/get-favorites?idSoggetto='+idSoggetto);
+    this.language = this.authService.getLanguageSession();
+    if (!this.language) {
+      this.language = "it";
+    }
+    const params = new HttpParams()
+      .set('idSoggetto', idSoggetto.toString())
+      .set('lang', this.language.toUpperCase())
+    return this.http.get<Attivita[]>(this.constants.BasePath()+'/Attivita/get-favorites', {params});
   }
 
   createListaTipoAttivitaSession(listaTipoAtt:TipoAttivita[]){
@@ -187,7 +194,20 @@ export class GetApiAttivitaService {
   }
 
   apiGetAttivitaByIdSoggetto(idSoggetto: number): Observable<any> {
-    return this.http.get(this.constants.BasePath() + '/Attivita/get-lista-attivita-by-id?idSoggetto=' + idSoggetto);
+    this.language = this.authService.getLanguageSession();
+    if (!this.language) {
+      this.language = "it";
+    }
+  
+    return this.http.get(
+      this.constants.BasePath() + '/Attivita/get-lista-attivita-by-id',
+      {
+        params: {
+          idSoggetto: idSoggetto.toString(),
+          lang: this.language
+        }
+      }
+    );
   }
 
   async apiGetListaDecAttivita(): Promise<Observable<TipoAttivita[]>>{
@@ -201,8 +221,13 @@ export class GetApiAttivitaService {
   }
 
   apiGetAttivitaFavorite(id:number): Observable<AttivitaRicerca[]>{
+    this.language = this.authService.getLanguageSession();
+    if (!this.language) {
+      this.language = "it";
+    }
     const params = new HttpParams()
       .set('idSoggetto', id.toString())
+      .set('lang', this.language.toUpperCase())
     return this.http.get<AttivitaRicerca[]>(this.constants.BasePath()+'/Attivita/get-favorites', {params});
   }
 

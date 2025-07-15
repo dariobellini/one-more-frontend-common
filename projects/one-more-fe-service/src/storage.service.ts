@@ -1,11 +1,15 @@
 import { Injectable } from '@angular/core';
 import { Storage } from '@capacitor/storage';
 import { compressToUTF16, decompressFromUTF16 } from 'lz-string';
+import { Attivita } from './EntityInterface/Attivita';
 
 @Injectable({
   providedIn: 'root'
 })
 export class StorageService {
+
+  listaAtt: Attivita [] | undefined;
+  attivita: Attivita | undefined;
 
   async setItem(key: string, value: any, ttl: number = 3600) {
     const expirationTime = Date.now() + ttl * 1000;
@@ -45,5 +49,32 @@ export class StorageService {
 
   async clearAll() {
     await Storage.clear();
+  }
+
+  async clearAfterChangeLanguage() {
+    const cacheKeylista_attivita = `lista_attivita`;
+
+    const cachedDatalista_attivita = await this.getItem(cacheKeylista_attivita);
+    if (cachedDatalista_attivita) {
+        this.listaAtt = cachedDatalista_attivita;
+        if (this.listaAtt && this.listaAtt.length > 0) {
+          for (const att of this.listaAtt) {
+            const cacheKeyatt = `attivita_${att.idAttivita}`;
+            await this.removeItem(cacheKeyatt);
+          }
+        }
+        await this.removeItem(cacheKeylista_attivita);
+      }
+      const cacheKeyAttivita_promo = `attivita_promo`;
+      const cachedDataAttivita_promo = await this.getItem(cacheKeyAttivita_promo);
+      if (cachedDataAttivita_promo) {
+        await this.removeItem(cacheKeyAttivita_promo);
+      }
+
+      const cacheKeyAttivita_favoriti = `attivita_favoriti`;
+      const cachedDataAttivita_favoriti = await this.getItem(cacheKeyAttivita_favoriti);
+      if (cachedDataAttivita_favoriti) {
+        await this.removeItem(cacheKeyAttivita_favoriti);
+      }
   }
 }

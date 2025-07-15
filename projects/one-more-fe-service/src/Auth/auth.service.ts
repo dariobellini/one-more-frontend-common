@@ -10,6 +10,7 @@ import { Firestore, doc, getDoc, setDoc, deleteDoc } from '@angular/fire/firesto
 import { Constants } from '../Constants';
 import { TranslateService } from '@ngx-translate/core';
 import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
+import { StorageService } from '../storage.service';
 
 @Injectable({
   providedIn: 'root'
@@ -38,7 +39,8 @@ export class AuthService {
               private firebaseAut: Auth, 
               private firestore: Firestore,
               private constants: Constants,
-              private translate: TranslateService) { 
+              private translate: TranslateService,
+              private storageService: StorageService) {
 
     this.userSession = this.getUserSession();
     if(this.userSession){
@@ -282,7 +284,9 @@ export class AuthService {
       this.isLoggedInSubject.next(false);
     }
 
-    saveLanguageSession(language: string) {
+    async saveLanguageSession(language: string) {
+      await this.storageService.clearAfterChangeLanguage();
+      
       localStorage.setItem('language', language);
       this.translate.use(language); // Cambia la lingua
       this.languageSubject.next(language); // Notifica i componenti che la lingua è cambiata
