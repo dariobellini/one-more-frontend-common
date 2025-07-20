@@ -12,5 +12,6 @@ export class SearchItemDto{
 
 export enum searchItemType{
   Shop = 1,
-  ShopType = 2
+  ShopType = 2,
+  Promo = 3
 }
