@@ -417,6 +417,7 @@ export class FiltriAttivita {
   isHomePage: boolean | undefined;
   typeFilterHomePage: number | undefined;
   tipoRicercaAttivita: TipoRicercaAttivita | undefined;
+  language: string | undefined;
 }
 
 export class AttivitaFiltrate

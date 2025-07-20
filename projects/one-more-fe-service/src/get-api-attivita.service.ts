@@ -118,6 +118,14 @@ export class GetApiAttivitaService {
 
   async apiGetListaAttivitaFiltrate(filtro: FiltriAttivita): Promise<Observable<AttivitaFiltrate>> {
     let params = new HttpParams();
+
+    this.language = this.authService.getLanguageSession();
+    if (!this.language) {
+      this.language = "it";
+    }
+
+    if(this.language)
+      params = params.set('lang', this.language.toUpperCase());
     
     // Aggiungi i parametri alla query solo se sono definiti
     if (filtro.idAttivita) 
@@ -162,13 +170,19 @@ export class GetApiAttivitaService {
       
     params = params.set('isHomePage', filtro.isHomePage ? filtro.isHomePage : false);
 
-    params = params.set('typeFilterHomePage', filtro.typeFilterHomePage ? filtro.typeFilterHomePage : 0);
+    //params = params.set('typeFilterHomePage', filtro.typeFilterHomePage ? filtro.typeFilterHomePage : 0);
+
+    if (filtro.days && filtro.days.length > 0) {
+      filtro.days.forEach(day => {
+        params = params.append('days', day.toString());
+      });
+    }
     if(filtro.tipoRicercaAttivita)
       params = params.set('tipoRicercaAttivita',filtro.tipoRicercaAttivita ? filtro.tipoRicercaAttivita : 0);
     
-    if(filtro.codTipoPeriodoList)
+    if(filtro.codTipoPeriodoList && filtro.codTipoPeriodoList.length > 0)
       params =params.set('CodTipoPeriodoList', filtro.codTipoPeriodoList.join(','))
-
+    console.log('params:', params.toString());
     return this.http.get<AttivitaFiltrate>(this.constants.BasePath()+'/Attivita/get-attivita-filtrata', { params });
   }
 
