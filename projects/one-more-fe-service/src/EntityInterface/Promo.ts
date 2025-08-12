@@ -122,6 +122,11 @@ idSoggetto: number | undefined;
 dataAcquisizione:Date | undefined;
 }
 
+export class InsertCouponResponse {
+  codice: string | undefined;
+  descrizione: string | undefined;
+}
+
 export class PromoUserAttive
 {
 idPromo: number | undefined;

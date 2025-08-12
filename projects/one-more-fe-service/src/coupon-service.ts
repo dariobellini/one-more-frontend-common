@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { CouponListDto } from './EntityInterface/CouponListDto.cjs';
 import { Constants } from './Constants';
 import { AuthService } from './Auth/auth.service';
+import { InsertCouponResponse } from './EntityInterface/Promo';
 
 
 @Injectable({
@@ -18,9 +19,12 @@ export class CouponService {
   constructor(private http:HttpClient, private constants: Constants,
     private authService: AuthService) { }
 
-  AddCoupon(coupon : Coupon): Observable<any>{
-    return this.http.post<Coupon>(this.constants.BasePath()+'/Coupon/Add', coupon);
-  }
+  AddCoupon(coupon: Coupon): Observable<InsertCouponResponse> {
+  return this.http.post<InsertCouponResponse>(
+    `${this.constants.BasePath()}/Coupon/Add`,
+    coupon
+  );
+}
 
   ListCoupon(idSogetto: number): Observable<any>{
     this.language = this.authService.getLanguageSession();
