@@ -182,7 +182,6 @@ export class GetApiAttivitaService {
     
     if(filtro.codTipoPeriodoList && filtro.codTipoPeriodoList.length > 0)
       params =params.set('CodTipoPeriodoList', filtro.codTipoPeriodoList.join(','))
-    console.log('params:', params.toString());
     return this.http.get<AttivitaFiltrate>(this.constants.BasePath()+'/Attivita/get-attivita-filtrata', { params });
   }
 
