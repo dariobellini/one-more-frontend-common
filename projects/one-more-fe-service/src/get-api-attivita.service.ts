@@ -181,7 +181,11 @@ export class GetApiAttivitaService {
       params = params.set('tipoRicercaAttivita',filtro.tipoRicercaAttivita ? filtro.tipoRicercaAttivita : 0);
     
     if(filtro.codTipoPeriodoList && filtro.codTipoPeriodoList.length > 0)
-      params =params.set('CodTipoPeriodoList', filtro.codTipoPeriodoList.join(','))
+      params =params.set('codTipoPeriodoList', filtro.codTipoPeriodoList.join(','))
+
+    if(filtro.codTipoConsumazione)
+      params = params.set('codTipoConsumazione', filtro.codTipoConsumazione);
+
     return this.http.get<AttivitaFiltrate>(this.constants.BasePath()+'/Attivita/get-attivita-filtrata', { params });
   }
 
@@ -434,19 +438,19 @@ export class GetApiAttivitaService {
     return this.listaAttivitaDDL$;
   }
 
-  apiDeleteAttivita(idAttivita: number, idSoggetto: number): Observable<any> {
-
+  apiDeleteAttivita(idAttivita: number, idSoggetto: number): Observable<number> {
     const attivita = new DeleteAttivita();
-    if (idAttivita && idSoggetto) {
-        attivita.idAttivita = idAttivita ? idAttivita : 0;
-        attivita.idSoggetto = idSoggetto ? idSoggetto : 0;
-    }
-
+    attivita.idAttivita = idAttivita || 0;
+    attivita.idSoggetto = idSoggetto || 0;
+    
     const options = {
       body: attivita
-  };
-
-    return this.http.delete<DeleteAttivita>(this.constants.BasePath() + '/Attivita/delete-attivita', options);
+    };
+  
+    return this.http.delete<number>(
+      this.constants.BasePath() + '/Attivita/delete-attivita',
+      options
+    );
   }
 
 }

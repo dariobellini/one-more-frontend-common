@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable} from 'rxjs';
-import { InsertPromoReqDto, InsertPromoUserAttiva, Promo } from './EntityInterface/Promo';
+import { EsitoInsertPromo, InsertPromoReqDto, InsertPromoUserAttiva, Promo } from './EntityInterface/Promo';
 import { Constants } from './Constants';
 import { AuthService } from './Auth/auth.service';
 import { firstValueFrom } from 'rxjs';
@@ -79,18 +79,16 @@ async apiGetListaTipoPeriodo(): Promise<TipoPeriodo[]>{
   );
 }
 
-  async apiInsertPromo(promo: InsertPromoReqDto): Promise<any> {
-    const lang = this.authService.getLanguageSession() || 'IT'; 
+  async apiInsertPromo(promo: InsertPromoReqDto): Promise<EsitoInsertPromo> {
+    const lang = this.authService.getLanguageSession() || 'IT';
+
     return await firstValueFrom(
-      this.http.post<any>(this.constants.BasePath() + `/Promo/insert-promo`,promo, {params: {
-        lang: lang.toUpperCase(),
-    }
-  }));
-  }
-  
-  async apiInsertPromoAttiva(promo: InsertPromoUserAttiva): Promise<any> {
-    return await firstValueFrom(
-      this.http.post<any>(this.constants.BasePath() + `/Promo/insert-promo-user-attiva`, promo)
+      this.http.post<EsitoInsertPromo>(
+        `${this.constants.BasePath()}/Promo/insert-promo`,
+        promo, {
+          params: { lang: lang.toUpperCase() }
+        }
+      )
     );
   }
   

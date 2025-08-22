@@ -107,6 +107,12 @@ codTipoConsumazione: number | undefined;
 descTipoConsumazione:string | undefined;
 }
 
+export class EsitoInsertPromo{
+  idPromo:number | undefined;
+  message:string | undefined;
+  promo:Promo | undefined;
+}
+
 export class GiorniSettimanaPromo{
   days:number[] | undefined;
 }
