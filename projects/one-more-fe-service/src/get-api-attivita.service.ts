@@ -273,8 +273,7 @@ export class GetApiAttivitaService {
   }
 
     async apiGetAttivitaByIdAttivita(
-      id: number | undefined,
-      idSoggetto: number | undefined
+      id: number | undefined
     ): Promise<any> {
       this.language = this.authService.getLanguageSession();
       if (!this.language) {
@@ -285,10 +284,6 @@ export class GetApiAttivitaService {
         idAttivita: id?.toString() || '',
         lang: this.language.toUpperCase()
       };
-    
-      if (idSoggetto !== undefined && idSoggetto !== null) {
-        params.idSoggetto = idSoggetto.toString();
-      }
     
       // Fai la GET normalmente
       const attivita = await firstValueFrom(
