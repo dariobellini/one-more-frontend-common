@@ -1,17 +1,19 @@
 
 export class Coupon {
-    Id : number;
-    IdPromo : number;
-    IdSoggetto : number;
+    Id: number;
+    IdAttivita: number;
+    IdPromo: number;
+    IdSoggetto: number;
 
-    constructor(idPromo: number, idSoggetto: number) {
+    constructor(idPromo: number, IdAttivita: number, idSoggetto: number) {
         this.Id = 0;
+        this.IdAttivita = IdAttivita,
         this.IdPromo = idPromo,
-         this.IdSoggetto = idSoggetto
-        }
+        this.IdSoggetto = idSoggetto
     }
+}
 
-export class StatusCouponUser{
+export class StatusCouponUser {
     idCoupon: number;
     idStatus: number;
 
@@ -22,13 +24,13 @@ export class StatusCouponUser{
 }
 
 export class StatusCoupon {
-    idCoupon! : number;
-    idStatus! : number;
-    idSoggetto! : number;
+    idCoupon!: number;
+    idStatus!: number;
+    idSoggetto!: number;
 
-    constructor(idCoupon: number, idStatus: number,idSoggetto : number) {
+    constructor(idCoupon: number, idStatus: number, idSoggetto: number) {
         this.idCoupon = idCoupon
         this.idStatus = idStatus
         this.idSoggetto = idSoggetto
     }
- }
+}
