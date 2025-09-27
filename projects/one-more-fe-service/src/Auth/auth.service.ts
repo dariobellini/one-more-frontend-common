@@ -25,7 +25,6 @@ export class AuthService {
   position !: GeolocationPosition;
   utente! : DeleteUtente;
   isReautenticated : boolean = false;
-  idPage! : number;
   esito!: string;
 
   /////////////////////// FIREBASE ///////////////////////  
@@ -381,13 +380,5 @@ export class AuthService {
 
   getIsShowedSplash() {
     return localStorage.getItem('splashShown') === "true";
-  }
-
-  setLastIdPageInSession(idPage: number){
-    this.idPage = idPage;
-  }
-
-  getLastIdPageFromSession(){
-    return this.idPage;
   }
 }
