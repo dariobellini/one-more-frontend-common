@@ -1,16 +1,18 @@
-import { Injectable} from '@angular/core';
-import { HttpClient} from '@angular/common/http';
-import { Observable, BehaviorSubject, firstValueFrom, Observer} from 'rxjs';
-import { filter} from 'rxjs/operators';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, BehaviorSubject, firstValueFrom, Observer } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { DeleteUtente, ProfileUser, UserSession, Utente } from '../EntityInterface/Utente';
 import { GoogleAuthProvider, User, UserCredential, createUserWithEmailAndPassword, deleteUser, getAdditionalUserInfo, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth';
-import { FacebookAuthProvider} from 'firebase/auth'
+import { FacebookAuthProvider } from 'firebase/auth'
 import { Auth, authState } from '@angular/fire/auth';
 import { Firestore, doc, getDoc, setDoc, deleteDoc } from '@angular/fire/firestore';
 import { Constants } from '../Constants';
 import { TranslateService } from '@ngx-translate/core';
 import { EmailAuthProvider, reauthenticateWithCredential } from "firebase/auth";
 import { StorageService } from '../storage.service';
+import { NewAuthService } from './new-auth.service';
+import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
 
 @Injectable({
   providedIn: 'root'
@@ -23,9 +25,9 @@ export class AuthService {
   userSession: UserSession | null;
   language: string | undefined;
   position !: GeolocationPosition;
-  utente! : DeleteUtente;
-  isReautenticated : boolean = false;
-  idPage! : number;
+  utente!: DeleteUtente;
+  isReautenticated: boolean = false;
+  idPage!: number;
   esito!: string;
 
   /////////////////////// FIREBASE ///////////////////////  
@@ -34,16 +36,17 @@ export class AuthService {
     filter(u => !!u)
   )
   authService: any;
-  
-  constructor(private http:HttpClient, 
-              private firebaseAut: Auth, 
-              private firestore: Firestore,
-              private constants: Constants,
-              private translate: TranslateService,
-              private storageService: StorageService) {
+
+  constructor(private http: HttpClient,
+    private firebaseAut: Auth,
+    private newAuthService: NewAuthService,
+    private firestore: Firestore,
+    private constants: Constants,
+    private translate: TranslateService,
+    private storageService: StorageService) {
 
     this.userSession = this.getUserSession();
-    if(this.userSession){
+    if (this.userSession) {
       this.isLoggedInSubject.next(true);
     }
     else {
@@ -58,10 +61,10 @@ export class AuthService {
 
   async getCurrentUser(uid: string): Promise<ProfileUser | undefined> {
     const userDocRef = doc(this.firestore, 'users', uid);
-  
+
     try {
       const userDocSnap = await getDoc(userDocRef);
-      
+
       if (userDocSnap.exists()) {
         const userData = userDocSnap.data();
         const user: ProfileUser = {
@@ -85,7 +88,7 @@ export class AuthService {
     return await this.firebaseAut.currentUser;
   }
 
-  async logOut(): Promise<void>{
+  async logOut(): Promise<void> {
     this.deleteUserSession();
     return signOut(this.firebaseAut);
   }
@@ -106,11 +109,11 @@ export class AuthService {
       });
   }
 
-  setDisplayName(user: User, name: string): Promise<void>{
-    return updateProfile(user, {displayName: name});
+  setDisplayName(user: User, name: string): Promise<void> {
+    return updateProfile(user, { displayName: name });
   }
 
-  addUser(user:ProfileUser): Promise<void>{
+  addUser(user: ProfileUser): Promise<void> {
     return setDoc(doc(this.firestore, "users", user.uid), {
       displayName: user.displayName,
       email: user.email,
@@ -121,18 +124,38 @@ export class AuthService {
     });
   }
 
-  passwordReset(email: string): Promise<void>{
+  passwordReset(email: string): Promise<void> {
     return sendPasswordResetEmail(this.firebaseAut, email);
   }
 
   googleProvider = new GoogleAuthProvider();
 
-   async GoogleLogIn(): Promise<ProfileUser | null>{
-    const userCredential =  await signInWithPopup(this.firebaseAut, this.googleProvider);
+  async GoogleLogIn(): Promise<JwtResponseDto | undefined> {
+
+    const userCredential = await signInWithPopup(this.firebaseAut, this.googleProvider);
+
+    const idTokenGoogle = await userCredential.user.getIdToken();
+
+    const readealJwt = await firstValueFrom(this.GoogleLogin(idTokenGoogle));
+
+    if (readealJwt)
+      this.newAuthService.setToken(readealJwt);
+
+    return Promise.resolve(readealJwt);
+  }
+
+  private GoogleLogin(idToken: string): Observable<JwtResponseDto> {
+    return this.http.get<JwtResponseDto>(this.constants.BasePath() + '/auth/google-login?idToken=' + idToken);
+  }
+
+  facebookProvider = new FacebookAuthProvider();
+
+  async FacebookLogIn(): Promise<ProfileUser | null> {
+    const userCredential = await signInWithPopup(this.firebaseAut, this.facebookProvider);
     const additionalInfo = getAdditionalUserInfo(userCredential);
 
-    const{
-      user: { uid, email, displayName}
+    const {
+      user: { uid, email, displayName }
     } = userCredential;
 
     const token = await userCredential.user.getIdToken();
@@ -150,41 +173,16 @@ export class AuthService {
     return Promise.resolve(newProfile);
   }
 
-  facebookProvider = new FacebookAuthProvider();
-
-   async FacebookLogIn(): Promise<ProfileUser | null>{
-    const userCredential =  await signInWithPopup(this.firebaseAut, this.facebookProvider);
-    const additionalInfo = getAdditionalUserInfo(userCredential);
-
-      const{
-        user: { uid, email, displayName}
-      } = userCredential;
-  
-      const token = await userCredential.user.getIdToken();
-
-      const newProfile = {
-        uid,
-        email: email ?? '',
-        displayName: displayName ?? '',
-        token: token ?? ''
-      }
-      
-    const apiJwt = await this.GetUserJwt(userCredential.user.uid).toPromise();
-    localStorage.setItem(this.constants.UserApiJwt(), apiJwt ?? '');
-
-    return Promise.resolve(newProfile);
-  }
-
   async refreshToken(userSession: UserSession): Promise<boolean> {
     try {
       const currentUser = await firstValueFrom(this.currentUser$); // Converti l'osservabile in una promessa
-  
+
       if (currentUser) {
         const refreshedToken = await currentUser.getIdToken(true);
         if (refreshedToken) {
           userSession.token = refreshedToken;
           this.saveUserSession(userSession);
-          return true;  
+          return true;
         } else {
           return false;
         }
@@ -198,56 +196,56 @@ export class AuthService {
   }
 
   async reauthenticateUser(userEmail: string, userPassword: string): Promise<boolean> {
-      const user = this.firebaseAut.currentUser;
-      this.isReautenticated = false;
-      if (user) {
-          const credential = EmailAuthProvider.credential(userEmail, userPassword);
-          try {
-              await reauthenticateWithCredential(user, credential);
-              this.isReautenticated = true;
-          } catch (error) {
-              console.error('Errore durante la ri-autenticazione:', error);
-              this.isReautenticated = false;
-          }
+    const user = this.firebaseAut.currentUser;
+    this.isReautenticated = false;
+    if (user) {
+      const credential = EmailAuthProvider.credential(userEmail, userPassword);
+      try {
+        await reauthenticateWithCredential(user, credential);
+        this.isReautenticated = true;
+      } catch (error) {
+        console.error('Errore durante la ri-autenticazione:', error);
+        this.isReautenticated = false;
       }
-      return this.isReautenticated;
+    }
+    return this.isReautenticated;
   }
 
   async deleteUserAccount(): Promise<void> {
     const user = this.firebaseAut.currentUser;
     let userDocData: any; // Variabile per tenere i dati del documento utente
     try {
-        if (user) {
-            const userDocRef = doc(this.firestore, `users/${user.uid}`);
-            
-            // Controlla se il documento esiste e ottieni i dati per un possibile ripristino
-            const userDocSnap = await getDoc(userDocRef);
-            if (userDocSnap.exists()) {
-                userDocData = userDocSnap.data(); // Salva i dati in caso di rollback
-            } else {
-                throw new Error('Documento utente non trovato.');
-            }
+      if (user) {
+        const userDocRef = doc(this.firestore, `users/${user.uid}`);
 
-            // Elimina il documento
-            await deleteDoc(userDocRef);
-
-            // Prova a fare il signOut e a eliminare l'utente
-            await signOut(this.firebaseAut);
-            await deleteUser(user);
-
-            // Elimina la sessione se tutto è andato a buon fine
-            this.deleteUserSession();
+        // Controlla se il documento esiste e ottieni i dati per un possibile ripristino
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          userDocData = userDocSnap.data(); // Salva i dati in caso di rollback
         } else {
-            throw new Error('Errore: Nessun utente autenticato.');
+          throw new Error('Documento utente non trovato.');
         }
+
+        // Elimina il documento
+        await deleteDoc(userDocRef);
+
+        // Prova a fare il signOut e a eliminare l'utente
+        await signOut(this.firebaseAut);
+        await deleteUser(user);
+
+        // Elimina la sessione se tutto è andato a buon fine
+        this.deleteUserSession();
+      } else {
+        throw new Error('Errore: Nessun utente autenticato.');
+      }
     } catch (error) {
 
-        // Rollback: ripristina il documento se il deleteUser fallisce
-        if (user && userDocData) {
-            const userDocRef = doc(this.firestore, `users/${user.uid}`);
-            await setDoc(userDocRef, userDocData);
-        }
-        throw error; // Rilancia l'errore per gestirlo nel metodo chiamante
+      // Rollback: ripristina il documento se il deleteUser fallisce
+      if (user && userDocData) {
+        const userDocRef = doc(this.firestore, `users/${user.uid}`);
+        await setDoc(userDocRef, userDocData);
+      }
+      throw error; // Rilancia l'errore per gestirlo nel metodo chiamante
     }
   }
 
@@ -267,44 +265,44 @@ export class AuthService {
     return this.esito;
   }
 
-    /////////////////////////////////////////////////////////  
+  /////////////////////////////////////////////////////////  
 
-    saveUserSession(userSession: UserSession) {
-      localStorage.setItem('userSession', JSON.stringify(userSession));
-    }
+  saveUserSession(userSession: UserSession) {
+    localStorage.setItem('userSession', JSON.stringify(userSession));
+  }
 
-    getUserSession(): UserSession | null {
-      const userSessionString = localStorage.getItem('userSession');
-      return userSessionString ? JSON.parse(userSessionString) : null;
-    }
+  getUserSession(): UserSession | null {
+    const userSessionString = localStorage.getItem('userSession');
+    return userSessionString ? JSON.parse(userSessionString) : null;
+  }
 
-    deleteUserSession() {
-      this.userSession = null;
-      localStorage.removeItem('userSession');
-      this.isLoggedInSubject.next(false);
-    }
+  deleteUserSession() {
+    this.userSession = null;
+    localStorage.removeItem('userSession');
+    this.isLoggedInSubject.next(false);
+  }
 
-    async saveLanguageSession(language: string) {
-      await this.storageService.clearAfterChangeLanguage();
-      
-      localStorage.setItem('language', language);
-      this.translate.use(language); // Cambia la lingua
-      this.languageSubject.next(language); // Notifica i componenti che la lingua è cambiata
-    }
-  
-    getLanguageSession(): string {
-      return localStorage.getItem('language') || 'it';
-    }
-  
-    deleteLanguageSession() {
-      localStorage.removeItem('language');
-    }
+  async saveLanguageSession(language: string) {
+    await this.storageService.clearAfterChangeLanguage();
+
+    localStorage.setItem('language', language);
+    this.translate.use(language); // Cambia la lingua
+    this.languageSubject.next(language); // Notifica i componenti che la lingua è cambiata
+  }
+
+  getLanguageSession(): string {
+    return localStorage.getItem('language') || 'it';
+  }
+
+  deleteLanguageSession() {
+    localStorage.removeItem('language');
+  }
 
   isAuthenticated() {
     return this.isLoggedInSubject.value;
   }
 
-  createUserSession(email: string, uid : string, token : string, idAttivita : number, idUser: number, photoURL:string, typeLog: number, displayName: string, nome:string, cognome:string){
+  createUserSession(email: string, uid: string, token: string, idAttivita: number, idUser: number, photoURL: string, typeLog: number, displayName: string, nome: string, cognome: string) {
     this.userSession = new UserSession(uid, email, idAttivita, idUser, token, photoURL, typeLog, displayName, nome, cognome);
     this.saveUserSession(this.userSession);
     this.isLoggedInSubject.next(true);
@@ -322,39 +320,39 @@ export class AuthService {
     }
   }
 
-  getUser(){
-      return this.userSession = this.getUserSession();
+  getUser() {
+    return this.userSession = this.getUserSession();
   }
-  
+
   apiInsertNewUtente(utente: Utente): Observable<any> {
-    return this.http.post<Utente>(this.constants.BasePath()+'/Soggetto/insert-utente', utente);
+    return this.http.post<Utente>(this.constants.BasePath() + '/Soggetto/insert-utente', utente);
   }
 
   GetUserJwt(uId: string): Observable<string> {
     return this.http.get(this.constants.BasePath() + '/auth/get-jwt?uId=' + uId, {
       responseType: 'text' // Specifica che la risposta è una stringa
     });
-  }  
+  }
 
   apiDeleteUtente(user: UserSession | null, reason: string | null): Observable<any> {
     const utente = new DeleteUtente();
     if (user) {
-        utente.email = user.email ? user.email : '';
-        utente.id = user.idSoggetto ? user.idSoggetto : 0;
-        utente.uid = user.uid ? user.uid : '';
-        utente.reason = reason ? reason : '';
+      utente.email = user.email ? user.email : '';
+      utente.id = user.idSoggetto ? user.idSoggetto : 0;
+      utente.uid = user.uid ? user.uid : '';
+      utente.reason = reason ? reason : '';
     }
 
     const options = {
-        body: utente
+      body: utente
     };
 
     return this.http.delete<DeleteUtente>(this.constants.BasePath() + '/Soggetto/delete-utente', options);
-}
+  }
 
   apiCheckUtenteByProvider(utente: Utente): Observable<any> {
     return new Observable((observer: Observer<Utente>) => {
-      this.http.post<Utente>(this.constants.BasePath()+'/Soggetto/check-utente', utente)
+      this.http.post<Utente>(this.constants.BasePath() + '/Soggetto/check-utente', utente)
         .subscribe({
           next: (response: Utente) => {
             observer.next(response);
@@ -368,14 +366,14 @@ export class AuthService {
   }
 
   apiCheckUtenteLogin(utente: Utente): Observable<any> {
-    return this.http.post<Utente>(this.constants.BasePath()+'/Soggetto/check-utente', utente);
+    return this.http.post<Utente>(this.constants.BasePath() + '/Soggetto/check-utente', utente);
   }
 
-  setIsShowedSplashFalse(){
+  setIsShowedSplashFalse() {
     localStorage.setItem('splashShown', "false");
   }
 
-  setIsShowedSplash(){
+  setIsShowedSplash() {
     localStorage.setItem('splashShown', "true");
   }
 
@@ -383,11 +381,11 @@ export class AuthService {
     return localStorage.getItem('splashShown') === "true";
   }
 
-  setLastIdPageInSession(idPage: number){
+  setLastIdPageInSession(idPage: number) {
     this.idPage = idPage;
   }
 
-  getLastIdPageFromSession(){
+  getLastIdPageFromSession() {
     return this.idPage;
   }
 }
