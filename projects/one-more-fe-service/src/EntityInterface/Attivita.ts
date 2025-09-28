@@ -33,6 +33,7 @@ export class Attivita {
   uploadImgPrincipale : string;
   promo: Promo[] | undefined;
   error : string;
+  partitaIva : string;
   constructor(
     idAttivita:number,
     idSoggetto:number,
@@ -64,7 +65,8 @@ export class Attivita {
     numberOfRating:number,
     placeId: string,
     uploadImgPrincipale : string,
-    error : string
+    error : string,
+    partitaIva: string
   ) 
   {
     this.idAttivita = idAttivita,
@@ -98,6 +100,7 @@ export class Attivita {
     this.placeId = placeId,
     this.uploadImgPrincipale = uploadImgPrincipale
     this.error = error;
+    this.partitaIva = partitaIva;
   }
 
 }
@@ -206,6 +209,7 @@ export class InsertAttivitaReqDto {
   rating:number;
   numberOfRating:number;
   placeId: string;
+  partitaIva: string;
 
   constructor(
     idAttivita:number ,
@@ -230,7 +234,8 @@ export class InsertAttivitaReqDto {
     esitoVerifica: boolean,
     rating:number,
     numberOfRating:number,
-    placeId: string) 
+    placeId: string,
+    partitaIva: string) 
     {
       this.idAttivita = idAttivita,
       this.idSoggetto = idSoggetto,
@@ -255,6 +260,7 @@ export class InsertAttivitaReqDto {
       this.rating = rating;
       this.numberOfRating = numberOfRating;
       this.placeId = placeId;
+      this.partitaIva = partitaIva;
   }
 }
 
