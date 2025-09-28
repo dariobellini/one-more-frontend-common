@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { GoogleAuthProvider } from 'firebase/auth';
-import { jwtDecode } from "jwt-decode";
+import { jwtDecode, JwtPayload } from "jwt-decode";
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { Constants } from '../Constants';
 import { ApiJwtPayload } from '../EntityInterface/ApiJwtPayload';
 import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
 import { Role } from '../Enum/Role';
+import { DecimalPipe } from '@angular/common';
 
 @Injectable({
     providedIn: 'root'
@@ -20,6 +21,17 @@ export class NewAuthService {
     private isShop$ = new BehaviorSubject<boolean>(this.isShop());
 
     constructor(private constants: Constants) { }
+
+    getToken(): string | null {
+        return localStorage.getItem(this.constants.UserApiJwt());
+    }
+
+    getTokenPayload(): ApiJwtPayload | null {
+        var token = this.getToken();
+        if (token)
+            return this.getDecodedToken(token);
+        else return null;
+    }
 
     setToken(token: JwtResponseDto) {
         localStorage.setItem(this.constants.UserApiJwt(), token.jwt);
@@ -70,7 +82,31 @@ export class NewAuthService {
             return false;
         }
     }
+    private getDecodedToken(token: string): ApiJwtPayload | null {
+        try {
+            const decoded: any = jwtDecode(token);
+            const idAttivitaList = (decoded["id-attivita-list"]  as string).split("-").map(s=>s.trim());
 
+            const jwt: ApiJwtPayload = {
+                sub: decoded.sub,
+                exp: decoded.exp,
+                name: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
+                roles: Array.isArray(decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"])
+                    ? decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]
+                    : [decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]].filter(Boolean),
+                isVerified: decoded["is-verified"] === "true" || decoded["is-verified"]  === true || decoded["is-verified"]  === "True",
+                idSoggetto: decoded["id-soggetto"],
+                idAttivitaList: idAttivitaList.map(num => parseInt(num.trim(), 10))
+            };
+
+            console.log("Jwt he uso in memory"+ jwt);
+
+            return jwt;
+        } catch (error) {
+            console.error("Errore nella decodifica JWT:", error);
+            return null;
+        }
+    }
     private getRolesFromToken(): string[] {
         const token = this.getToken();
         if (!token) return [];
@@ -93,28 +129,5 @@ export class NewAuthService {
         const roles = this.getRolesFromToken();
         return roles.includes(Role[Role.shop]);
     }
-
-    private getToken(): string | null {
-        return localStorage.getItem(this.constants.UserApiJwt());
-    }
-
-    private getDecodedToken(token: string): ApiJwtPayload | null {
-        try {
-            const decoded: any = jwtDecode(token);
-
-            return {
-                sub: decoded.sub,
-                exp: decoded.exp,
-                name: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
-                roles: Array.isArray(decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"])
-                    ? decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]
-                    : [decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]].filter(Boolean)
-            };
-        } catch (error) {
-            console.error("Errore nella decodifica JWT:", error);
-            return null;
-        }
-    }
-
     //#endregion
 }
