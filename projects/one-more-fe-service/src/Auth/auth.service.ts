@@ -93,12 +93,15 @@ export class AuthService {
     return signOut(this.firebaseAut);
   }
 
-  async login(email: string, password: string): Promise<{ userCredential: UserCredential, token: string }> {
+  async login(email: string, password: string): Promise<JwtResponseDto | undefined> {
     const userCredential = await signInWithEmailAndPassword(this.firebaseAut, email, password);
     const token = await userCredential.user.getIdToken();
-    const apiJwt = await this.GetUserJwt(userCredential.user.uid).toPromise();
-    localStorage.setItem(this.constants.UserApiJwt(), apiJwt ?? '');
-    return { userCredential, token };
+    const readealJwt = await firstValueFrom(this.UsernamePasswordLogin(token));
+
+    if (readealJwt)
+      this.newAuthService.setToken(readealJwt);
+
+    return Promise.resolve(readealJwt);
   }
 
   signUp(email: string, password: string): Promise<{ userCredential: UserCredential, token: string }> {
@@ -146,6 +149,10 @@ export class AuthService {
 
   private GoogleLogin(idToken: string): Observable<JwtResponseDto> {
     return this.http.get<JwtResponseDto>(this.constants.BasePath() + '/auth/google-login?idToken=' + idToken);
+  }
+
+  private UsernamePasswordLogin(idToken: string): Observable<JwtResponseDto> {
+    return this.http.get<JwtResponseDto>(this.constants.BasePath() + '/auth/username-password-login?idToken=' + idToken);
   }
 
   facebookProvider = new FacebookAuthProvider();
