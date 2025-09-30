@@ -37,6 +37,6 @@ export class CouponService {
   }
 
   Validate(jwtCoupon: string): Observable<ValidaCouponEsitoDto> {
-    return this.http.post<ValidaCouponEsitoDto>(this.constants.BasePath() + '/Coupon/Validate', jwtCoupon);
+    return this.http.post<ValidaCouponEsitoDto>(this.constants.BasePath() + '/Coupon/Validate', {jwtCoupon});
   }
 }
