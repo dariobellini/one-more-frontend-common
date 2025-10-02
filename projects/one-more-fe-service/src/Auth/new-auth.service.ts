@@ -6,7 +6,6 @@ import { Constants } from '../Constants';
 import { ApiJwtPayload } from '../EntityInterface/ApiJwtPayload';
 import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
 import { Role } from '../Enum/Role';
-import { DecimalPipe } from '@angular/common';
 
 @Injectable({
     providedIn: 'root'
