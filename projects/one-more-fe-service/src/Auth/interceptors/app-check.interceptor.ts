@@ -1,10 +1,5 @@
 import { Injectable } from '@angular/core';
-import {
-  HttpInterceptor,
-  HttpRequest,
-  HttpHandler,
-  HttpEvent
-} from '@angular/common/http';
+import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { Observable, from } from 'rxjs';
 import { getToken, AppCheck } from '@angular/fire/app-check';
 
