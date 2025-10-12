@@ -1,7 +1,7 @@
 import { Coupon, StatusCoupon, StatusCouponUser } from './EntityInterface/Coupon';
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { CouponListDto } from './EntityInterface/CouponListDto.cjs';
 import { Constants } from './Constants';
 import { AuthService } from './Auth/auth.service';
@@ -27,9 +27,12 @@ export class CouponService {
     );
   }
 
-  ListCoupon(): Observable<any> {
+  async ListCoupon(): Promise<any> {
     this.language = this.authService.getLanguageSession();
-    return this.http.get<CouponListDto[]>(this.constants.BasePath() + '/Coupon/List?lang=' + this.language.toUpperCase());
+     return await firstValueFrom(
+          this.http.get<CouponListDto[]>(this.constants.BasePath() + '/Coupon/List?lang='+ this.language.toUpperCase())
+        );
+    // return this.http.get<CouponListDto[]>(this.constants.BasePath() + '/Coupon/List?lang=' + this.language.toUpperCase());
   }
 
   UpdateCoupon(coupon: StatusCoupon): Observable<any> {
