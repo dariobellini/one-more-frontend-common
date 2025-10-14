@@ -210,7 +210,8 @@ export class GetApiAttivitaService {
     });
   }
 
-  apiGetAttivitaByIdSoggetto(idSoggetto: number): Observable<any> {
+  // apiGetAttivitaByIdSoggetto(idSoggetto: number): Observable<any> {
+  apiGetAttivitaByIdSoggetto(): Observable<any> {
     this.language = this.authService.getLanguageSession();
     if (!this.language) {
       this.language = "it";
@@ -220,7 +221,7 @@ export class GetApiAttivitaService {
       this.constants.BasePath() + '/Attivita/get-lista-attivita-by-id',
       {
         params: {
-          idSoggetto: idSoggetto.toString(),
+          // idSoggetto: idSoggetto.toString(),
           lang: this.language
         }
       }

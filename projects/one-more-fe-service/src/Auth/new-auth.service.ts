@@ -17,6 +17,7 @@ export class NewAuthService {
 
     private loggedIn$ = new BehaviorSubject<boolean>(this.hasValidToken());
     private isUser$ = new BehaviorSubject<boolean>(this.isUser());
+    private isVerified$ = new BehaviorSubject<boolean>(this.isVerified());
     private isShop$ = new BehaviorSubject<boolean>(this.isShop());
 
     constructor(private constants: Constants) { }
@@ -49,6 +50,12 @@ export class NewAuthService {
         return this.isUser$.asObservable().pipe(
             tap(value => console.log('check isUser:', value)));
     }
+
+    loggedUserIsVerified(): Observable<boolean> {
+        return this.isVerified$.asObservable().pipe(
+            tap(value => console.log('check isVerified:', value)));
+    }
+
 
     loggedUserIsShop(): Observable<boolean> {
         return this.isShop$.asObservable().pipe(
@@ -123,6 +130,20 @@ export class NewAuthService {
     private isUser(): boolean {
         const roles = this.getRolesFromToken();
         return roles.includes(Role[Role.user]);
+    }
+    private isVerified(): boolean {
+         const token = this.getToken();
+        if (!token) return false;
+
+        try {
+            const decoded = this.getDecodedToken(token);
+            console.log(decoded);
+            if (decoded?.isVerified) return decoded.isVerified;
+            else return false;
+
+        } catch {
+            return false;
+        }
     }
     private isShop(): boolean {
         const roles = this.getRolesFromToken();
