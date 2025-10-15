@@ -112,10 +112,6 @@ export class AuthService {
       });
   }
 
-  setDisplayName(user: User, name: string): Promise<void> {
-    return updateProfile(user, { displayName: name });
-  }
-
   addUser(user: ProfileUser): Promise<void> {
     return setDoc(doc(this.firestore, "users", user.uid), {
       displayName: user.displayName,

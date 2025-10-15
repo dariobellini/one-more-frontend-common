@@ -54,12 +54,11 @@ async apiGetListaTipoPeriodo(): Promise<TipoPeriodo[]>{
     );
   }
 
-  apiGetListaPromoByIdAttivitaAndUser(id: number, idSoggetto: number): Observable<Promo[]> {
+  apiGetListaPromoByIdAttivitaAndUser(id: number): Observable<Promo[]> {
     const lang = this.authService.getLanguageSession() || 'IT'; // Recupera la lingua
 
     const params = new HttpParams()
         .set('idAttivita', id.toString())
-        .set('idSoggetto', idSoggetto.toString())
         .set('lang', lang.toUpperCase());
 
     return this.http.get<Promo[]>(this.constants.BasePath() + '/Promo/get-promo-attive-by-idattivita-user', { params });

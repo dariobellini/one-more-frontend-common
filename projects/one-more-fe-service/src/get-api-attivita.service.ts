@@ -238,13 +238,12 @@ export class GetApiAttivitaService {
           })
   }
 
-  apiGetAttivitaFavorite(id:number): Observable<AttivitaRicerca[]>{
+  apiGetAttivitaFavorite(): Observable<AttivitaRicerca[]>{
     this.language = this.authService.getLanguageSession();
     if (!this.language) {
       this.language = "it";
     }
     const params = new HttpParams()
-      .set('idSoggetto', id.toString())
       .set('lang', this.language.toUpperCase())
     return this.http.get<AttivitaRicerca[]>(this.constants.BasePath()+'/Attivita/get-favorites', {params});
   }
@@ -434,10 +433,9 @@ export class GetApiAttivitaService {
     return this.listaAttivitaDDL$;
   }
 
-  apiDeleteAttivita(idAttivita: number, idSoggetto: number): Observable<number> {
+  apiDeleteAttivita(idAttivita: number): Observable<number> {
     const attivita = new DeleteAttivita();
     attivita.idAttivita = idAttivita || 0;
-    attivita.idSoggetto = idSoggetto || 0;
     
     const options = {
       body: attivita

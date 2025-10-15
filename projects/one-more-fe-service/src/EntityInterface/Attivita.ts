@@ -448,7 +448,6 @@ export class AttivitaFiltrate
 
 export class DeleteAttivita {
   idAttivita :number = 0;
-  idSoggetto :number = 0;
 }
 
 export class ReqAttivitaAutocomplete
