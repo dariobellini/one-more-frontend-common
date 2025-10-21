@@ -197,20 +197,18 @@ export class GetApiAttivitaService {
     return this.http.get<Immagini[]>(this.constants.BasePath()+'/Attivita/get-lista-immagini/' + id);
   }
 
-  apiGetAttivitaByIdSoggettoAndAtt(idSoggetto: number, idAttivita: number): Observable<any> {
+  apiGetAttivitaByIdAttivta(idAttivita: number): Observable<any> {
     this.language = this.authService.getLanguageSession();
     if(this.language == undefined)
       this.language = "it";
     return this.http.get(this.constants.BasePath() + '/Attivita/get-attivita-by-id', {
         params: {
-            idSoggetto: idSoggetto.toString(),
             idAttivita: idAttivita.toString(),
             lang: this.language.toUpperCase(),
         }
     });
   }
 
-  // apiGetAttivitaByIdSoggetto(idSoggetto: number): Observable<any> {
   apiGetAttivitaByIdSoggetto(): Observable<any> {
     this.language = this.authService.getLanguageSession();
     if (!this.language) {
@@ -274,7 +272,7 @@ export class GetApiAttivitaService {
 
     async apiGetAttivitaByIdAttivita(
       id: number | undefined
-    ): Promise<any> {
+    ): Promise<Attivita> {
       this.language = this.authService.getLanguageSession();
       if (!this.language) {
         this.language = "it";
