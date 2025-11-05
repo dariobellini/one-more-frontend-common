@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Comuni } from './EntityInterface/Comuni_CAP';
 import { Constants } from './Constants';
-import { AuthService } from './Auth/auth.service';
+import { NewAuthService } from './Auth/new-auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +13,7 @@ export class GetApiComuniService {
   private listaComuniSubject = new BehaviorSubject<Comuni[] | null>(null);
 
   constructor(private http:HttpClient, private constants: Constants,
-    private authService: AuthService) { }
+    private authService: NewAuthService) { }
 
   apiGetListaComuni(): Observable<Comuni[]>{
     this.language = this.authService.getLanguageSession() || 'it';

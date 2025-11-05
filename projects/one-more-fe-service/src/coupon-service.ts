@@ -4,9 +4,9 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, Observable } from 'rxjs';
 import { CouponListDto } from './EntityInterface/CouponListDto.cjs';
 import { Constants } from './Constants';
-import { AuthService } from './Auth/auth.service';
 import { InsertCouponResponse } from './EntityInterface/Promo';
 import { ValidaCouponEsitoDto } from './EntityInterface/CouponDto/ValidaCouponEsitoDto';
+import { NewAuthService } from './Auth/new-auth.service';
 
 
 @Injectable({
@@ -18,7 +18,7 @@ export class CouponService {
 
   language: string | undefined;
   constructor(private http: HttpClient, private constants: Constants,
-    private authService: AuthService) { }
+    private authService: NewAuthService) { }
 
   AddCoupon(coupon: Coupon): Observable<InsertCouponResponse> {
     return this.http.post<InsertCouponResponse>(

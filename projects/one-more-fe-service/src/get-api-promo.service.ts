@@ -3,9 +3,9 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable} from 'rxjs';
 import { EsitoInsertPromo, InsertPromoReqDto, InsertPromoUserAttiva, Promo } from './EntityInterface/Promo';
 import { Constants } from './Constants';
-import { AuthService } from './Auth/auth.service';
 import { firstValueFrom } from 'rxjs';
 import { TipoPeriodo } from './EntityInterface/TipoPeriodo';
+import { NewAuthService } from './Auth/new-auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -16,7 +16,7 @@ export class GetApiPromoService {
   promoData !: Promo;
   language : string | undefined;
   
-  constructor(private http:HttpClient, private constants: Constants, private authService: AuthService) { }
+  constructor(private http:HttpClient, private constants: Constants, private authService: NewAuthService) { }
 
   setPromoData(promo: Promo) {
     this.promoData = promo;

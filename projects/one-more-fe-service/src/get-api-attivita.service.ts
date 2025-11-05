@@ -3,9 +3,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { Constants } from './Constants';
-import { AuthService } from './Auth/auth.service';
 import { LocationService } from './location.service';
 import { StorageService } from './storage.service';
+import { NewAuthService } from './Auth/new-auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -32,7 +32,7 @@ export class GetApiAttivitaService {
   
   constructor(private http:HttpClient, 
               private constants:Constants,
-              private authService: AuthService,
+              private authService: NewAuthService,
               private locationService: LocationService,
               private storageService: StorageService) { }
   
