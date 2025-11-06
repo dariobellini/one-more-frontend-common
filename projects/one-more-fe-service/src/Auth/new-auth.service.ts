@@ -137,9 +137,7 @@ export class NewAuthService {
           console.error('Errore durante il salvataggio della sessione:', error);
         }
       }
-    }
-
-    
+    } 
 
     GetUserJwt(uId: string): Observable<string> {
       return this.http.get(this.constants.BasePath() + '/auth/get-jwt?uId=' + uId, {
@@ -283,13 +281,22 @@ export class NewAuthService {
     //#endregion
 
 
-  async GoogleLogIn(): Promise<JwtResponseDto | undefined> {
+  async ServiceLogIn(userType: number): Promise<JwtResponseDto | undefined> {
 
-    const userCredential = await signInWithPopup(this.firebaseAut, this.googleProvider);
+    let chosenProvider;
+    if (userType === 2) {
+        chosenProvider = this.googleProvider;
+    } else if (userType === 3) {
+        chosenProvider = this.facebookProvider;
+    } else {
+        throw new Error('Provider non gestito!');
+    }
 
-    const idTokenGoogle = await userCredential.user.getIdToken();
+    const userCredential = await signInWithPopup(this.firebaseAut, chosenProvider);
 
-    const readealJwt = await firstValueFrom(this.GoogleLogin(idTokenGoogle));
+    const idToken = await userCredential.user.getIdToken();
+
+    const readealJwt = await firstValueFrom(this.apiServiceLogin(idToken, userType));
 
     if (readealJwt)
       this.tokenService.setToken(readealJwt);
@@ -297,32 +304,6 @@ export class NewAuthService {
     return Promise.resolve(readealJwt);
   }
 
-  private GoogleLogin(idToken: string): Observable<JwtResponseDto> {
-    return this.http.get<JwtResponseDto>(this.constants.BasePath() + '/auth/google-login?idToken=' + idToken);
-  }
-
-  async FacebookLogIn(): Promise<ProfileUser | null> {
-      const userCredential = await signInWithPopup(this.firebaseAut, this.facebookProvider);
-  
-      const {
-        user: { uid, email, displayName }
-      } = userCredential;
-  
-      const token = await userCredential.user.getIdToken();
-  
-      const newProfile = {
-        uid,
-        email: email ?? '',
-        displayName: displayName ?? '',
-        token: token ?? ''
-      }
-  
-      const apiJwt = await this.GetUserJwt(userCredential.user.uid).toPromise();
-      localStorage.setItem(this.constants.UserApiJwt(), apiJwt ?? '');
-  
-      return Promise.resolve(newProfile);
-  }
-  
   apiInsertNewUtente(utente: Utente): Observable<any> {
     return this.http.post<Utente>(this.constants.BasePath() + '/Soggetto/insert-utente', utente);
   }
@@ -342,4 +323,9 @@ export class NewAuthService {
 
       return this.http.delete<DeleteUtente>(this.constants.BasePath() + '/Soggetto/delete-utente', options);
   }
+
+  private apiServiceLogin(idToken: string, userType: number): Observable<JwtResponseDto> {
+    const url = `${this.constants.BasePath()}/auth/service-login?idToken=${idToken}&userType=${userType}`;
+    return this.http.get<JwtResponseDto>(url);
+}
 }
