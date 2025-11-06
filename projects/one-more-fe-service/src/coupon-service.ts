@@ -6,7 +6,7 @@ import { CouponListDto } from './EntityInterface/CouponListDto.cjs';
 import { Constants } from './Constants';
 import { InsertCouponResponse } from './EntityInterface/Promo';
 import { ValidaCouponEsitoDto } from './EntityInterface/CouponDto/ValidaCouponEsitoDto';
-import { NewAuthService } from './Auth/new-auth.service';
+import { LanguageService } from './Language.service';
 
 
 @Injectable({
@@ -17,8 +17,9 @@ export class CouponService {
   coupon !: Coupon;
 
   language: string | undefined;
-  constructor(private http: HttpClient, private constants: Constants,
-    private authService: NewAuthService) { }
+  constructor(private http: HttpClient, 
+              private constants: Constants,
+              private languageService: LanguageService) { }
 
   AddCoupon(coupon: Coupon): Observable<InsertCouponResponse> {
     return this.http.post<InsertCouponResponse>(
@@ -28,11 +29,10 @@ export class CouponService {
   }
 
   async ListCoupon(): Promise<any> {
-    this.language = this.authService.getLanguageSession();
+    this.language = this.languageService.getLanguageSession();
      return await firstValueFrom(
           this.http.get<CouponListDto[]>(this.constants.BasePath() + '/Coupon/List?lang='+ this.language.toUpperCase())
         );
-    // return this.http.get<CouponListDto[]>(this.constants.BasePath() + '/Coupon/List?lang=' + this.language.toUpperCase());
   }
 
   UpdateCoupon(coupon: StatusCoupon): Observable<any> {

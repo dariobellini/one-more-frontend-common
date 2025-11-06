@@ -1,17 +1,16 @@
 import { Injectable } from '@angular/core';
 import { createUserWithEmailAndPassword, deleteUser, EmailAuthProvider, FacebookAuthProvider, getAdditionalUserInfo, GoogleAuthProvider, reauthenticateWithCredential, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, User, UserCredential } from 'firebase/auth';
 import { Auth, authState, signOut } from '@angular/fire/auth';
-import { jwtDecode, JwtPayload } from "jwt-decode";
 import { BehaviorSubject, filter, firstValueFrom, Observable, Observer, tap } from 'rxjs';
 import { Constants } from '../Constants';
-import { ApiJwtPayload } from '../EntityInterface/ApiJwtPayload';
 import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
 import { Role } from '../Enum/Role';
 import { DeleteUtente, ProfileUser, UserSession, Utente } from '../EntityInterface/Utente';
 import { deleteDoc, doc, Firestore, getDoc, setDoc } from '@angular/fire/firestore';
 import { StorageService } from '../storage.service';
-import { TranslateService } from '@ngx-translate/core';
+
 import { HttpClient } from '@angular/common/http';
+import { TokenService } from './token.service';
 
 @Injectable({
     providedIn: 'root'
@@ -25,12 +24,10 @@ export class NewAuthService {
 
     googleProvider = new GoogleAuthProvider();
     facebookProvider = new FacebookAuthProvider();
-    private languageSubject = new BehaviorSubject<string>('IT'); // Stato iniziale
-    private loggedIn$ = new BehaviorSubject<boolean>(this.hasValidToken());
+    private loggedIn$ = new BehaviorSubject<boolean>(this.tokenService.hasValidToken());
     private isUser$ = new BehaviorSubject<boolean>(this.isUser());
     private isVerified$ = new BehaviorSubject<boolean>(this.isVerified());
     private isShop$ = new BehaviorSubject<boolean>(this.isShop());
-    language$ = this.languageSubject.asObservable();
     esito!: string;
     userSession!: UserSession | null;
     language: string | undefined;
@@ -42,9 +39,8 @@ export class NewAuthService {
     constructor(private constants: Constants,
                 private firestore: Firestore,
                 private firebaseAut: Auth,
-                private storageService: StorageService,
-                private translate: TranslateService,
-                private http: HttpClient
+                private http: HttpClient,
+                private tokenService: TokenService
     ) { 
 
         this.userSession = this.getUserSession();
@@ -54,30 +50,13 @@ export class NewAuthService {
         else {
           this.loggedIn$.next(false);
         }
-
-        const savedLang = this.getLanguageSession();
-        this.translate.setDefaultLang(savedLang);
-        this.translate.use(savedLang);
-        this.languageSubject.next(savedLang);
     }
 
-    getToken(): string | null {
-        return localStorage.getItem(this.constants.UserApiJwt());
-    }
-
-    getTokenPayload(): ApiJwtPayload | null {
-        var token = this.getToken();
-        if (token)
-            return this.getDecodedToken(token);
-        else return null;
-    }
-
-    setToken(token: JwtResponseDto) {
-        localStorage.setItem(this.constants.UserApiJwt(), token.jwt);
-        localStorage.setItem(this.constants.UserApiRefreshToken(), token.refreshToken);
-        this.loggedIn$.next(this.hasValidToken());
-        this.isUser$.next(this.isUser());
-        this.isShop$.next(this.isShop());
+    
+    setStatusUserVerified(): void {
+      this.loggedIn$.next(this.tokenService.hasValidToken());
+      this.isUser$.next(this.isUser());
+      this.isShop$.next(this.isShop());
     }
 
     isLoggedIn(): Observable<boolean> {
@@ -142,18 +121,6 @@ export class NewAuthService {
         return userSessionString ? JSON.parse(userSessionString) : null;
     }
 
-    async saveLanguageSession(language: string) {
-      await this.storageService.clearAfterChangeLanguage();
-
-      localStorage.setItem('language', language);
-      this.translate.use(language); // Cambia la lingua
-      this.languageSubject.next(language); // Notifica i componenti che la lingua è cambiata
-    }
-
-    getLanguageSession(): string {
-      return localStorage.getItem('language') || 'it';
-    }
-
     createUserSession(email: string, uid: string, token: string, idAttivita: number, idUser: number, photoURL: string, typeLog: number, displayName: string, nome: string, cognome: string) {
       this.userSession = new UserSession(uid, email, idAttivita, idUser, token, photoURL, typeLog, displayName, nome, cognome);
       this.saveUserSession(this.userSession);
@@ -172,25 +139,7 @@ export class NewAuthService {
       }
     }
 
-    apiInsertNewUtente(utente: Utente): Observable<any> {
-      return this.http.post<Utente>(this.constants.BasePath() + '/Soggetto/insert-utente', utente);
-    }
-
-    apiDeleteUtente(user: UserSession | null, reason: string | null): Observable<any> {
-      const utente = new DeleteUtente();
-      if (user) {
-        utente.email = user.email ? user.email : '';
-        utente.id = user.idSoggetto ? user.idSoggetto : 0;
-        utente.uid = user.uid ? user.uid : '';
-        utente.reason = reason ? reason : '';
-      }
-
-      const options = {
-        body: utente
-      };
-
-      return this.http.delete<DeleteUtente>(this.constants.BasePath() + '/Soggetto/delete-utente', options);
-    }
+    
 
     GetUserJwt(uId: string): Observable<string> {
       return this.http.get(this.constants.BasePath() + '/auth/get-jwt?uId=' + uId, {
@@ -231,7 +180,7 @@ export class NewAuthService {
       const readealJwt = await firstValueFrom(this.UsernamePasswordLogin(token));
 
       if (readealJwt)
-        this.setToken(readealJwt);
+        this.tokenService.setToken(readealJwt);
 
       return Promise.resolve(readealJwt);
     }
@@ -306,73 +255,18 @@ export class NewAuthService {
     }
 
     //#region  private methods
-
-    private hasValidToken(): boolean {
-        const token = this.getToken();
-        if (!token) return false;
-
-        try {
-            const decoded = jwtDecode<ApiJwtPayload>(token);
-            const now = Math.floor(Date.now() / 1000); // in secondi
-            return decoded.exp > now;
-        } catch (e) {
-            console.log(e);
-            return false;
-        }
-    }
     
-    private getDecodedToken(token: string): ApiJwtPayload | null {
-        try {
-            const decoded: any = jwtDecode(token);
-            const idAttivitaList = (decoded["id-attivita-list"]  as string).split("-").map(s=>s.trim());
-
-            const jwt: ApiJwtPayload = {
-                sub: decoded.sub,
-                exp: decoded.exp,
-                name: decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"],
-                roles: Array.isArray(decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"])
-                    ? decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]
-                    : [decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]].filter(Boolean),
-                isVerified: decoded["is-verified"] === "true" || decoded["is-verified"]  === true || decoded["is-verified"]  === "True",
-                idSoggetto: decoded["id-soggetto"],
-                idAttivitaList: idAttivitaList.map(num => parseInt(num.trim(), 10))
-            };
-
-            console.log("Jwt he uso in memory"+ jwt);
-
-            return jwt;
-        } catch (error) {
-            console.error("Errore nella decodifica JWT:", error);
-            return null;
-        }
-    }
-
-    private getRolesFromToken(): string[] {
-        const token = this.getToken();
-        if (!token) return [];
-
-        try {
-            const decoded = this.getDecodedToken(token);
-            console.log(decoded);
-            if (decoded?.roles) return decoded.roles;
-            else return [];
-
-        } catch {
-            return [];
-        }
-    }
 
     private isUser(): boolean {
-        const roles = this.getRolesFromToken();
+        const roles = this.tokenService.getRolesFromToken();
         return roles.includes(Role[Role.user]);
     }
-
     private isVerified(): boolean {
-         const token = this.getToken();
+         const token = this.tokenService.getToken();
         if (!token) return false;
 
         try {
-            const decoded = this.getDecodedToken(token);
+            const decoded = this.tokenService.getDecodedToken(token);
             console.log(decoded);
             if (decoded?.isVerified) return decoded.isVerified;
             else return false;
@@ -382,14 +276,14 @@ export class NewAuthService {
         }
     }
     private isShop(): boolean {
-        const roles = this.getRolesFromToken();
+        const roles = this.tokenService.getRolesFromToken();
         return roles.includes(Role[Role.shop]);
     }
 
     //#endregion
 
 
-    async GoogleLogIn(): Promise<JwtResponseDto | undefined> {
+  async GoogleLogIn(): Promise<JwtResponseDto | undefined> {
 
     const userCredential = await signInWithPopup(this.firebaseAut, this.googleProvider);
 
@@ -398,7 +292,7 @@ export class NewAuthService {
     const readealJwt = await firstValueFrom(this.GoogleLogin(idTokenGoogle));
 
     if (readealJwt)
-      this.setToken(readealJwt);
+      this.tokenService.setToken(readealJwt);
 
     return Promise.resolve(readealJwt);
   }
@@ -427,5 +321,25 @@ export class NewAuthService {
       localStorage.setItem(this.constants.UserApiJwt(), apiJwt ?? '');
   
       return Promise.resolve(newProfile);
-    }
+  }
+  
+  apiInsertNewUtente(utente: Utente): Observable<any> {
+    return this.http.post<Utente>(this.constants.BasePath() + '/Soggetto/insert-utente', utente);
+  }
+
+  apiDeleteUtente(user: UserSession | null, reason: string | null): Observable<any> {
+      const utente = new DeleteUtente();
+      if (user) {
+        utente.email = user.email ? user.email : '';
+        utente.id = user.idSoggetto ? user.idSoggetto : 0;
+        utente.uid = user.uid ? user.uid : '';
+        utente.reason = reason ? reason : '';
+      }
+
+      const options = {
+        body: utente
+      };
+
+      return this.http.delete<DeleteUtente>(this.constants.BasePath() + '/Soggetto/delete-utente', options);
+  }
 }

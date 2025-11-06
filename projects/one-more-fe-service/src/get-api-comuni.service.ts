@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Comuni } from './EntityInterface/Comuni_CAP';
 import { Constants } from './Constants';
-import { NewAuthService } from './Auth/new-auth.service';
+import { LanguageService } from './Language.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,11 +12,12 @@ export class GetApiComuniService {
   language : string | undefined;
   private listaComuniSubject = new BehaviorSubject<Comuni[] | null>(null);
 
-  constructor(private http:HttpClient, private constants: Constants,
-    private authService: NewAuthService) { }
+  constructor(private http:HttpClient, 
+              private constants: Constants,
+              private languageService: LanguageService ) { }
 
   apiGetListaComuni(): Observable<Comuni[]>{
-    this.language = this.authService.getLanguageSession() || 'it';
+    this.language = this.languageService.getLanguageSession() || 'it';
     return this.http.get<Comuni[]>(this.constants.BasePath()+'/Comuni/get-comuni', {
       params: {
           lang: this.language.toUpperCase(),

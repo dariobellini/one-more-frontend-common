@@ -6,6 +6,7 @@ import { Constants } from './Constants';
 import { LocationService } from './location.service';
 import { StorageService } from './storage.service';
 import { NewAuthService } from './Auth/new-auth.service';
+import { LanguageService } from './Language.service';
 
 @Injectable({
   providedIn: 'root'
@@ -34,7 +35,8 @@ export class GetApiAttivitaService {
               private constants:Constants,
               private authService: NewAuthService,
               private locationService: LocationService,
-              private storageService: StorageService) { }
+              private storageService: StorageService,
+              private languageService: LanguageService) { }
   
   async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number, isHomePage: boolean): Promise<Observable<Attivita[]>> {
     const params = {
@@ -101,7 +103,7 @@ export class GetApiAttivitaService {
   }
 
   async GetFavorites(idSoggetto:number): Promise<Observable<Attivita[]>>{
-    this.language = this.authService.getLanguageSession();
+    this.language = this.languageService.getLanguageSession();
     if (!this.language) {
       this.language = "it";
     }
@@ -119,7 +121,7 @@ export class GetApiAttivitaService {
   async apiGetListaAttivitaFiltrate(filtro: FiltriAttivita): Promise<Observable<AttivitaFiltrate>> {
     let params = new HttpParams();
 
-    this.language = this.authService.getLanguageSession();
+    this.language = this.languageService.getLanguageSession();
     if (!this.language) {
       this.language = "it";
     }
@@ -198,7 +200,7 @@ export class GetApiAttivitaService {
   }
 
   apiGetAttivitaByIdAttivta(idAttivita: number): Observable<any> {
-    this.language = this.authService.getLanguageSession();
+    this.language = this.languageService.getLanguageSession();
     if(this.language == undefined)
       this.language = "it";
     return this.http.get(this.constants.BasePath() + '/Attivita/get-attivita-by-id', {
@@ -210,7 +212,7 @@ export class GetApiAttivitaService {
   }
 
   apiGetAttivitaByIdSoggetto(): Observable<any> {
-    this.language = this.authService.getLanguageSession();
+    this.language = this.languageService.getLanguageSession();
     if (!this.language) {
       this.language = "it";
     }
@@ -227,7 +229,7 @@ export class GetApiAttivitaService {
   }
 
   async apiGetListaDecAttivita(): Promise<Observable<TipoAttivita[]>>{
-    this.language = this.authService.getLanguageSession() || 'it';
+    this.language = this.languageService.getLanguageSession() || 'it';
 
     return this.http.get<TipoAttivita[]>(this.constants.BasePath()+'/Attivita/get-lista-tipoAttivita',{
               params: {
@@ -237,7 +239,7 @@ export class GetApiAttivitaService {
   }
 
   apiGetAttivitaFavorite(): Observable<AttivitaRicerca[]>{
-    this.language = this.authService.getLanguageSession();
+    this.language = this.languageService.getLanguageSession();
     if (!this.language) {
       this.language = "it";
     }
@@ -251,7 +253,7 @@ export class GetApiAttivitaService {
   }
 
   async apiInsertAttivita(attivita: InsertAttivitaReqDto): Promise<InsertAttivitaResponse> {
-    const lang = this.authService.getLanguageSession() || 'IT'; 
+    const lang = this.languageService.getLanguageSession() || 'IT'; 
     return await firstValueFrom(
       this.http.post<InsertAttivitaResponse>(this.constants.BasePath() + `/Attivita/insert-attivita`,attivita, {params: {
         lang: lang.toUpperCase(),
@@ -261,7 +263,7 @@ export class GetApiAttivitaService {
   }
 
   async apiUpdateAttivita(attivita: InsertAttivitaReqDto): Promise<any> {
-    const lang = this.authService.getLanguageSession() || 'IT'; 
+    const lang = this.languageService.getLanguageSession() || 'IT'; 
     return await firstValueFrom(
       this.http.post<InsertAttivitaReqDto>(this.constants.BasePath() + `/Attivita/update-attivita`,attivita, {params: {
         lang: lang.toUpperCase(),
@@ -273,7 +275,7 @@ export class GetApiAttivitaService {
     async apiGetAttivitaByIdAttivita(
       id: number | undefined
     ): Promise<Attivita> {
-      this.language = this.authService.getLanguageSession();
+      this.language = this.languageService.getLanguageSession();
       if (!this.language) {
         this.language = "it";
       }
@@ -315,7 +317,7 @@ export class GetApiAttivitaService {
     }
 
   async apiGetAttivitaAutocomplete(placeId: string): Promise<any> {
-    this.language = this.authService.getLanguageSession();
+    this.language = this.languageService.getLanguageSession();
     return await firstValueFrom(
         this.http.get(this.constants.BasePath() + '/Attivita/get-detail-attivita-autocomplete', {
             params: {
@@ -327,7 +329,7 @@ export class GetApiAttivitaService {
   }
 
   async apiGetListaAttivitaAutocomplete(datiAttivita: ReqAttivitaAutocomplete): Promise<Attivita[]> {
-    this.language = this.authService.getLanguageSession();
+    this.language = this.languageService.getLanguageSession();
     return await firstValueFrom(
       this.http.get<Attivita[]>(this.constants.BasePath() + '/Attivita/get-lista-attivita-autocomplete', {
         params: {
