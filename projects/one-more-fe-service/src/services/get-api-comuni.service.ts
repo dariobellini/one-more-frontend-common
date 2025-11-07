@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { Comuni } from './EntityInterface/Comuni_CAP';
-import { Constants } from './Constants';
-import { LanguageService } from './Language.service';
+import { Constants } from '../Constants';
+import { Comuni } from '../EntityInterface/Comuni_CAP';
+import { LanguageService } from './language.service';
 
 @Injectable({
   providedIn: 'root'

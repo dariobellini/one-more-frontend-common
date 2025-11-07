@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Constants } from './Constants';
-import { SearchItemDto } from './EntityInterface/SearchItemDto';
 import { Observable } from 'rxjs';
+import { Constants } from '../Constants';
+import { SearchItemDto } from '../EntityInterface/SearchItemDto';
 
 @Injectable({
   providedIn: 'root'

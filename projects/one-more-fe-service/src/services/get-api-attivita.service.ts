@@ -1,12 +1,13 @@
-import { Attivita, TipoAttivita, InsertAttivitaReqDto, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita, ReqAttivitaAutocomplete, InsertAttivitaResponse, AttivitaWithPromos } from './EntityInterface/Attivita';
+import { Attivita, TipoAttivita, InsertAttivitaReqDto, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita, ReqAttivitaAutocomplete, InsertAttivitaResponse, AttivitaWithPromos } from '../EntityInterface/Attivita';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
-import { Constants } from './Constants';
+import { Constants } from '../Constants';
 import { LocationService } from './location.service';
-import { StorageService } from './storage.service';
-import { NewAuthService } from './Auth/new-auth.service';
-import { LanguageService } from './Language.service';
+import { StorageService } from '../storage.service';
+import { NewAuthService } from '../Auth/new-auth.service';
+import { ShopFastRecListDto } from '../Dtos/ShopFastRecListDto';
+import { LanguageService } from './language.service';
 
 @Injectable({
   providedIn: 'root'
@@ -325,20 +326,6 @@ export class GetApiAttivitaService {
               lang: this.language.toUpperCase()
             }
         })
-    );
-  }
-
-  async apiGetListaAttivitaAutocomplete(datiAttivita: ReqAttivitaAutocomplete): Promise<Attivita[]> {
-    this.language = this.languageService.getLanguageSession();
-    return await firstValueFrom(
-      this.http.get<Attivita[]>(this.constants.BasePath() + '/Attivita/get-lista-attivita-autocomplete', {
-        params: {
-          nome: datiAttivita.nome || '',
-          citta: datiAttivita.citta || '',
-          indirizzo: datiAttivita.indirizzo || '',
-          lang: this.language || 'IT'
-        }
-      })
     );
   }
 

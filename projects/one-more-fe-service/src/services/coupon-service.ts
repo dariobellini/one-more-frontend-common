@@ -1,13 +1,12 @@
-import { Coupon, StatusCoupon, StatusCouponUser } from './EntityInterface/Coupon';
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { firstValueFrom, Observable } from 'rxjs';
-import { CouponListDto } from './EntityInterface/CouponListDto.cjs';
-import { Constants } from './Constants';
-import { InsertCouponResponse } from './EntityInterface/Promo';
-import { ValidaCouponEsitoDto } from './EntityInterface/CouponDto/ValidaCouponEsitoDto';
-import { LanguageService } from './Language.service';
-
+import { HttpClient } from "@angular/common/http";
+import { Injectable } from "@angular/core";
+import { Constants } from "../Constants";
+import { Coupon, StatusCoupon } from "../EntityInterface/Coupon";
+import { InsertCouponResponse } from "../EntityInterface/Promo";
+import { firstValueFrom, Observable } from "rxjs";
+import { LanguageService } from "./language.service";
+import { CouponListDto } from "../EntityInterface/CouponListDto.cjs";
+import { ValidaCouponEsitoDto } from "../EntityInterface/CouponDto/ValidaCouponEsitoDto";
 
 @Injectable({
   providedIn: 'root'

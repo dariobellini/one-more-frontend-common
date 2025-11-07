@@ -2,7 +2,6 @@ import { Injectable, EventEmitter } from '@angular/core';
 import { ApiJwtPayload } from '../EntityInterface/ApiJwtPayload';
 import { Constants } from '../Constants';
 import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
-import { NewAuthService } from './new-auth.service';
 import { jwtDecode } from 'jwt-decode';
 
 @Injectable({
@@ -10,8 +9,7 @@ import { jwtDecode } from 'jwt-decode';
 })
 export class TokenService {
 
-  constructor(private constants: Constants,
-              private newAuthService: NewAuthService
+  constructor(private constants: Constants
   ) { }
 
   public tokenChanged: EventEmitter<string> = new EventEmitter();
@@ -30,7 +28,7 @@ export class TokenService {
   setToken(token: JwtResponseDto) {
       localStorage.setItem(this.constants.UserApiJwt(), token.jwt);
       localStorage.setItem(this.constants.UserApiRefreshToken(), token.refreshToken);
-      this.newAuthService.setStatusUserVerified();
+    //   this.newAuthService.setStatusUserVerified();
   }
 
   getDecodedToken(token: string): ApiJwtPayload | null {

@@ -1,13 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable} from 'rxjs';
-import { EsitoInsertPromo, InsertPromoReqDto, InsertPromoUserAttiva, Promo } from './EntityInterface/Promo';
-import { Constants } from './Constants';
 import { firstValueFrom } from 'rxjs';
-import { TipoPeriodo } from './EntityInterface/TipoPeriodo';
-import { NewAuthService } from './Auth/new-auth.service';
-import { LanguageService } from './Language.service';
-
+import { Constants } from '../Constants';
+import { NewAuthService } from '../Auth/new-auth.service';
+import { LanguageService } from './language.service';
+import { EsitoInsertPromo, InsertPromoReqDto, Promo } from '../EntityInterface/Promo';
+import { TipoPeriodo } from '../EntityInterface/TipoPeriodo';
 @Injectable({
   providedIn: 'root'
 })
