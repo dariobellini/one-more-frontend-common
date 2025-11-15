@@ -3,7 +3,6 @@ export class AddressDto {
     streetNumber?: string;
     city?: string;
     zipCode?: string;
-    country?: string;
 
     constructor(data?: Partial<AddressDto>) {
         if (data) {
@@ -11,7 +10,6 @@ export class AddressDto {
             this.streetNumber = data.streetNumber;
             this.city = data.city;
             this.zipCode = data.zipCode;
-            this.country = data.country;
         }
     }
 }

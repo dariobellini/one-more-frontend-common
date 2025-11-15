@@ -6,7 +6,7 @@ import { Constants } from '../Constants';
 import { LocationService } from './location.service';
 import { StorageService } from '../storage.service';
 import { NewAuthService } from '../Auth/new-auth.service';
-import { ShopFastRecListDto } from '../Dtos/ShopFastRecListDto';
+import { ShopFastRecListDto } from '../Dtos/Requests/ShopFastRecListDto';
 import { LanguageService } from './language.service';
 
 @Injectable({
