@@ -1,4 +1,4 @@
 export interface CommonResDto {
-    outcom:boolean;
+    outcome:boolean;
     description: string;
 }

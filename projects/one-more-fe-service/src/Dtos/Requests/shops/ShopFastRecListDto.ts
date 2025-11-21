@@ -1,5 +1,5 @@
-import { AddressDto } from "../AddressDto";
-import { PhotoDto } from "../PhotoDto";
+import { AddressDto } from "../../AddressDto";
+import { PhotoDto } from "../../PhotoDto";
 
 export class ShopFastRecListDto {
     placeId?: string;

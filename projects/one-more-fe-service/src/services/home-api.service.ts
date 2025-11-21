@@ -6,26 +6,26 @@ import { ShopRecDetailDto } from "../Dtos/Requests/shops/ShopRecDetailDto";
 import { ShopAddResDto } from "../Dtos/Responses/shops/ShopAddResDto";
 import { ShopListDto } from "../Dtos/Responses/shops/ShopListDto";
 import { ShopAddReqDto } from "../Dtos/Requests/shops/ShopAddReqDto";
-import { ShopDetailResDto } from "../Dtos/Responses/shops/ShopDetailResDto";
+import { ShopListResDto } from "../Dtos/Responses/shops/ShopListResDto";
 
 @Injectable({
     providedIn: 'root'
 })
-export class ShopApiService {
+export class HomeApiService {
 
     language: string | undefined;
     constructor(private http: HttpClient,
         private constants: Constants,) { }
 
-    Get(shopId: number): Observable<ShopDetailResDto> {
-        return this.http.get<ShopDetailResDto>(this.constants.BasePath() + '/shop/get?shopId=' + shopId);
+    ShopsByType(promoTypeId: number): Observable<ShopListResDto> {
+        return this.http.get<ShopListResDto>(this.constants.BasePath() + '/home/shops-by-type?promoTypeId=' + promoTypeId);
     }
 
-    Add(shopAddReqDto: ShopAddReqDto): Observable<ShopAddResDto> {
-        return this.http.post<ShopAddResDto>(this.constants.BasePath() + '/shop/add', shopAddReqDto);
+    ShopsByCategory(promoCategoryId: number): Observable<ShopListResDto> {
+        return this.http.get<ShopListResDto>(this.constants.BasePath() + '/home/shops-by-category?promoCategoryId=' + promoCategoryId);
     }
 
-    List(): Observable<ShopListDto[]> {
-        return this.http.get<ShopListDto[]>(this.constants.BasePath() + '/shop/list');
+    NewEntries(): Observable<ShopListResDto> {
+        return this.http.get<ShopListResDto>(this.constants.BasePath() + '/home/new-entries');
     }
 }

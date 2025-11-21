@@ -1,4 +1,4 @@
-import { CommonResDto } from "./CommonResDto";
+import { CommonResDto } from "../CommonResDto";
 
 export interface ShopAddResDto extends CommonResDto{
 }

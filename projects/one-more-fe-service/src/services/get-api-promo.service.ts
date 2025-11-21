@@ -3,7 +3,6 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable} from 'rxjs';
 import { firstValueFrom } from 'rxjs';
 import { Constants } from '../Constants';
-import { NewAuthService } from '../Auth/new-auth.service';
 import { LanguageService } from './language.service';
 import { EsitoInsertPromo, InsertPromoReqDto, Promo } from '../EntityInterface/Promo';
 import { TipoPeriodo } from '../EntityInterface/TipoPeriodo';
@@ -17,8 +16,7 @@ export class GetApiPromoService {
   language : string | undefined;
   
   constructor(private http:HttpClient, 
-              private constants: Constants, 
-              private authService: NewAuthService, 
+              private constants: Constants,
               private languageService: LanguageService ) { }
 
   setPromoData(promo: Promo) {

@@ -41,16 +41,7 @@ export class NewAuthService {
     private firebaseAut: Auth,
     private http: HttpClient,
     private tokenService: TokenService
-  ) {
-
-    this.userSession = this.getUserSession();
-    if (this.userSession) {
-      this.loggedIn$.next(true);
-    }
-    else {
-      this.loggedIn$.next(false);
-    }
-  }
+  ) {}
 
 
   setStatusUserVerified(): void {

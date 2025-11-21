@@ -4,8 +4,8 @@ import { Constants } from "../Constants";
 import { firstValueFrom } from "rxjs";
 import { LanguageService } from "./language.service";
 import { ReqAttivitaAutocomplete } from "../EntityInterface/Attivita";
-import { ShopRecDetailDto } from "../Dtos/Requests/ShopRecDetailDto";
-import { ShopFastRecListDto } from "../Dtos/Requests/ShopFastRecListDto";
+import { ShopFastRecListDto } from "../Dtos/Requests/shops/ShopFastRecListDto";
+import { ShopRecDetailDto } from "../Dtos/Requests/shops/ShopRecDetailDto";
 
 @Injectable({
     providedIn: 'root'

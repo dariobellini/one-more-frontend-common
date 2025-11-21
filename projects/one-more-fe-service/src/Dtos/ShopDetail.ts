@@ -5,5 +5,6 @@ export interface ShopDetailDto {
     placeId: string;
     longitude: number;
     latitude: number;
+    rating: number;
     telephone: string;
 }
