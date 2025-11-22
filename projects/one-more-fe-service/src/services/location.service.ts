@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { Storage } from '@capacitor/storage';
 import { Geolocation } from '@capacitor/geolocation';
+import { CoordinatesDto } from '../Dtos/CoordinatesDto';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +10,11 @@ import { Geolocation } from '@capacitor/geolocation';
 export class LocationService {
   private cacheKey = 'cached_location';
   private cacheTTL = 10 * 60 * 1000; // 10 minuti
+  private readonly EARTH_RADIUS_KM = 6371;
 
+  private toRad(value: number): number {
+    return (value * Math.PI) / 180;
+  }
   async getCurrentLocation(): Promise<{ latitudine: number; longitudine: number }> {
     // 1. Controlla la cache
     const cachedLocation = await this.getCachedLocation();
@@ -63,6 +68,28 @@ export class LocationService {
     // 3. Fallback su Roma
     return this.getFallbackLocation();
   }
+
+
+  public async calculateDistance(lat: number, lon: number): Promise<number> {
+    // const location = await this.getCachedLocation();
+
+    // if (location != null) {
+    //   const dLat = this.toRad(location.latitudine - lat);
+    //   const dLon = this.toRad(location.longitudine - lon);
+
+    //   const a =
+    //     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    //     Math.cos(this.toRad(location.latitudine)) * Math.cos(this.toRad(lat)) *
+    //     Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+    //   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    //   return this.EARTH_RADIUS_KM * c;
+    // } else {
+      return 0;
+    // }
+  }
+
 
   // --- Helpers ---
   private async getCachedLocation(): Promise<{ latitudine: number; longitudine: number } | null> {

@@ -13,6 +13,6 @@ export class PromoGetResDto {
   categories!: PromoCategoryDto[];
   types!: PromoTypeDto[];
   limit!: PromoLimitDto;
-  period!: PromoPeriodDto;
+  periods!: PromoPeriodDto[];
   photos!: PhotoDto[];
 }

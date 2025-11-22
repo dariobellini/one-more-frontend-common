@@ -1,4 +1,6 @@
 export class PromoPeriodDto {
-  startDate!: Date;
-  endDate!: Date;
+  id!: number;
+  description!: string;
+  imgUrl!: string;
+  style!: string;
 }
