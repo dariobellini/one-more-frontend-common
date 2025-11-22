@@ -4,32 +4,34 @@ import { BehaviorSubject } from 'rxjs';
 import { StorageService } from '../storage.service';
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
-
 export class LanguageService {
+  
+  private languageSubject: BehaviorSubject<string>;
+  language$;
 
-    private languageSubject = new BehaviorSubject<string>('IT'); // Stato iniziale
-    language$ = this.languageSubject.asObservable();
+  constructor(
+    private translate: TranslateService,
+    private storageService: StorageService
+  ) {
+    const savedLang = this.getLanguageSession(); // recupera da localStorage o default
+    this.languageSubject = new BehaviorSubject<string>(savedLang);
+    this.language$ = this.languageSubject.asObservable();
 
-    constructor(private translate: TranslateService,
-                private storageService: StorageService
-    ) {
-        const savedLang = this.getLanguageSession();
-        this.translate.setDefaultLang(savedLang);
-        this.translate.use(savedLang);
-        this.languageSubject.next(savedLang);
-     }
+    this.translate.setDefaultLang(savedLang);
+    this.translate.use(savedLang);
+  }
 
-    async saveLanguageSession(language: string) {
-      await this.storageService.clearAfterChangeLanguage();
+  async saveLanguageSession(language: string) {
+    await this.storageService.clearAfterChangeLanguage();
 
-      localStorage.setItem('language', language);
-      this.translate.use(language); // Cambia la lingua
-      this.languageSubject.next(language); // Notifica i componenti che la lingua è cambiata
-    }
+    localStorage.setItem('language', language);
+    this.translate.use(language);
+    this.languageSubject.next(language); // aggiorna correttamente
+  }
 
-    getLanguageSession(): string {
-      return localStorage.getItem('language') || 'it';
-    }
+  getLanguageSession(): string {
+    return localStorage.getItem('language') || 'it';
+  }
 }

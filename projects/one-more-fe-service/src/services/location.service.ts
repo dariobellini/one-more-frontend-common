@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Capacitor } from '@capacitor/core';
 import { Storage } from '@capacitor/storage';
 import { Geolocation } from '@capacitor/geolocation';
 
@@ -10,49 +11,84 @@ export class LocationService {
   private cacheTTL = 10 * 60 * 1000; // 10 minuti
 
   async getCurrentLocation(): Promise<{ latitudine: number; longitudine: number }> {
-    // Controlla la cache
-    const cachedLocation = await Storage.get({ key: this.cacheKey });
-    if (cachedLocation.value) {
+    // 1. Controlla la cache
+    const cachedLocation = await this.getCachedLocation();
+    if (cachedLocation) {
+      return cachedLocation;
+    }
+
+    // 2. Gestione per piattaforma
+    if (Capacitor.getPlatform() === 'web') {
+      // Browser: usa navigator.geolocation
+      return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const newLocation = {
+              latitudine: pos.coords.latitude,
+              longitudine: pos.coords.longitude,
+              timestamp: Date.now()
+            };
+            await this.setCachedLocation(newLocation);
+            resolve({ latitudine: newLocation.latitudine, longitudine: newLocation.longitudine });
+          },
+          (err) => {
+            console.error('Errore geolocalizzazione browser:', err);
+            resolve(this.getFallbackLocation());
+          }
+        );
+      });
+    } else {
+      // Mobile: usa Capacitor Geolocation
       try {
-        const { latitudine, longitudine, timestamp } = JSON.parse(cachedLocation.value);
-        if (Date.now() - timestamp < this.cacheTTL) {
-          return { latitudine, longitudine }; // posizione dalla cache
+        let permStatus = await Geolocation.checkPermissions();
+        if (permStatus.location !== 'granted') {
+          permStatus = await Geolocation.requestPermissions();
+        }
+
+        if (permStatus.location === 'granted') {
+          const position = await Geolocation.getCurrentPosition();
+          const newLocation = {
+            latitudine: position.coords.latitude,
+            longitudine: position.coords.longitude,
+            timestamp: Date.now()
+          };
+          await this.setCachedLocation(newLocation);
+          return { latitudine: newLocation.latitudine, longitudine: newLocation.longitudine };
         }
       } catch (error) {
-        console.error('Errore nel parsing della cache della posizione:', error);
+        console.error('Errore durante il recupero della posizione mobile:', error);
       }
     }
 
+    // 3. Fallback su Roma
+    return this.getFallbackLocation();
+  }
+
+  // --- Helpers ---
+  private async getCachedLocation(): Promise<{ latitudine: number; longitudine: number } | null> {
     try {
-      // Verifica e richiede i permessi
-      let permStatus = await Geolocation.checkPermissions();
-
-      if (permStatus.location !== 'granted') {
-        permStatus = await Geolocation.requestPermissions();
+      const cachedLocation = await Storage.get({ key: this.cacheKey });
+      if (cachedLocation.value) {
+        const { latitudine, longitudine, timestamp } = JSON.parse(cachedLocation.value);
+        if (Date.now() - timestamp < this.cacheTTL) {
+          return { latitudine, longitudine };
+        }
       }
-
-      if (permStatus.location === 'granted') {
-        const position = await Geolocation.getCurrentPosition();
-
-        const newLocation = {
-          latitudine: position.coords.latitude,
-          longitudine: position.coords.longitude,
-          timestamp: Date.now()
-        };
-
-        await Storage.set({ key: this.cacheKey, value: JSON.stringify(newLocation) });
-
-        return {
-          latitudine: newLocation.latitudine,
-          longitudine: newLocation.longitudine
-        };
-      }
-
     } catch (error) {
-      console.error('Errore durante il recupero della posizione:', error);
+      console.error('Errore nel parsing della cache della posizione:', error);
     }
+    return null;
+  }
 
-    // Fallback su Roma
-    return { latitudine: 41.9028, longitudine: 12.4964 };
+  private async setCachedLocation(location: { latitudine: number; longitudine: number; timestamp: number }) {
+    try {
+      await Storage.set({ key: this.cacheKey, value: JSON.stringify(location) });
+    } catch (error) {
+      console.error('Errore nel salvataggio della cache:', error);
+    }
+  }
+
+  private getFallbackLocation(): { latitudine: number; longitudine: number } {
+    return { latitudine: 41.9028, longitudine: 12.4964 }; // Roma
   }
 }
