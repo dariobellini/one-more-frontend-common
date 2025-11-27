@@ -17,6 +17,7 @@ export class HomeApiService {
 
 
     PromosByType(promoTypeId: number): Observable<PromoListResDto> {
+        console.log("PromosByType");
         return this.http.get<PromoListResDto>(this.constants.BasePath() + '/home/promos-by-type?promoTypeId=' + promoTypeId);
     }
 

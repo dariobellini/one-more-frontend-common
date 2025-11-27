@@ -1,4 +1,5 @@
 import { AddressDto } from "../../AddressDto";
+import { BytesPhotoDto } from "../../FastRecDtos/BytesPhotoDto";
 import { HourDto } from "../../HourDto";
 import { OfferTypeDto } from "../../OfferTypeDto";
 import { PhotoDto } from "../../PhotoDto";
@@ -12,5 +13,5 @@ export interface ShopAddReqDto {
     offerType: OfferTypeDto;
     detail: ShopDetailDto;
     types: ShopTypeDto[];
-    photos: PhotoDto[];
+    photos: BytesPhotoDto[];
 }

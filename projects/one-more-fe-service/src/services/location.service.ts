@@ -71,23 +71,27 @@ export class LocationService {
 
 
   public async calculateDistance(lat: number, lon: number): Promise<number> {
-    // const location = await this.getCachedLocation();
+    const location = await this.getCachedLocation();
 
-    // if (location != null) {
-    //   const dLat = this.toRad(location.latitudine - lat);
-    //   const dLon = this.toRad(location.longitudine - lon);
+    if (location != null) {
+      const dLat = this.toRad(location.latitudine - lat);
+      const dLon = this.toRad(location.longitudine - lon);
 
-    //   const a =
-    //     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    //     Math.cos(this.toRad(location.latitudine)) * Math.cos(this.toRad(lat)) *
-    //     Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(this.toRad(location.latitudine)) * Math.cos(this.toRad(lat)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
 
-    //   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-    //   return this.EARTH_RADIUS_KM * c;
-    // } else {
+      const result = this.EARTH_RADIUS_KM * c;
+      console.log("calculateDistance result:",result);
+      return result;
+    } else {
+      
+      console.log("calculateDistance no locations");
       return 0;
-    // }
+    }
   }
 
 

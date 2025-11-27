@@ -3,9 +3,9 @@ import { Injectable } from "@angular/core";
 import { Constants } from "../Constants";
 import { firstValueFrom } from "rxjs";
 import { LanguageService } from "./language.service";
-import { ReqAttivitaAutocomplete } from "../EntityInterface/Attivita";
-import { ShopFastRecListDto } from "../Dtos/Requests/shops/ShopFastRecListDto";
+import { ShopFastRecResListDto } from "../Dtos/Responses/shops-fast-rec/ShopFastRecListResDto";
 import { ShopRecDetailDto } from "../Dtos/Requests/shops/ShopRecDetailDto";
+import { ShopFastRecReqDto } from "../Dtos/Requests/shops-fast-rec/ShopFastRecReqDto";
 
 @Injectable({
     providedIn: 'root'
@@ -17,10 +17,10 @@ export class ShopFastRecService {
         private constants: Constants,
         private languageService: LanguageService) { }
 
-    async List(datiAttivita: ReqAttivitaAutocomplete): Promise<ShopFastRecListDto[]> {
+    async List(datiAttivita: ShopFastRecReqDto): Promise<ShopFastRecResListDto[]> {
         this.language = this.languageService.getLanguageSession();
         return await firstValueFrom(
-            this.http.get<ShopFastRecListDto[]>(this.constants.BasePath() + '/shopfastrec/list', {
+            this.http.get<ShopFastRecResListDto[]>(this.constants.BasePath() + '/shopfastrec/list', {
                 params: {
                     nome: datiAttivita.nome || '',
                     citta: datiAttivita.citta || '',

@@ -1,4 +1,4 @@
-import { Attivita, TipoAttivita, InsertAttivitaReqDto, Orari, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita, ReqAttivitaAutocomplete, InsertAttivitaResponse, AttivitaWithPromos } from '../EntityInterface/Attivita';
+import { Attivita, TipoAttivita, InsertAttivitaReqDto, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita, InsertAttivitaResponse, AttivitaWithPromos } from '../EntityInterface/Attivita';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';

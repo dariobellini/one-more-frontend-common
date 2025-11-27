@@ -1,18 +1,18 @@
 import { AddressDto } from "../../AddressDto";
-import { PhotoDto } from "../../PhotoDto";
+import { BytesPhotoDto } from "../../FastRecDtos/BytesPhotoDto";
 
-export class ShopFastRecListDto {
+export class ShopFastRecResListDto {
     placeId?: string;
     title?: string;
     address?: AddressDto;
-    photo?: PhotoDto;
+    photo?: BytesPhotoDto;
 
-    constructor(data?: Partial<ShopFastRecListDto>) {
+    constructor(data?: Partial<ShopFastRecResListDto>) {
         if (data) {
             this.placeId = data.placeId;
             this.title = data.title;
             this.address = data.address ? new AddressDto(data.address) : undefined;
-            this.photo = data.photo ? new PhotoDto(data.photo) : undefined;
+            this.photo = data.photo ? new BytesPhotoDto(data.photo) : undefined;
         }
     }
 }

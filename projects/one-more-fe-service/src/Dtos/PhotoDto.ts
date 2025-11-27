@@ -1,12 +1,12 @@
 export class PhotoDto {
     title?: string;
-    upload?: string;
+    fileName?: string;
     isMain?: boolean;
 
     constructor(data?: Partial<PhotoDto>) {
         if (data) {
             this.title = data.title;
-            this.upload = data.upload;
+            this.fileName = data.fileName;
             this.isMain = data.isMain;
         }
     }

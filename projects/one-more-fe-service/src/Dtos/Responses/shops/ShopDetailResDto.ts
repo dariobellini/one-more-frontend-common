@@ -1,3 +1,4 @@
+import { AddPhotoDto } from "../../AddPhotoDto";
 import { AddressDto } from "../../AddressDto";
 import { HourDto } from "../../HourDto";
 import { OfferTypeDto } from "../../OfferTypeDto";
