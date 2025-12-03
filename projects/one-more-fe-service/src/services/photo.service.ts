@@ -74,9 +74,9 @@ export class PhotoService {
    * @returns URL dell'icona o null in caso di errore
    */
   async getIconUrl(iconName: string | undefined): Promise<string | null> {
-    if (!iconName) {
+     if (!iconName) {
       return null;
-    }
+     }
 
     try {
       const fileRef = ref(this.storage, `icons/${iconName}.png`);

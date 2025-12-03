@@ -1,6 +1,6 @@
 export class PromoTypeDto {
   id!: number;
   description!: string;
-  img!: string;
+  fileName!: string;
   style!: string;
 }
