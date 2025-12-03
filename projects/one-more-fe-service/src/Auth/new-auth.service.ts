@@ -7,10 +7,10 @@ import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
 import { Role } from '../Enum/Role';
 import { DeleteUtente, ProfileUser, UserSession, Utente } from '../EntityInterface/Utente';
 import { deleteDoc, doc, Firestore, getDoc, setDoc } from '@angular/fire/firestore';
-import { StorageService } from '../storage.service';
 
 import { HttpClient } from '@angular/common/http';
 import { TokenService } from './token.service';
+import { FavoritesApiService } from '../services/favorites-api.service';
 
 @Injectable({
   providedIn: 'root'
@@ -40,7 +40,8 @@ export class NewAuthService {
     private firestore: Firestore,
     private firebaseAut: Auth,
     private http: HttpClient,
-    private tokenService: TokenService
+    private tokenService: TokenService,
+    private favoritesApiService: FavoritesApiService
   ) {}
 
 
@@ -292,6 +293,7 @@ export class NewAuthService {
     if (readealJwt) {
       this.tokenService.setToken(readealJwt);
       this.setStatusUserVerified();
+      await this.favoritesApiService.Favorite();
     }
 
 
