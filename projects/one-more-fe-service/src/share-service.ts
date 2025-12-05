@@ -5,7 +5,7 @@ import { Share } from '@capacitor/share';
   providedIn: 'root',
 })
 export class ShareService {
-  async shareContent(title: string, text: string, url?: string) {
+  async shareContent(title: string, text?: string, url?: string) {
     const canShare = !!(navigator as any).share;
 
     if (canShare) {
