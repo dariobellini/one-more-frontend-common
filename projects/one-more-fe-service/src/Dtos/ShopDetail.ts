@@ -1,5 +1,6 @@
 export interface ShopDetailDto {
     title: string;
+    description: string;
     email: string;
     vatNumber: string;
     placeId: string;
