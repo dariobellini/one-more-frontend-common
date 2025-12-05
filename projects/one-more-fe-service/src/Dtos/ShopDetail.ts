@@ -7,5 +7,6 @@ export interface ShopDetailDto {
     longitude: number;
     latitude: number;
     rating: number;
+    ratingCount: number;
     telephone: string;
 }
