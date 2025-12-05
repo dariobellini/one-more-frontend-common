@@ -20,7 +20,24 @@ export class SearchApiService {
     return this.http.post<SearchResDto>(this.constants.BasePath() + '/search/guided-search', input);
   }
 
-  async GenericSearch(input: string): Promise<Observable<SearchResDto>> {
-    return this.http.get<SearchResDto>(this.constants.BasePath() + '/search/generic-search?query='+input );
+  async GenericSearch(input: string, promoTypeIds?: number[], promoPeriodIds?: number[], promoCategoryIds?: number[]): Promise<Observable<SearchResDto>> {
+    let url = this.constants.BasePath() + '/search/generic-search?query=' + input;
+    
+    if (promoTypeIds && promoTypeIds.length > 0) {
+      const idsParam = promoTypeIds.join(',');
+      url += '&promoTypeIds=' + idsParam;
+    }
+    
+    if (promoPeriodIds && promoPeriodIds.length > 0) {
+      const periodIdsParam = promoPeriodIds.join(',');
+      url += '&promoPeriodIds=' + periodIdsParam;
+    }
+    
+    if (promoCategoryIds && promoCategoryIds.length > 0) {
+      const categoryIdsParam = promoCategoryIds.join(',');
+      url += '&promoCategoryIds=' + categoryIdsParam;
+    }
+    
+    return this.http.get<SearchResDto>(url);
   }
 }

@@ -1,6 +1,6 @@
 export class PromoPeriodDto {
   id!: number;
   description!: string;
-  imgUrl!: string;
+  fileName!: string;
   style!: string;
 }
