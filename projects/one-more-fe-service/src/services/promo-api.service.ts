@@ -1,5 +1,5 @@
 import { HttpClient } from "@angular/common/http";
-import { Injectable } from "@angular/core";
+import { inject, Injectable } from "@angular/core";
 import { Constants } from "../Constants";
 import { Observable } from "rxjs";
 import { PromoCategoryDto } from "../Dtos/PromoCategoryDto";
@@ -16,8 +16,10 @@ import { PromoPeriodDto } from "../Dtos/PromoPeriodDto";
 export class PromoApiService {
 
     language: string | undefined;
-    constructor(private http: HttpClient,
-        private constants: Constants,) { }
+    http = inject(HttpClient);
+    constants = inject(Constants);
+
+    constructor() { }
 
     Categories(): Observable<PromoCategoryDto[]> {
         return this.http.get<PromoCategoryDto[]>(this.constants.BasePath() + '/promo/categories');

@@ -17,8 +17,7 @@ export class PromoListDto {
     categories!: PromoCategoryDto[];
     types!: PromoTypeDto[];
     limit!: PromoLimitDto;
-    period!: PromoPeriodDto;
+    period!: PromoPeriodDto[];
     photo!: PhotoDto;
     shop!: ShopListDto;
-    
 }
