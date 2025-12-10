@@ -1,5 +1,5 @@
 import { HttpClient } from "@angular/common/http";
-import { Injectable } from "@angular/core";
+import { inject, Injectable } from "@angular/core";
 import { Constants } from "../Constants";
 import { Coupon, StatusCoupon } from "../EntityInterface/Coupon";
 import { InsertCouponResponse } from "../EntityInterface/Promo";
@@ -15,11 +15,11 @@ import { CanRedeemResDto } from "../Dtos/Responses/coupons/CanRedeemResDto";
 export class CouponService {
 
   coupon !: Coupon;
-
+  http = inject(HttpClient);
+  constants = inject(Constants);
+  languageService = inject(LanguageService);
   language: string | undefined;
-  constructor(private http: HttpClient, 
-              private constants: Constants,
-              private languageService: LanguageService) { }
+  constructor() { }
 
   AddCoupon(coupon: Coupon): Observable<InsertCouponResponse> {
     return this.http.post<InsertCouponResponse>(

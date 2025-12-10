@@ -6,6 +6,7 @@ import { ShopDetailDto } from "../../ShopDetail";
 import { ShopTypeDto } from "../../ShopTypeDto";
 
 export interface ShopRecDetailDto {
+        id: number;
         title: string;
         address: AddressDto;
         hours: HourDto[];

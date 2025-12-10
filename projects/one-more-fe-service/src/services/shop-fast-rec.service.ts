@@ -1,5 +1,5 @@
 import { HttpClient } from "@angular/common/http";
-import { Injectable } from "@angular/core";
+import { inject, Injectable } from "@angular/core";
 import { Constants } from "../Constants";
 import { firstValueFrom } from "rxjs";
 import { LanguageService } from "./language.service";
@@ -13,9 +13,11 @@ import { ShopFastRecReqDto } from "../Dtos/Requests/shops-fast-rec/ShopFastRecRe
 export class ShopFastRecService {
 
     language: string | undefined;
-    constructor(private http: HttpClient,
-        private constants: Constants,
-        private languageService: LanguageService) { }
+    http = inject(HttpClient);
+    constants = inject(Constants)
+    languageService = inject(LanguageService);
+
+    constructor() { }
 
     async List(datiAttivita: ShopFastRecReqDto): Promise<ShopFastRecResListDto[]> {
         this.language = this.languageService.getLanguageSession();
