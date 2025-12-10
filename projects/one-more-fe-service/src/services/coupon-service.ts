@@ -7,6 +7,7 @@ import { firstValueFrom, Observable } from "rxjs";
 import { LanguageService } from "./language.service";
 import { CouponListDto } from "../EntityInterface/CouponListDto.cjs";
 import { ValidaCouponEsitoDto } from "../EntityInterface/CouponDto/ValidaCouponEsitoDto";
+import { CanRedeemResDto } from "../Dtos/Responses/coupons/CanRedeemResDto";
 
 @Injectable({
   providedIn: 'root'
@@ -40,5 +41,8 @@ export class CouponService {
 
   Validate(jwtCoupon: string): Observable<ValidaCouponEsitoDto> {
     return this.http.post<ValidaCouponEsitoDto>(this.constants.BasePath() + '/Coupon/Validate', {jwtCoupon});
+  }
+  CanRedeem(promoId: string): Observable<CanRedeemResDto> {
+    return this.http.get<CanRedeemResDto>(this.constants.BasePath() + '/Coupon/can-redeem', {params: {promoId}});
   }
 }
