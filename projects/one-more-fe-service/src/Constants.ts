@@ -6,7 +6,7 @@ const BASE_PATH: string = "http://localhost:5000";
 
 //const BASE_PATH: string = "http://192.168.8.151:4200";
 //const BASE_PATH: string = "http://192.168.79.110:4200";
-// const BASE_PATH: string = "https://one-more-service-api.it/api";
+//const BASE_PATH: string = "https://one-more-service-api.it/api";
 const USER_API_JWT: string = "readeal-jwt";
 const USER_API_REFRESH_TOKEN: string = "readeal-refresh-token";
 

@@ -1,7 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { Constants } from "../Constants";
-import { firstValueFrom } from "rxjs";
+import { firstValueFrom, Observable } from "rxjs";
 import { LanguageService } from "./language.service";
 import { ShopFastRecResListDto } from "../Dtos/Responses/shops-fast-rec/ShopFastRecListResDto";
 import { ShopRecDetailDto } from "../Dtos/Requests/shops/ShopRecDetailDto";
@@ -33,7 +33,7 @@ export class ShopFastRecService {
         );
     }
 
-    async Detail(placeId:string): Promise<ShopRecDetailDto> {
-        return await firstValueFrom(this.http.get<ShopRecDetailDto>(this.constants.BasePath() + '/shopfastrec/detail', {params: {placeId: placeId}}));
+    Detail(placeId:string): Observable<ShopRecDetailDto> {
+        return this.http.get<ShopRecDetailDto>(this.constants.BasePath() + '/shopfastrec/detail', {params: {placeId: placeId}});
     }
 }
