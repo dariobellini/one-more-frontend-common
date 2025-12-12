@@ -50,9 +50,6 @@ export class TokenService {
                 idSoggetto: decoded["id-soggetto"],
                 idAttivitaList: idAttivitaList.map(num => parseInt(num.trim(), 10))
             };
-
-            console.log("Jwt he uso in memory" + jwt);
-
             return jwt;
         } catch (error) {
             console.error("Errore nella decodifica JWT:", error);
@@ -80,7 +77,6 @@ export class TokenService {
 
         try {
             const decoded = this.getDecodedToken(token);
-            console.log(decoded);
             if (decoded?.roles) return decoded.roles;
             else return [];
 

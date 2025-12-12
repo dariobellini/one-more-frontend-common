@@ -85,11 +85,8 @@ export class LocationService {
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
       const result = this.EARTH_RADIUS_KM * c;
-      console.log("calculateDistance result:",result);
       return result;
     } else {
-      
-      console.log("calculateDistance no locations");
       return 0;
     }
   }
