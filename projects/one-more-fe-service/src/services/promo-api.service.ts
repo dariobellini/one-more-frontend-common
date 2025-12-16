@@ -9,6 +9,7 @@ import { PromoAddResDto } from "../Dtos/Responses/promos/PromoAddResDto";
 import { PromoListResDto } from "../Dtos/Responses/promos/PromoListResDto";
 import { PromoGetResDto } from "../Dtos/Responses/promos/PromoGetResDto";
 import { PromoPeriodDto } from "../Dtos/PromoPeriodDto";
+import { PromoAnyResDto } from "../Dtos/Responses/promos/PromoAnyResDto";
 
 @Injectable({
     providedIn: 'root'
@@ -34,6 +35,10 @@ export class PromoApiService {
 
     Get(promoId: number): Observable<PromoGetResDto> {
         return this.http.get<PromoGetResDto>(this.constants.BasePath() + '/promo/get?promoId=' + promoId);
+    }
+    
+    Any(): Observable<PromoAnyResDto> {
+        return this.http.get<PromoAnyResDto>(this.constants.BasePath() + '/promo/any');
     }
 
     Add(promoAddReqDto: PromoAddReqDto): Observable<PromoAddResDto> {
