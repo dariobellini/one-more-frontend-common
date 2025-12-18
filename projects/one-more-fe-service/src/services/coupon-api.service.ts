@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Constants } from '../Constants';
 import { CouponAddReqDto } from '../Dtos/Requests/coupons/CouponAddReqDto';
@@ -13,7 +13,11 @@ import { CouponUseResDto } from '../Dtos/Responses/coupons/CouponUseResDto';
   providedIn: 'root'
 })
 export class CouponApiService {
-  constructor(private http: HttpClient, private constants: Constants) {}
+
+  http = inject(HttpClient);
+  constants = inject(Constants);
+
+  constructor() {}
 
   /**
    * Recupera la lista dei coupon dell'utente
