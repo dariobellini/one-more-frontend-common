@@ -12,26 +12,11 @@ export class UserService {
   constructor(private http:HttpClient, 
               private constants:Constants) { }
 
-  async AddRemoveFavorite(idAttivita: number): Promise<boolean> {
-    const params = new HttpParams()
-      .set('idAttivita', idAttivita.toString());
-  
-    try {
-      // Usa firstValueFrom per convertire l'observable in una Promise
-      const result = await firstValueFrom(
-        this.http.get<boolean>(this.constants.BasePath() + '/User/AddRemoveFavorite', { params })
-      );
-      return result;
-    } catch (error) {
-      console.error('Errore durante la chiamata HTTP:', error);
-      throw error; // Puoi gestire diversamente l'errore se necessario
-    }
+  updateShopRecentView(shopId: number): Observable<any> {
+    return this.http.post(
+      `${this.constants.BasePath()}/user/update-shop-recent-view?shopId=${shopId}`,
+      null
+    );
   }
-  
-  async apiCheckIsFavorite(idSoggetto: number, idAttivita: number): Promise<Observable<boolean>> {
-    const params = new HttpParams()
-    .set('idSoggetto', idSoggetto.toString())
-    .set('idAttivita', idAttivita.toString());
-    return this.http.get<boolean>(this.constants.BasePath()+'/User/CheckFavorite', { params });
-  }
+
 }
