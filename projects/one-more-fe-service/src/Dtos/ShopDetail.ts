@@ -9,4 +9,5 @@ export interface ShopDetailDto {
     rating: number;
     ratingCount: number;
     telephone: string;
+    distance?: number;
 }

@@ -1,9 +1,8 @@
 import { HttpClient } from "@angular/common/http";
-import { Injectable } from "@angular/core";
+import { inject, Injectable } from "@angular/core";
 import { Constants } from "../Constants";
-import { firstValueFrom, Observable } from "rxjs";
+import { Observable } from "rxjs";
 import { ShopListResDto } from "../Dtos/Responses/shops/ShopListResDto";
-import { PromoListDto } from "../Dtos/PromoListDto";
 import { PromoListResDto } from "../Dtos/Responses/promos/PromoListResDto";
 
 @Injectable({
@@ -12,8 +11,10 @@ import { PromoListResDto } from "../Dtos/Responses/promos/PromoListResDto";
 export class HomeApiService {
 
     language: string | undefined;
-    constructor(private http: HttpClient,
-        private constants: Constants,) { }
+
+    http = inject(HttpClient);
+    constants = inject(Constants);
+    constructor() { }
 
 
     PromosByType(promoTypeId: number): Observable<PromoListResDto> {
