@@ -8,6 +8,7 @@ import { CouponDetailResDto } from '../Dtos/Responses/coupons/CouponDetailResDto
 import { CouponAddResDto } from '../Dtos/Responses/coupons/CouponAddResDto';
 import { CouponUseReqDto } from '../Dtos/Requests/coupons/CouponUseReqDto';
 import { CouponUseResDto } from '../Dtos/Responses/coupons/CouponUseResDto';
+import { CouponUpdateReqDto } from '../Dtos/Requests/coupons/CouponUpdateReqDto';
 
 @Injectable({
   providedIn: 'root'
@@ -55,9 +56,9 @@ export class CouponApiService {
    * @param id ID del coupon
    * @param coupon Dati del coupon da aggiornare
    */
-  Update(id: number, coupon: any): Observable<any> {
+  Update(coupon: CouponUpdateReqDto): Observable<any> {
     return this.http.put<any>(
-      `${this.constants.BasePath()}/Coupon/Update/${id}`,
+      `${this.constants.BasePath()}/Coupon/Update`,
       coupon
     );
   }
