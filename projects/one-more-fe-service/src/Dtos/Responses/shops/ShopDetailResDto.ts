@@ -1,8 +1,7 @@
-import { AddPhotoDto } from "../../AddPhotoDto";
 import { AddressDto } from "../../AddressDto";
+import { PhotoFormDto } from "../../FastRecDtos/PhotoFormDto";
 import { HourDto } from "../../HourDto";
 import { OfferTypeDto } from "../../OfferTypeDto";
-import { PhotoDto } from "../../PhotoDto";
 import { ShopDetailDto } from "../../ShopDetail";
 import { ShopTypeDto } from "../../ShopTypeDto";
 import { CommonResDto } from "../CommonResDto";
@@ -15,5 +14,5 @@ export interface ShopDetailResDto extends CommonResDto {
     offerType: OfferTypeDto;
     detail: ShopDetailDto;
     types: ShopTypeDto[];
-    photos: PhotoDto[];
+    photos: PhotoFormDto[];
 }

@@ -1,5 +1,4 @@
-import { AddPhotoDto } from "../../AddPhotoDto";
-import { HourDto } from "../../HourDto";
+import { PhotoFormDto } from "../../FastRecDtos/PhotoFormDto";import { HourDto } from "../../HourDto";
 import { PromoCategoryDto } from "../../PromoCategoryDto";
 import { PromoLimitDto } from "../../PromoLimitDto";
 import { PromoPeriodDto } from "../../PromoPeriodDto";
@@ -14,5 +13,5 @@ export class PromoAddReqDto {
   types!: PromoTypeDto[];
   limit!: PromoLimitDto;
   period!: PromoPeriodDto;
-  photos!: AddPhotoDto[];
+  photos!: PhotoFormDto[];
 }
