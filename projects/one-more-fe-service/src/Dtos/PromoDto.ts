@@ -8,6 +8,7 @@ import { PromoTypeDto } from "./PromoTypeDto";
 export class PromoDto {
     id!: number;
     shopId!: number;
+    isActive!: boolean;
     title!: string;
     description!: string;
     startDate!: Date | null;
