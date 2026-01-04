@@ -8,6 +8,7 @@ import { ShopListDto } from "./Responses/shops/ShopListDto";
 
 export class PromoListDto {
     id!: number;
+    isActive!: boolean;
     shopId!: number;
     title!: string;
     description!: string;
