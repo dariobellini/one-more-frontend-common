@@ -13,6 +13,7 @@ import { PromoAnyResDto } from "../Dtos/Responses/promos/PromoAnyResDto";
 import { PromoUpdateReqDto } from "../Dtos/Requests/promos/PromoUpdateReqDto";
 import { PromoUpdateResDto } from "../Dtos/Responses/promos/PromoUpdateResDto";
 import { PromoDeleteResDto } from "../Dtos/Responses/promos/PromoDeleteResDto";
+import { LanguageService } from "./language.service";
 
 @Injectable({
     providedIn: 'root'
@@ -20,6 +21,7 @@ import { PromoDeleteResDto } from "../Dtos/Responses/promos/PromoDeleteResDto";
 export class PromoApiService {
 
     language: string | undefined;
+    languageService = inject(LanguageService);
     http = inject(HttpClient);
     constants = inject(Constants);
 

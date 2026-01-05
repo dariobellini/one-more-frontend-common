@@ -9,7 +9,8 @@ export class LanguageInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const langService = this.injector.get(LanguageService); // risolto runtime
-    const currentLang = langService.getLanguageSession();
+    const currentLang = langService.getLanguageSession()?.toUpperCase() ?? "IT";
+
 
     const cloned = req.clone({
       setHeaders: {
