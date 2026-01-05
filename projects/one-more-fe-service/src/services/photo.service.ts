@@ -86,4 +86,32 @@ export class PhotoService {
       return null;
     }
   }
+
+  async getIconUrlAvif(iconName: string | undefined): Promise<string | null> {
+     if (!iconName) {
+      return null;
+     }
+
+    try {
+      const fileRef = ref(this.storage, `icons/${iconName}.avif`);
+      return await getDownloadURL(fileRef);
+    } catch (err) {
+      console.error("Errore Firebase nel recupero dell'icona:", err);
+      return null;
+    }
+  }
+
+  async getIconUrlGif(iconName: string | undefined): Promise<string | null> {
+     if (!iconName) {
+      return null;
+     }
+
+    try {
+      const fileRef = ref(this.storage, `icons/${iconName}.gif`);
+      return await getDownloadURL(fileRef);
+    } catch (err) {
+      console.error("Errore Firebase nel recupero dell'icona:", err);
+      return null;
+    }
+  }
 }
