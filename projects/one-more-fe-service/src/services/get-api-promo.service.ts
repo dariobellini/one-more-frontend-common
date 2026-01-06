@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable} from 'rxjs';
 import { firstValueFrom } from 'rxjs';
@@ -14,11 +14,12 @@ export class GetApiPromoService {
   promo !: Promo;
   promoData !: Promo;
   language : string | undefined;
-  
-  constructor(private http:HttpClient, 
-              private constants: Constants,
-              private languageService: LanguageService ) { }
 
+  http = inject(HttpClient);
+  constants = inject(Constants);
+  languageService = inject(LanguageService);
+  
+  constructor() { }
   setPromoData(promo: Promo) {
     this.promoData = promo;
   }
