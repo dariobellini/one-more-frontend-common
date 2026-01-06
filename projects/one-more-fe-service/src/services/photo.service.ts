@@ -2,15 +2,14 @@ import { Injectable, inject } from '@angular/core';
 import { Storage, ref, getDownloadURL } from '@angular/fire/storage';
 import { Constants } from '../Constants';
 import { CacheStorageService } from './cache-storage.service';
-import { getStorage } from 'firebase/storage';
+
 @Injectable({
   providedIn: 'root'
 })
 export class PhotoService {
   private storage: Storage = inject(Storage);
-
-  cacheService = inject(CacheStorageService);
   constants = inject(Constants);
+  cacheService = inject(CacheStorageService);
 
   constructor() {}
 
@@ -77,13 +76,14 @@ export class PhotoService {
    * @param iconName Nome del file dell'icona (es: "icon-name.png")
    * @returns URL dell'icona o null in caso di errore
    */
+
   async getIconUrl(iconName: string | undefined, category: string): Promise<string | null> {
 
     if (!iconName) {
       return null;
      }
 
-    const cachedIcon = await this.cacheService.getImage(iconName, category);
+    const cachedIcon = await this.cacheService. getJSON<string>(iconName, category);
 
     if (cachedIcon) {
       return cachedIcon;
@@ -92,38 +92,19 @@ export class PhotoService {
       try {
       const fileRef = ref(this.storage, `icons/${iconName}.png`);
       const downloadUrl = await getDownloadURL(fileRef);
-      const blob = await fetch(downloadUrl).then(res => res.blob());
-      console.log('Icon blob obtained:', blob);
-
-      await this.cacheService.setImage(iconName, blob, {
+      console.log('Icon URL scaricata da Firebase:', downloadUrl);
+      await this.cacheService.setJSON(iconName, downloadUrl, {
         category: category,
         ttl: 60 * 24 * 60 * 60 * 1000 // 60 giorni
       });
 
-      const localUrl = await this.cacheService.getImage(iconName, category);
-
-      return localUrl;
+      return downloadUrl;
 
     } catch (err) {
       console.error(`❌ Errore caricamento icona ${iconName}:`, err);
       return null;
       }
     } 
-  }
-
-  private async downloadImageAsBase64(url: string): Promise<string> {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = (reader.result as string).split(',')[1];
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
   }
 
   async getIconUrlAvif(iconName: string | undefined): Promise<string | null> {
