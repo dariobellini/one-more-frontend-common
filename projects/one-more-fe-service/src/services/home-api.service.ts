@@ -36,6 +36,9 @@ export class HomeApiService {
     NewEntries(): Observable<ShopListResDto> {
         return this.http.get<ShopListResDto>(this.constants.BasePath() + '/home/new-entries');
     }
+    Nearby(): Observable<ShopListResDto> {
+        return this.http.get<ShopListResDto>(this.constants.BasePath() + '/home/nearby');
+    }
     RecentViews(): Observable<ShopListResDto> {
         return this.http.get<ShopListResDto>(this.constants.BasePath() + '/home/recent-views');
     }
