@@ -29,7 +29,7 @@ export class CouponService {
   }
 
   async ListCoupon(): Promise<any> {
-    this.language = this.languageService.getLanguageSession();
+    this.language = this.languageService.getCurrentLanguage() || 'it';
      return await firstValueFrom(
           this.http.get<CouponListDto[]>(this.constants.BasePath() + '/Coupon/List?lang='+ this.language.toUpperCase())
         );

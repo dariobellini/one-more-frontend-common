@@ -1,24 +1,36 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
-import { Storage } from '@capacitor/storage';
 import { Geolocation } from '@capacitor/geolocation';
 import { CoordinatesDto } from '../Dtos/CoordinatesDto';
+import { CacheStorageService } from './cache-storage.service';
+
+interface CachedLocation {
+  latitudine: number;
+  longitudine:  number;
+  timestamp: number;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class LocationService {
-  private cacheKey = 'cached_location';
-  private cacheTTL = 10 * 60 * 1000; // 10 minuti
+  private readonly CACHE_KEY = 'cached_location';
+  private readonly CACHE_CATEGORY = 'location-data';
+  private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minuti
   private readonly EARTH_RADIUS_KM = 6371;
+
+  // ✅ Inietta il nuovo servizio
+  private cacheService = inject(CacheStorageService);
 
   private toRad(value: number): number {
     return (value * Math.PI) / 180;
   }
+
   async getCurrentLocation(): Promise<{ latitudine: number; longitudine: number }> {
     // 1. Controlla la cache
     const cachedLocation = await this.getCachedLocation();
     if (cachedLocation) {
+      console.log('📦 Posizione recuperata dalla cache');
       return cachedLocation;
     }
 
@@ -28,16 +40,20 @@ export class LocationService {
       return new Promise((resolve) => {
         navigator.geolocation.getCurrentPosition(
           async (pos) => {
-            const newLocation = {
+            const newLocation:  CachedLocation = {
               latitudine: pos.coords.latitude,
               longitudine: pos.coords.longitude,
               timestamp: Date.now()
             };
             await this.setCachedLocation(newLocation);
-            resolve({ latitudine: newLocation.latitudine, longitudine: newLocation.longitudine });
+            console.log('🌐 Posizione ottenuta dal browser');
+            resolve({ 
+              latitudine: newLocation. latitudine, 
+              longitudine: newLocation.longitudine 
+            });
           },
           (err) => {
-            console.error('Errore geolocalizzazione browser:', err);
+            console. error('Errore geolocalizzazione browser:', err);
             resolve(this.getFallbackLocation());
           }
         );
@@ -52,13 +68,17 @@ export class LocationService {
 
         if (permStatus.location === 'granted') {
           const position = await Geolocation.getCurrentPosition();
-          const newLocation = {
+          const newLocation: CachedLocation = {
             latitudine: position.coords.latitude,
             longitudine: position.coords.longitude,
             timestamp: Date.now()
           };
           await this.setCachedLocation(newLocation);
-          return { latitudine: newLocation.latitudine, longitudine: newLocation.longitudine };
+          console.log('📱 Posizione ottenuta dal dispositivo mobile');
+          return { 
+            latitudine: newLocation. latitudine, 
+            longitudine: newLocation.longitudine 
+          };
         }
       } catch (error) {
         console.error('Errore durante il recupero della posizione mobile:', error);
@@ -66,19 +86,19 @@ export class LocationService {
     }
 
     // 3. Fallback su Roma
+    console.log('⚠️ Uso posizione fallback (Roma)');
     return this.getFallbackLocation();
   }
-
 
   public async calculateDistance(lat: number, lon: number): Promise<number> {
     const location = await this.getCachedLocation();
 
     if (location != null) {
-      const dLat = this.toRad(location.latitudine - lat);
+      const dLat = this. toRad(location.latitudine - lat);
       const dLon = this.toRad(location.longitudine - lon);
 
       const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math. sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos(this.toRad(location.latitudine)) * Math.cos(this.toRad(lat)) *
         Math.sin(dLon / 2) * Math.sin(dLon / 2);
 
@@ -91,26 +111,51 @@ export class LocationService {
     }
   }
 
-
   // --- Helpers ---
-  private async getCachedLocation(): Promise<{ latitudine: number; longitudine: number } | null> {
+
+  /**
+   * ✅ Recupera la posizione dalla cache usando CacheStorageService
+   */
+  private async getCachedLocation(): Promise<{ latitudine: number; longitudine:  number } | null> {
     try {
-      const cachedLocation = await Storage.get({ key: this.cacheKey });
-      if (cachedLocation.value) {
-        const { latitudine, longitudine, timestamp } = JSON.parse(cachedLocation.value);
-        if (Date.now() - timestamp < this.cacheTTL) {
-          return { latitudine, longitudine };
+      const cached = await this.cacheService. getJSON<CachedLocation>(
+        this.CACHE_KEY,
+        this.CACHE_CATEGORY
+      );
+
+      if (cached) {
+        // Verifica se la cache è ancora valida
+        if (Date. now() - cached.timestamp < this.CACHE_TTL) {
+          return { 
+            latitudine: cached.latitudine, 
+            longitudine:  cached.longitudine 
+          };
+        } else {
+          // Cache scaduta, rimuovila
+          console.log('⏰ Cache posizione scaduta');
+          await this.cacheService.remove(this.CACHE_KEY, this.CACHE_CATEGORY);
         }
       }
     } catch (error) {
-      console.error('Errore nel parsing della cache della posizione:', error);
+      console.error('Errore nel recupero della cache della posizione:', error);
     }
     return null;
   }
 
-  private async setCachedLocation(location: { latitudine: number; longitudine: number; timestamp: number }) {
+  /**
+   * ✅ Salva la posizione in cache usando CacheStorageService
+   */
+  private async setCachedLocation(location: CachedLocation): Promise<void> {
     try {
-      await Storage.set({ key: this.cacheKey, value: JSON.stringify(location) });
+      await this.cacheService.setJSON(
+        this.CACHE_KEY,
+        location,
+        {
+          category: this.CACHE_CATEGORY,
+          ttl: this.CACHE_TTL
+        }
+      );
+      console.log('💾 Posizione salvata in cache');
     } catch (error) {
       console.error('Errore nel salvataggio della cache:', error);
     }
@@ -118,5 +163,23 @@ export class LocationService {
 
   private getFallbackLocation(): { latitudine: number; longitudine: number } {
     return { latitudine: 41.9028, longitudine: 12.4964 }; // Roma
+  }
+
+  /**
+   * ✅ Forza il refresh della posizione (utile per pull-to-refresh)
+   */
+  async refreshLocation(): Promise<{ latitudine: number; longitudine:  number }> {
+    // Rimuovi la cache
+    await this.cacheService. remove(this.CACHE_KEY, this.CACHE_CATEGORY);
+    // Ottieni nuova posizione
+    return await this.getCurrentLocation();
+  }
+
+  /**
+   * ✅ Pulisce la cache della posizione
+   */
+  async clearLocationCache(): Promise<void> {
+    await this.cacheService.remove(this.CACHE_KEY, this.CACHE_CATEGORY);
+    console.log('🗑️ Cache posizione pulita');
   }
 }

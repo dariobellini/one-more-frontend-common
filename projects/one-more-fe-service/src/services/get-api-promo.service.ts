@@ -27,10 +27,7 @@ export class GetApiPromoService {
     return this.promoData;
   }
 async apiGetListaTipoPeriodo(): Promise<TipoPeriodo[]>{
-    this.language = this.languageService.getLanguageSession();
-    if (!this.language) {
-        this.language = "it";
-    }
+    this.language = this.languageService.getCurrentLanguage() || 'it';
     return await firstValueFrom(
       this.http.get<TipoPeriodo[]>(this.constants.BasePath() + '/Promo/get-tipi-periodo', {
           params: {
@@ -41,10 +38,7 @@ async apiGetListaTipoPeriodo(): Promise<TipoPeriodo[]>{
   }
 
   async apiGetListaPromoByIdAttivita(idAttivita:number): Promise<Promo[]>{
-    this.language = this.languageService.getLanguageSession();
-    if (!this.language) {
-        this.language = "it";
-    }
+    this.language = this.languageService.getCurrentLanguage() || 'it';
     return await firstValueFrom(
       this.http.get<Promo[]>(this.constants.BasePath() + '/Promo/get-promo-attive-by-idattivita', {
           params: {
@@ -56,7 +50,7 @@ async apiGetListaTipoPeriodo(): Promise<TipoPeriodo[]>{
   }
 
   apiGetListaPromoByIdAttivitaAndUser(id: number): Observable<Promo[]> {
-    const lang = this.languageService.getLanguageSession() || 'IT'; // Recupera la lingua
+    const lang = this.languageService.getCurrentLanguage() || 'it';
 
     const params = new HttpParams()
         .set('idAttivita', id.toString())
@@ -80,7 +74,7 @@ async apiGetListaTipoPeriodo(): Promise<TipoPeriodo[]>{
 }
 
   async apiInsertPromo(promo: InsertPromoReqDto): Promise<EsitoInsertPromo> {
-    const lang = this.languageService.getLanguageSession() || 'IT';
+    const lang = this.languageService.getCurrentLanguage() || 'it';
 
     return await firstValueFrom(
       this.http.post<EsitoInsertPromo>(
@@ -93,7 +87,7 @@ async apiGetListaTipoPeriodo(): Promise<TipoPeriodo[]>{
   }
   
   async apiUpdatePromo(promo: InsertPromoReqDto): Promise<any> {
-    const lang = this.languageService.getLanguageSession() || 'IT';
+    const lang = this.languageService.getCurrentLanguage() || 'it';
     return await firstValueFrom(
       this.http.post<any>(this.constants.BasePath() + `/Promo/update-promo`, promo, {params: {
         lang: lang.toUpperCase(),

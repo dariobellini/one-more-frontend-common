@@ -1,15 +1,17 @@
-import { Injectable, Injector } from '@angular/core';
+import { inject, Injectable, Injector } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { LanguageService } from '../services/language.service';
 
 @Injectable()
 export class LanguageInterceptor implements HttpInterceptor {
-  constructor(private injector: Injector) {}
+
+  injector = inject(Injector);
+  constructor() {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const langService = this.injector.get(LanguageService); // risolto runtime
-    const currentLang = langService.getLanguageSession()?.toUpperCase() ?? "IT";
+    const currentLang = langService.getCurrentLanguage()?.toUpperCase() ?? "IT";
 
 
     const cloned = req.clone({

@@ -20,7 +20,7 @@ export class ShopFastRecService {
     constructor() { }
 
     async List(datiAttivita: ShopFastRecReqDto): Promise<ShopFastRecResListDto[]> {
-        this.language = this.languageService.getLanguageSession();
+        this.language = this.languageService.getCurrentLanguage() || 'it';
         return await firstValueFrom(
             this.http.get<ShopFastRecResListDto[]>(this.constants.BasePath() + '/shopfastrec/list', {
                 params: {

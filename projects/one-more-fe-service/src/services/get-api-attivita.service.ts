@@ -1,11 +1,10 @@
 import { Attivita, TipoAttivita, InsertAttivitaReqDto, Immagini, AttivitaFiltrate, FiltriAttivita, AttivitaRicerca, DeleteAttivita, InsertAttivitaResponse, AttivitaWithPromos } from '../EntityInterface/Attivita';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { Constants } from '../Constants';
 import { LocationService } from './location.service';
-import { StorageService } from '../storage.service';
-import { NewAuthService } from '../Auth/new-auth.service';
+import { CacheStorageService } from './cache-storage.service';
 import { LanguageService } from './language.service';
 
 @Injectable({
@@ -13,40 +12,47 @@ import { LanguageService } from './language.service';
 })
 export class GetApiAttivitaService {
  
-  language : string | undefined;
-  listaAttivitaPerRicerca!: AttivitaRicerca[];
-  listaTipoAttivita : TipoAttivita [] | undefined;
-  listaAttivitaNewHome : Attivita[] | undefined;
-  listaAttivitaPromoHome : Attivita[] | undefined;
-  listaAttivitaVicine : Attivita[] | undefined;
-  listaCitta : string[] | undefined;
-  isListaAttModalOpen : boolean = false;
+  // ✅ Costanti per la cache
+  private readonly RECENT_VIEW_KEY = 'attivita_recent_view';
+  private readonly RECENT_VIEW_CATEGORY = 'user-activity';
+  private readonly RECENT_VIEW_MAX_ITEMS = 15;
+  private readonly RECENT_VIEW_TTL = 30 * 24 * 60 * 60 * 1000; // 30 giorni
+
+  language: string | undefined;
+  listaAttivitaPerRicerca! : AttivitaRicerca[];
+  listaTipoAttivita: TipoAttivita[] | undefined;
+  listaAttivitaNewHome: Attivita[] | undefined;
+  listaAttivitaPromoHome: Attivita[] | undefined;
+  listaAttivitaVicine:  Attivita[] | undefined;
+  listaCitta: string[] | undefined;
+  isListaAttModalOpen: boolean = false;
   filter: FiltriAttivita | undefined;
-  insertAttivita !: InsertAttivitaReqDto;
-  attivita !: Attivita;
-  attivitaFiltrate !: AttivitaFiltrate;
-  attivitaFiltrateResult !: AttivitaFiltrate | null;
-  filtroAttivita !: FiltriAttivita;
+  insertAttivita! : InsertAttivitaReqDto;
+  attivita! :  Attivita;
+  attivitaFiltrate!: AttivitaFiltrate;
+  attivitaFiltrateResult! : AttivitaFiltrate | null;
+  filtroAttivita!: FiltriAttivita;
   private attivitaSubject = new BehaviorSubject<Attivita | null>(null);
   private listaAttivitaDDLSubject = new BehaviorSubject<TipoAttivita[] | null>(null);
   listaAttivitaDDL$ = this.listaAttivitaDDLSubject.asObservable();
+
+  http = inject(HttpClient);
+  constants = inject(Constants);
+  locationService = inject(LocationService);
+  cacheService = inject(CacheStorageService);
+  languageService = inject(LanguageService);
   
-  constructor(private http:HttpClient, 
-              private constants:Constants,
-              private authService: NewAuthService,
-              private locationService: LocationService,
-              private storageService: StorageService,
-              private languageService: LanguageService) { }
+  constructor() { }
   
   async apiGetListaAttivitaJustSigned(latitudine: number, longitudine: number, isHomePage: boolean): Promise<Observable<Attivita[]>> {
     const params = {
-      latitudine: latitudine.toString(),
+      latitudine: latitudine. toString(),
       longitudine: longitudine.toString(),
       isHomePage: isHomePage
     };
   
     return this.http.get<Attivita[]>(
-      this.constants.BasePath() + '/Attivita/get-top-activities-just-signed',
+      this. constants.BasePath() + '/Attivita/get-top-activities-just-signed',
       { params }
     );
   }
@@ -64,35 +70,35 @@ export class GetApiAttivitaService {
     );
   }
 
-  async apiGetListaAttivitaWhitPromo(latitudine: number, longitudine: number, isHomePage: boolean): Promise<Observable<Attivita[]>> {
+  async apiGetListaAttivitaWhitPromo(latitudine: number, longitudine: number, isHomePage:  boolean): Promise<Observable<Attivita[]>> {
     const params = {
-      latitudine: latitudine.toString(),
+      latitudine:  latitudine.toString(),
       longitudine: longitudine.toString(),
       isHomePage: isHomePage
     };
   
     return this.http.get<Attivita[]>(
-      this.constants.BasePath() + '/Attivita/get-top-activities-whit-promo',
+      this. constants.BasePath() + '/Attivita/get-top-activities-whit-promo',
       { params }
     );
   }
 
   async apiGetListaAttivitaRecentView(idSoggetto: number): Promise<Observable<Attivita[]>> {
     const params = {
-      id: idSoggetto.toString()
+      id:  idSoggetto.toString()
     };
   
     return this.http.get<Attivita[]>(
-      this.constants.BasePath() + '/Attivita/get-top-activities-recent-view',
+      this. constants.BasePath() + '/Attivita/get-top-activities-recent-view',
       { params }
     );
   }
 
-  async apiGetListaAttivitaFoodDrinkPromo(latitudine: number, longitudine: number, codConsumazione:number, isHomePage: boolean): Promise<Observable<Attivita[]>> {
+  async apiGetListaAttivitaFoodDrinkPromo(latitudine: number, longitudine: number, codConsumazione: number, isHomePage: boolean): Promise<Observable<Attivita[]>> {
     const params = {
       latitudine: latitudine.toString(),
       longitudine: longitudine.toString(),
-      codConsumazione : codConsumazione,
+      codConsumazione: codConsumazione,
       isHomePage: isHomePage
     };
   
@@ -102,36 +108,35 @@ export class GetApiAttivitaService {
     );
   }
 
-  async GetFavorites(idSoggetto:number): Promise<Observable<Attivita[]>>{
-    this.language = this.languageService.getLanguageSession();
-    if (!this.language) {
+  async GetFavorites(idSoggetto: number): Promise<Observable<Attivita[]>> {
+    this.language = this.languageService.getCurrentLanguage() || 'it';
+    if (! this.language) {
       this.language = "it";
     }
     const params = new HttpParams()
       .set('idSoggetto', idSoggetto.toString())
-      .set('lang', this.language.toUpperCase())
-    return this.http.get<Attivita[]>(this.constants.BasePath()+'/Attivita/get-favorites', {params});
+      .set('lang', this.language. toUpperCase())
+    return this.http.get<Attivita[]>(this.constants.BasePath() + '/Attivita/get-favorites', { params });
   }
 
-  createListaTipoAttivitaSession(listaTipoAtt:TipoAttivita[]){
-    if(listaTipoAtt)
+  createListaTipoAttivitaSession(listaTipoAtt: TipoAttivita[]) {
+    if (listaTipoAtt)
       this.listaTipoAttivita = listaTipoAtt;
   }
 
   async apiGetListaAttivitaFiltrate(filtro: FiltriAttivita): Promise<Observable<AttivitaFiltrate>> {
     let params = new HttpParams();
 
-    this.language = this.languageService.getLanguageSession();
+    this.language = this.languageService.getCurrentLanguage() || 'it';
     if (!this.language) {
       this.language = "it";
     }
 
-    if(this.language)
+    if (this.language)
       params = params.set('lang', this.language.toUpperCase());
     
-    // Aggiungi i parametri alla query solo se sono definiti
-    if (filtro.idAttivita) 
-      params = params.set('idAttivita', filtro.idAttivita);
+    if (filtro. idAttivita) 
+      params = params.set('idAttivita', filtro. idAttivita);
 
     if (filtro.nome) 
       params = params.set('nome', filtro.nome);
@@ -142,230 +147,274 @@ export class GetApiAttivitaService {
     if (filtro.codTipoAttivita) 
       params = params.set('codTipoAttivita', filtro.codTipoAttivita);
 
-   
     if (filtro && filtro.latitudine === undefined && filtro.longitudine === undefined) {
-
       try {
         const position = await this.locationService.getCurrentLocation();
-    
-        if (position.latitudine != null && position.longitudine != null) {
+        if (position. latitudine != null && position.longitudine != null) {
           params = params.set('latitudine', position.latitudine.toString());
           params = params.set('longitudine', position.longitudine.toString());
         }
       } catch (error) {
         console.error('Errore durante il recupero della posizione:', error);
       }
-    }
-    else if(filtro.latitudine && filtro.longitudine)
-    {
+    } else if (filtro. latitudine && filtro.longitudine) {
       params = params.set('latitudine', filtro.latitudine);
       params = params.set('longitudine', filtro.longitudine);
     }
     
-    if (filtro.codTipoPromo && filtro.codTipoPromo.length > 0) {
-      filtro.codTipoPromo.forEach((promo) => {
-          params = params.append('codTipoPromo', promo.toString());
+    if (filtro.codTipoPromo && filtro.codTipoPromo. length > 0) {
+      filtro.codTipoPromo. forEach((promo) => {
+        params = params. append('codTipoPromo', promo. toString());
       });
     }
 
-    params = params.set('isMovingMap', filtro.isMovingMap ? filtro.isMovingMap : false);
-      
-    params = params.set('isHomePage', filtro.isHomePage ? filtro.isHomePage : false);
-
-    //params = params.set('typeFilterHomePage', filtro.typeFilterHomePage ? filtro.typeFilterHomePage : 0);
+    params = params.set('isMovingMap', filtro.isMovingMap ? filtro.isMovingMap :  false);
+    params = params.set('isHomePage', filtro.isHomePage ? filtro.isHomePage :  false);
 
     if (filtro.days && filtro.days.length > 0) {
       filtro.days.forEach(day => {
-        params = params.append('days', day.toString());
+        params = params.append('days', day. toString());
       });
     }
-    if(filtro.tipoRicercaAttivita)
-      params = params.set('tipoRicercaAttivita',filtro.tipoRicercaAttivita ? filtro.tipoRicercaAttivita : 0);
-    
-    if(filtro.codTipoPeriodoList && filtro.codTipoPeriodoList.length > 0)
-      params =params.set('codTipoPeriodoList', filtro.codTipoPeriodoList.join(','))
 
-    if(filtro.codTipoConsumazione)
+    if (filtro.tipoRicercaAttivita)
+      params = params.set('tipoRicercaAttivita', filtro.tipoRicercaAttivita ?  filtro.tipoRicercaAttivita : 0);
+    
+    if (filtro. codTipoPeriodoList && filtro.codTipoPeriodoList.length > 0)
+      params = params.set('codTipoPeriodoList', filtro.codTipoPeriodoList.join(','))
+
+    if (filtro.codTipoConsumazione)
       params = params.set('codTipoConsumazione', filtro.codTipoConsumazione);
 
-    return this.http.get<AttivitaFiltrate>(this.constants.BasePath()+'/Attivita/get-attivita-filtrata', { params });
+    return this.http.get<AttivitaFiltrate>(this.constants.BasePath() + '/Attivita/get-attivita-filtrata', { params });
   }
 
-  apiGetListaTop3ImmaginiById(id:number): Observable<Immagini[]>{
-    return this.http.get<Immagini[]>(this.constants.BasePath()+'/Attivita/get-top3-immagini/' + id);
+  apiGetListaTop3ImmaginiById(id: number): Observable<Immagini[]> {
+    return this.http.get<Immagini[]>(this.constants.BasePath() + '/Attivita/get-top3-immagini/' + id);
   }
 
-  apiGetListaImmaginiById(id:number): Observable<Immagini[]>{
-    return this.http.get<Immagini[]>(this.constants.BasePath()+'/Attivita/get-lista-immagini/' + id);
+  apiGetListaImmaginiById(id: number): Observable<Immagini[]> {
+    return this.http.get<Immagini[]>(this.constants.BasePath() + '/Attivita/get-lista-immagini/' + id);
   }
 
   apiGetAttivitaByIdAttivta(idAttivita: number): Observable<any> {
-    this.language = this.languageService.getLanguageSession();
-    if(this.language == undefined)
-      this.language = "it";
+    this.language = this.languageService.getCurrentLanguage() || 'it';
     return this.http.get(this.constants.BasePath() + '/Attivita/get-attivita-by-id', {
-        params: {
-            idAttivita: idAttivita.toString(),
-            lang: this.language.toUpperCase(),
-        }
+      params: {
+        idAttivita: idAttivita.toString(),
+        lang: this.language. toUpperCase(),
+      }
     });
   }
 
   apiGetAttivitaByIdSoggetto(): Observable<any> {
-    this.language = this.languageService.getLanguageSession();
-    if (!this.language) {
-      this.language = "it";
-    }
+    this.language = this.languageService.getCurrentLanguage() || 'it';
   
     return this.http.get(
       this.constants.BasePath() + '/Attivita/get-lista-attivita-by-id',
       {
         params: {
-          // idSoggetto: idSoggetto.toString(),
           lang: this.language
         }
       }
     );
   }
 
-  async apiGetListaDecAttivita(): Promise<Observable<TipoAttivita[]>>{
-    this.language = this.languageService.getLanguageSession() || 'it';
+  async apiGetListaDecAttivita(): Promise<Observable<TipoAttivita[]>> {
+    this.language = this.languageService.getCurrentLanguage() || 'it';
 
-    return this.http.get<TipoAttivita[]>(this.constants.BasePath()+'/Attivita/get-lista-tipoAttivita',{
-              params: {
-                  lang: this.language.toUpperCase()
-              }
-          })
+    return this.http.get<TipoAttivita[]>(this.constants.BasePath() + '/Attivita/get-lista-tipoAttivita', {
+      params:  {
+        lang: this.language.toUpperCase()
+      }
+    })
   }
 
-  apiGetAttivitaFavorite(): Observable<AttivitaRicerca[]>{
-    this.language = this.languageService.getLanguageSession();
-    if (!this.language) {
-      this.language = "it";
-    }
+  apiGetAttivitaFavorite(): Observable<AttivitaRicerca[]> {
+    this.language = this.languageService.getCurrentLanguage() || 'it';
     const params = new HttpParams()
       .set('lang', this.language.toUpperCase())
-    return this.http.get<AttivitaRicerca[]>(this.constants.BasePath()+'/Attivita/get-favorites', {params});
+    return this.http.get<AttivitaRicerca[]>(this.constants.BasePath() + '/Attivita/get-favorites', { params });
   }
 
-  apiGetListaTipoAttivitaById(id:number): Observable<TipoAttivita[]>{
-    return this.http.get<TipoAttivita[]>(this.constants.BasePath()+'/Attivita/get-lista-tipoAttivita-by-id'+id);
+  apiGetListaTipoAttivitaById(id: number): Observable<TipoAttivita[]> {
+    return this.http.get<TipoAttivita[]>(this.constants.BasePath() + '/Attivita/get-lista-tipoAttivita-by-id' + id);
   }
 
   async apiInsertAttivita(attivita: InsertAttivitaReqDto): Promise<InsertAttivitaResponse> {
-    const lang = this.languageService.getLanguageSession() || 'IT'; 
+    const lang = this.languageService.getCurrentLanguage() || 'it';
     return await firstValueFrom(
-      this.http.post<InsertAttivitaResponse>(this.constants.BasePath() + `/Attivita/insert-attivita`,attivita, {params: {
-        lang: lang.toUpperCase(),
+      this.http.post<InsertAttivitaResponse>(this.constants.BasePath() + `/Attivita/insert-attivita`, attivita, {
+        params: {
+          lang: lang. toUpperCase(),
         }
       })
     );
   }
 
   async apiUpdateAttivita(attivita: InsertAttivitaReqDto): Promise<any> {
-    const lang = this.languageService.getLanguageSession() || 'IT'; 
+    const lang = this.languageService.getCurrentLanguage() || 'it';
     return await firstValueFrom(
-      this.http.post<InsertAttivitaReqDto>(this.constants.BasePath() + `/Attivita/update-attivita`,attivita, {params: {
-        lang: lang.toUpperCase(),
+      this.http.post<InsertAttivitaReqDto>(this.constants.BasePath() + `/Attivita/update-attivita`, attivita, {
+        params:  {
+          lang: lang.toUpperCase(),
         }
       })
     );
   }
 
-    async apiGetAttivitaByIdAttivita(
-      id: number | undefined
-    ): Promise<Attivita> {
-      this.language = this.languageService.getLanguageSession();
-      if (!this.language) {
-        this.language = "it";
-      }
-    
-      const params: any = {
-        idAttivita: id?.toString() || '',
-        lang: this.language.toUpperCase()
-      };
-    
-      // Fai la GET normalmente
-      const attivita = await firstValueFrom(
-        this.http.get<Attivita>(this.constants.BasePath() + '/Attivita/get-attivita', {
-          params: params
-        })
+  /**
+   * ✅ METODO PRINCIPALE AGGIORNATO CON CACHE
+   * Recupera un'attività per ID e la salva nella lista "visualizzate di recente"
+   */
+  async apiGetAttivitaByIdAttivita(id: number | undefined): Promise<Attivita> {
+    this.language = this.languageService.getCurrentLanguage() || 'it';
+  
+    const params:  any = {
+      idAttivita: id?.toString() || '',
+      lang: this.language. toUpperCase()
+    };
+  
+    // Fai la GET normalmente
+    const attivita = await firstValueFrom(
+      this.http.get<Attivita>(this.constants.BasePath() + '/Attivita/get-attivita', {
+        params:  params
+      })
+    );
+  
+    // ✅ Aggiorna la cache "attivita_recent_view"
+    await this.addToRecentView(attivita);
+  
+    return attivita;
+  }
+
+  /**
+   * ✅ NUOVO METODO:  Aggiunge un'attività alle visualizzate di recente
+   */
+  private async addToRecentView(attivita: Attivita): Promise<void> {
+    try {
+      // Recupera la lista corrente dalla cache
+      let cachedData = await this.cacheService.getJSON<Attivita[]>(
+        this.RECENT_VIEW_KEY,
+        this.RECENT_VIEW_CATEGORY
+      ) || [];
+
+      // Rimuovi l'attività se già presente (evita duplicati)
+      cachedData = cachedData.filter(a => a.idAttivita !== attivita. idAttivita);
+
+      // Recupera l'immagine principale
+      const immaginePrincipale = attivita.immagini?. find(
+        img => (img.isImmaginePrincipale && img.isVerificata) || img.isImmaginePrincipaleTemp
       );
-    
-      // Dopo la GET: aggiorna la cache "attivita_recent_view"
-      const cacheKey = `attivita_recent_view`;
-      const cachedData: Attivita[] = await this.storageService.getItem(cacheKey) || [];
-    
-      // Rimuovi l'attività se già presente (per evitare duplicati)
-      const updatedList = cachedData.filter(a => a.idAttivita !== attivita.idAttivita);
+      attivita.uploadImgPrincipale = immaginePrincipale 
+        ? immaginePrincipale.upload 
+        : 'URL_IMMAGINE_FALLBACK';
 
-      // Recupero l'immagine principale
-      const immaginePrincipale = attivita.immagini?.find(img => (img.isImmaginePrincipale && img.isVerificata) || img.isImmaginePrincipaleTemp);
-      attivita.uploadImgPrincipale = immaginePrincipale ? immaginePrincipale.upload : 'URL_IMMAGINE_FALLBACK';
       // Inserisci l'attività in testa
-      updatedList.unshift(attivita);
+      cachedData.unshift(attivita);
 
-      // Se superi 15 elementi, rimuovi l'ultimo
-      if (updatedList.length > 15) {
-        updatedList.pop();
+      // Se superi il limite, rimuovi l'ultimo
+      if (cachedData.length > this.RECENT_VIEW_MAX_ITEMS) {
+        cachedData.pop();
       }
-    
-      // Salva di nuovo la lista aggiornata
-      await this.storageService.setItem(cacheKey, updatedList, 8640000);
-    
-      return attivita;
+
+      // ✅ Salva nella cache con il nuovo servizio
+      await this.cacheService.setJSON(
+        this.RECENT_VIEW_KEY,
+        cachedData,
+        {
+          category: this.RECENT_VIEW_CATEGORY,
+          ttl: this. RECENT_VIEW_TTL
+        }
+      );
+
+      console.log(`✅ Attività ${attivita.idAttivita} aggiunta alle visualizzate di recente`);
+    } catch (error) {
+      console.error('❌ Errore nell\'aggiornamento delle attività recenti:', error);
     }
+  }
+
+  /**
+   * ✅ NUOVO METODO: Recupera le attività visualizzate di recente dalla cache
+   */
+  async getRecentViewedActivities(): Promise<Attivita[]> {
+    try {
+      const cached = await this.cacheService. getJSON<Attivita[]>(
+        this.RECENT_VIEW_KEY,
+        this. RECENT_VIEW_CATEGORY
+      );
+      return cached || [];
+    } catch (error) {
+      console.error('❌ Errore nel recupero delle attività recenti:', error);
+      return [];
+    }
+  }
+
+  /**
+   * ✅ NUOVO METODO: Pulisce la cache delle attività visualizzate
+   */
+  async clearRecentView(): Promise<void> {
+    await this.cacheService.remove(
+      this.RECENT_VIEW_KEY,
+      this.RECENT_VIEW_CATEGORY
+    );
+    console.log('🗑️ Cache attività recenti pulita');
+  }
 
   async apiGetAttivitaAutocomplete(placeId: string): Promise<any> {
-    this.language = this.languageService.getLanguageSession();
+    this.language = this.languageService.getCurrentLanguage() || 'it';
     return await firstValueFrom(
-        this.http.get(this.constants.BasePath() + '/Attivita/get-detail-attivita-autocomplete', {
-            params: {
-              placeId: placeId || '',
-              lang: this.language.toUpperCase()
-            }
-        })
+      this.http.get(this.constants.BasePath() + '/Attivita/get-detail-attivita-autocomplete', {
+        params: {
+          placeId: placeId || '',
+          lang: this.language.toUpperCase()
+        }
+      })
     );
   }
 
-  createListAttivitaNewHomeSession(list:Attivita []){
+  createListAttivitaNewHomeSession(list: Attivita[]) {
     this.listaAttivitaNewHome = list;
   }
   
-  createListaAttivitaPerRicercaSession(listaAttRicerca:AttivitaRicerca[]){
-    if(listaAttRicerca)
+  createListaAttivitaPerRicercaSession(listaAttRicerca: AttivitaRicerca[]) {
+    if (listaAttRicerca)
       this.listaAttivitaPerRicerca = listaAttRicerca;
   }
   
-  
-  GetListaAttivitaPerRicercaSession(){
+  GetListaAttivitaPerRicercaSession() {
     return this.listaAttivitaPerRicerca;
   }
 
-  GetListaTipoAttivitaSession(){
+  GetListaTipoAttivitaSession() {
     return this.listaTipoAttivita;
   }
-  createListAttivitaPromoHomeSession(list:Attivita []){
+
+  createListAttivitaPromoHomeSession(list: Attivita[]) {
     this.listaAttivitaPromoHome = list;
   }
-  createListAttivitaVicineSession(list:Attivita []){
+
+  createListAttivitaVicineSession(list: Attivita[]) {
     this.listaAttivitaPromoHome = list;
   }
-  createListCittaIconSession(list:string []){
+
+  createListCittaIconSession(list: string[]) {
     this.listaCitta = list;
   }
 
-  getListAttivitaPromoHomeSession(){
+  getListAttivitaPromoHomeSession() {
     return this.listaAttivitaPromoHome;
   }
-  getListAttivitaNewSession(){
+
+  getListAttivitaNewSession() {
     return this.listaAttivitaNewHome;
   }
-  getListAttivitaVicineHomeSession(){
+
+  getListAttivitaVicineHomeSession() {
     return this.listaAttivitaVicine;
   }
 
-  deleteSession(){
+  deleteSession() {
     this.attivitaSubject.next(null);
   }
 
@@ -373,22 +422,22 @@ export class GetApiAttivitaService {
     this.attivitaFiltrateResult = data;
   }
 
-  setIsListaAttModalOpen(isOpen: boolean){
+  setIsListaAttModalOpen(isOpen: boolean) {
     this.isListaAttModalOpen = isOpen;
   }
 
-  setFilter(filtro: FiltriAttivita | undefined){
-    if(filtro)
+  setFilter(filtro: FiltriAttivita | undefined) {
+    if (filtro)
       this.filter = filtro;
     else
       this.filter = undefined;
   }
 
-  getFilter(){
+  getFilter() {
     return this.filter;
   }
 
-  getIsListaModalOpen(){
+  getIsListaModalOpen() {
     return this.isListaAttModalOpen;
   }
 
@@ -400,9 +449,9 @@ export class GetApiAttivitaService {
     return this.attivitaFiltrateResult;
   }
 
-  setlistaAttivitaDDL(listaTipoAttivita: TipoAttivita[]) {
+  setlistaAttivitaDDL(listaTipoAttivita:  TipoAttivita[]) {
     listaTipoAttivita.sort((a, b) => {
-      const descrizioneA = a.descrizione.toLowerCase();
+      const descrizioneA = a.descrizione. toLowerCase();
       const descrizioneB = b.descrizione.toLowerCase();
       if (descrizioneA < descrizioneB) {
         return -1;
@@ -424,7 +473,7 @@ export class GetApiAttivitaService {
     attivita.idAttivita = idAttivita || 0;
     
     const options = {
-      body: attivita
+      body:  attivita
     };
   
     return this.http.delete<number>(
@@ -432,5 +481,4 @@ export class GetApiAttivitaService {
       options
     );
   }
-
 }
