@@ -78,26 +78,38 @@ export class PhotoService {
    * @returns URL dell'icona o null in caso di errore
    */
   async getIconUrl(iconName: string | undefined, category: string): Promise<string | null> {
-  if (!iconName) return null;
 
-  try {
-    const cachedIcon = await this. cacheService.getImage(iconName, category);
-    if (cachedIcon) return cachedIcon;
+    if (!iconName) {
+      return null;
+     }
 
-    const fileRef = ref(this.storage, `icons/${iconName}.png`);
-    const downloadUrl = await getDownloadURL(fileRef);
+    const cachedIcon = await this.cacheService.getImage(iconName, category);
 
-    await this.cacheService. setImage(iconName, blob, {
-      category,
-      ttl: 60 * 24 * 60 * 60 * 1000
-    });
+    if (cachedIcon) {
+      return cachedIcon;
+    }
+    else{
+      try {
+      const fileRef = ref(this.storage, `icons/${iconName}.png`);
+      const downloadUrl = await getDownloadURL(fileRef);
+      const blob = await fetch(downloadUrl).then(res => res.blob());
+      console.log('Icon blob obtained:', blob);
 
-    return await this.cacheService.getImage(iconName, category);
+      await this.cacheService.setImage(iconName, blob, {
+        category: category,
+        ttl: 60 * 24 * 60 * 60 * 1000 // 60 giorni
+      });
 
-  } catch (err) {
-    return null;
+      const localUrl = await this.cacheService.getImage(iconName, category);
+
+      return localUrl;
+
+    } catch (err) {
+      console.error(`❌ Errore caricamento icona ${iconName}:`, err);
+      return null;
+      }
+    } 
   }
-}
 
   private async downloadImageAsBase64(url: string): Promise<string> {
     const response = await fetch(url);
