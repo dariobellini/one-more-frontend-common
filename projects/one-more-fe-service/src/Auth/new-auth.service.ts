@@ -169,8 +169,11 @@ export class NewAuthService {
     const token = await userCredential.user.getIdToken();
     const readealJwt = await firstValueFrom(this.UsernamePasswordLogin(token));
 
-    if (readealJwt)
+    if (readealJwt) {
       this.tokenService.setToken(readealJwt);
+      this.setStatusUserVerified();
+      await this.favoritesApiService.Favorite();
+    }
 
     return Promise.resolve(readealJwt);
   }
