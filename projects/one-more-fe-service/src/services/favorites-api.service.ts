@@ -35,7 +35,7 @@ export class FavoritesApiService {
             tap(async (response) => {
                 if (response.outcome) {
                     // Richiama Favorite per aggiornare la sessione
-                    const favoriteObs = await this. Favorite();
+                    const favoriteObs = await this.Favorite();
                     favoriteObs.subscribe();
                 }
             })
