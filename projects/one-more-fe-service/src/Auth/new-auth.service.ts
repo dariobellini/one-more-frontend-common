@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { createUserWithEmailAndPassword, deleteUser, EmailAuthProvider, FacebookAuthProvider, getAdditionalUserInfo, GoogleAuthProvider, reauthenticateWithCredential, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, User, UserCredential } from 'firebase/auth';
 import { Auth, authState, signOut } from '@angular/fire/auth';
 import { BehaviorSubject, filter, firstValueFrom, Observable, Observer, tap } from 'rxjs';
@@ -18,6 +18,13 @@ import { FavoritesApiService } from '../services/favorites-api.service';
 
 export class NewAuthService {
 
+  constants = inject(Constants);
+  firestore = inject(Firestore);
+  firebaseAut = inject(Auth);
+  http = inject(HttpClient);
+  tokenService = inject(TokenService);
+  favoritesApiService = inject(FavoritesApiService);
+
   private currentUser$ = authState(this.firebaseAut).pipe(
     filter(u => !!u)
   )
@@ -36,14 +43,7 @@ export class NewAuthService {
   isReautenticated: boolean = false;
   idPage!: number;
 
-  constructor(private constants: Constants,
-    private firestore: Firestore,
-    private firebaseAut: Auth,
-    private http: HttpClient,
-    private tokenService: TokenService,
-    private favoritesApiService: FavoritesApiService
-  ) {}
-
+  constructor() {}
 
   setStatusUserVerified(): void {
     this.loggedIn$.next(this.tokenService.hasValidToken());
