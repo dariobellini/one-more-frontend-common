@@ -11,6 +11,8 @@ import { deleteDoc, doc, Firestore, getDoc, setDoc } from '@angular/fire/firesto
 import { HttpClient } from '@angular/common/http';
 import { TokenService } from './token.service';
 import { FavoritesApiService } from '../services/favorites-api.service';
+import { CommonResDto } from '../Dtos/Responses/CommonResDto';
+import { SignUpReqDto } from '../Dtos/Requests/auth/signUpReqDto';
 
 @Injectable({
   providedIn: 'root'
@@ -43,7 +45,7 @@ export class NewAuthService {
   isReautenticated: boolean = false;
   idPage!: number;
 
-  constructor() {}
+  constructor() { }
 
   setStatusUserVerified(): void {
     this.loggedIn$.next(this.tokenService.hasValidToken());
@@ -86,22 +88,6 @@ export class NewAuthService {
     this.isShop$.next(false);
 
     signOut(this.firebaseAut);
-  }
-
-  async resendVerificationEmail(): Promise<string> {
-    try {
-      const user = await this.getCurrentUserFromAuth();
-      if (user && !user.emailVerified) {
-        await sendEmailVerification(user);
-        this.esito = "Email di verifica inviata";
-        // Mostra un messaggio di conferma all'utente, ad esempio con un alert
-      } else {
-        this.esito = "L'utente è già verificato o non è autenticato.";
-      }
-    } catch (error) {
-      this.esito = "Errore durante il reinvio dell'email di verifica si prega di riprovare tra qualche istante";
-    }
-    return this.esito;
   }
 
   saveUserSession(userSession: UserSession) {
@@ -156,12 +142,19 @@ export class NewAuthService {
     return this.http.get<JwtResponseDto>(this.constants.BasePath() + '/auth/username-password-login?idToken=' + idToken);
   }
 
-  signUp(email: string, password: string): Promise<{ userCredential: UserCredential, token: string }> {
-    return createUserWithEmailAndPassword(this.firebaseAut, email, password)
-      .then(async (userCredential: UserCredential) => {
-        const token = await userCredential.user.getIdToken();
-        return { userCredential, token };
-      });
+  // signUp(email: string, password: string): Promise<{ userCredential: UserCredential, token: string }> {
+  //   return createUserWithEmailAndPassword(this.firebaseAut, email, password)
+  //     .then(async (userCredential: UserCredential) => {
+  //       const token = await userCredential.user.getIdToken();
+  //       return { userCredential, token };
+  //     });
+  // }
+
+  signUp(req: SignUpReqDto): Observable<CommonResDto> {
+    return this.http.post<CommonResDto>(
+      this.constants.BasePath() + '/auth/sign-up',
+      req
+    );
   }
 
   async login(email: string, password: string): Promise<JwtResponseDto | undefined> {
