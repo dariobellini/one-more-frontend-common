@@ -1,10 +1,12 @@
 export class SearchItemDto{
   id: string;
+  title: string;
   description: string;
-  type: searchItemType
+  type: searchItemType;
 
-  constructor(id: string, description: string, type: searchItemType) {
+  constructor(id: string, title: string, description: string, type: searchItemType) {
     this.id = id;
+    this.title = title;
     this.description = description;
     this.type = type;
   }
