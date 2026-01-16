@@ -10,6 +10,17 @@ export class SearchItemDto{
   }
 }
 
+export class SearchItemDtoRequest{
+  latitude: number | undefined;
+  longitude: number | undefined;
+  city: string | undefined;
+  idShopType: number | undefined;
+  idPromoDays: number[] | undefined;
+  idPromoPeriod: number | undefined;
+  idPromoTypes: number[] | undefined;
+  idPromoCategory: number | undefined;
+}
+
 export enum searchItemType{
   Shop = 1,
   ShopType = 2,
