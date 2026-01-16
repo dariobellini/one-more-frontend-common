@@ -2,41 +2,39 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Constants } from '../Constants';
-import { Comuni } from '../EntityInterface/Comuni_CAP';
 import { LanguageService } from './language.service';
+import { Municipality } from '../Dtos/MunicipalityDto';
 
 @Injectable({
   providedIn: 'root'
 })
 export class GetApiComuniService {
-  language : string | undefined;
-  private listaComuniSubject = new BehaviorSubject<Comuni[] | null>(null);
+  language: string | undefined;
+  // private listaComuniSubject = new BehaviorSubject<Municipality[] | null>(null);
 
   http = inject(HttpClient);
   constants = inject(Constants);
   languageService = inject(LanguageService);
 
   constructor() { }
-  apiGetListaComuni(): Observable<Comuni[]>{
-    this.language = this.languageService.getCurrentLanguage() || 'it';
-    return this.http.get<Comuni[]>(this.constants.BasePath()+'/Comuni/get-comuni', {
-      params: {
-          lang: this.language.toUpperCase(),
-      }
-   });
+
+
+
+  Filter(query: string): Observable<Municipality[] | null> {
+    return this.http.get<Municipality[]>(this.constants.BasePath() + '/municipality/filter?query=' + query);
   }
-   setlistaComuni(listaComuni:Comuni[]) {
-    listaComuni.sort((a, b) => {
-        const descrizioneA = a.descComune.toLowerCase();
-        const descrizioneB = b.descComune.toLowerCase();
-        if (descrizioneA < descrizioneB) {
-          return -1;
-        }
-        if (descrizioneA > descrizioneB) {
-          return 1;
-        }
-        return 0;
-      });
-      this.listaComuniSubject.next(listaComuni);
-    }
+  // setlistaComuni(listaComuni: Municipality[]) {
+  //   listaComuni.sort((a, b) => {
+  //     const descrizioneA = a.description.toLowerCase();
+  //     const descrizioneB = b.description.toLowerCase();
+  //     if (descrizioneA < descrizioneB) {
+  //       return -1;
+  //     }
+  //     if (descrizioneA > descrizioneB) {
+  //       return 1;
+  //     }
+  //     return 0;
+  //   });
+  //   this.listaComuniSubject.next(listaComuni);
+  // }
 }
