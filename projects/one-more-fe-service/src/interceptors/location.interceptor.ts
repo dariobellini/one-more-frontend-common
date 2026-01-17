@@ -14,8 +14,8 @@ export class LocationInterceptor implements HttpInterceptor {
       switchMap(location => {
         const cloned = req.clone({
           setHeaders: {
-            'X-Latitude': location.latitudine.toString(),
-            'X-Longitude': location.longitudine.toString()
+            'X-Latitude': location?.latitudine.toString() || '',
+            'X-Longitude': location?.longitudine.toString() || ''
           }
         });
         return next.handle(cloned);

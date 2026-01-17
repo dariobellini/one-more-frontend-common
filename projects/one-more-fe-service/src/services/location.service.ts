@@ -26,7 +26,8 @@ export class LocationService {
     return (value * Math.PI) / 180;
   }
 
-  async getCurrentLocation(): Promise<{ latitudine: number; longitudine: number }> {
+  async getCurrentLocation(): Promise<{ latitudine: number; longitudine: number } | null> {
+
     // 1. Controlla la cache
     const cachedLocation = await this.getCachedLocation();
     if (cachedLocation) {
@@ -168,7 +169,7 @@ export class LocationService {
   /**
    * ✅ Forza il refresh della posizione (utile per pull-to-refresh)
    */
-  async refreshLocation(): Promise<{ latitudine: number; longitudine:  number }> {
+  async refreshLocation(): Promise<{ latitudine: number; longitudine:  number }| null> {
     // Rimuovi la cache
     await this.cacheService. remove(this.CACHE_KEY, this.CACHE_CATEGORY);
     // Ottieni nuova posizione

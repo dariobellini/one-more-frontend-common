@@ -149,10 +149,10 @@ export class GetApiAttivitaService {
 
     if (filtro && filtro.latitudine === undefined && filtro.longitudine === undefined) {
       try {
-        const position = await this.locationService.getCurrentLocation();
-        if (position. latitudine != null && position.longitudine != null) {
-          params = params.set('latitudine', position.latitudine.toString());
-          params = params.set('longitudine', position.longitudine.toString());
+        const location = await this.locationService.getCurrentLocation();
+        if (location && location. latitudine != null && location.longitudine != null) {
+          params = params.set('latitudine', location.latitudine.toString());
+          params = params.set('longitudine', location.longitudine.toString());
         }
       } catch (error) {
         console.error('Errore durante il recupero della posizione:', error);
