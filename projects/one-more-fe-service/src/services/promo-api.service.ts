@@ -38,6 +38,10 @@ export class PromoApiService {
         return this.http.get<PromoPeriodDto[]>(this.constants.BasePath() + '/promo/periods');
     }
 
+    WeekDays(): Observable<{ [key: number]: string }> {
+        return this.http.get<{ [key: number]: string }>(this.constants.BasePath() + '/promo/week-days');
+    }
+
     Get(promoId: number): Observable<PromoGetResDto> {
         return this.http.get<PromoGetResDto>(this.constants.BasePath() + '/promo/get?promoId=' + promoId);
     }

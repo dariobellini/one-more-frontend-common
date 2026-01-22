@@ -13,8 +13,6 @@ export class SearchItemDto{
 }
 
 export class SearchItemDtoRequest{
-  latitude: number | undefined;
-  longitude: number | undefined;
   city: string | undefined;
   idShopType: number | undefined;
   idPromoDays: number[] | undefined;

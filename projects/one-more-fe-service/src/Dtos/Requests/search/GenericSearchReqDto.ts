@@ -1,7 +1,4 @@
 export class GenericSearchReqDto {
-  latitude?: number;
-  longitude?: number;
-  city?: string;
   cityCode?: string;
   idShopType?: number;
   idPromoDays?: number[];
