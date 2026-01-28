@@ -9,4 +9,5 @@ export interface ShopListDto {
     detail: ShopDetailDto;
     address: AddressDto;
     photo: PhotoDto;
+    isPromoPresente: boolean;
 }
