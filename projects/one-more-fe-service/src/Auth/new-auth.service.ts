@@ -54,18 +54,15 @@ export class NewAuthService {
   }
 
   isLoggedIn(): Observable<boolean> {
-    return this.loggedIn$.asObservable().pipe(
-      tap(value => console.log('check isloggedIn:', value)));
+    return this.loggedIn$.asObservable();
   }
 
   loggedUserIsUser(): Observable<boolean> {
-    return this.isUser$.asObservable().pipe(
-      tap(value => console.log('check isUser:', value)));
+    return this.isUser$.asObservable();
   }
 
   loggedUserIsVerified(): Observable<boolean> {
-    return this.isVerified$.asObservable().pipe(
-      tap(value => console.log('check isVerified:', value)));
+    return this.isVerified$.asObservable();
   }
 
   async getCurrentUserFromAuth(): Promise<User | null> {
@@ -73,8 +70,7 @@ export class NewAuthService {
   }
 
   loggedUserIsShop(): Observable<boolean> {
-    return this.isShop$.asObservable().pipe(
-      tap(value => console.log('check isShop:', value)));
+    return this.isShop$.asObservable();
   }
 
   logOut(): void {
@@ -253,7 +249,6 @@ export class NewAuthService {
 
     try {
       const decoded = this.tokenService.getDecodedToken(token);
-      console.log(decoded);
       if (decoded?.isVerified) return decoded.isVerified;
       else return false;
 

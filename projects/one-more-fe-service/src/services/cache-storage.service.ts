@@ -438,8 +438,6 @@ export class CacheStorageService {
 
       // Pulisci l'indice
       await Preferences.remove({ key: this.INDEX_KEY });
-      
-      console.log('Cache completamente pulita');
     } catch (error) {
       console.error('Errore nella pulizia della cache:', error);
     }
@@ -455,8 +453,6 @@ export class CacheStorageService {
     for (const entry of entries) {
       await this.remove(entry.key, entry.category);
     }
-
-    console.log(`Categoria '${category}' pulita`);
   }
 
   /**
@@ -469,8 +465,6 @@ export class CacheStorageService {
     for (const entry of expired) {
       await this.remove(entry.key, entry.category);
     }
-
-    console.log(`${expired.length} entry scadute rimosse`);
   }
 
   /**
@@ -594,8 +588,6 @@ export class CacheStorageService {
         await this.remove(entry. key, entry.category);
         currentSize -= entry.size / (1024 * 1024);
       }
-
-      console.log(`Cache ridotta da ${totalSizeMB. toFixed(2)}MB a ${currentSize.toFixed(2)}MB`);
     }
   }
 
