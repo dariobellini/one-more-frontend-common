@@ -64,8 +64,6 @@ export class LanguageService {
     // Aggiorna i traduttori
     this.translate. use(language);
     this.languageSubject.next(language);
-
-    console.log(`✅ Lingua cambiata in:  ${language}`);
   }
 
   /**
@@ -106,13 +104,10 @@ export class LanguageService {
    */
   private async clearCacheOnLanguageChange(): Promise<void> {
     try {
-      console.log('🧹 Pulizia cache per cambio lingua.. .');
 
       // Pulisci le categorie che contengono dati tradotti
       await this.cacheService.clearCategory('api-cache');
       await this.cacheService.clearCategory('promo-icons');
-      
-      console.log('✅ Cache pulita per cambio lingua');
     } catch (error) {
       console.error('❌ Errore nella pulizia della cache:', error);
     }

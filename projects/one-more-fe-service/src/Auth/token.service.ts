@@ -1,4 +1,4 @@
-import { Injectable, EventEmitter } from '@angular/core';
+import { Injectable, EventEmitter, inject } from '@angular/core';
 import { ApiJwtPayload } from '../EntityInterface/ApiJwtPayload';
 import { Constants } from '../Constants';
 import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
@@ -9,8 +9,8 @@ import { jwtDecode } from 'jwt-decode';
 })
 export class TokenService {
 
-    constructor(private constants: Constants
-    ) { }
+    constants = inject(Constants);
+    constructor() { }
 
     public tokenChanged: EventEmitter<string> = new EventEmitter();
 
@@ -66,7 +66,6 @@ export class TokenService {
             const now = Math.floor(Date.now() / 1000); // in secondi
             return decoded.exp > now;
         } catch (e) {
-            console.log(e);
             return false;
         }
     }

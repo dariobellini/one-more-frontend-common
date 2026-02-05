@@ -92,7 +92,6 @@ export class PhotoService {
       try {
       const fileRef = ref(this.storage, `icons/${iconName}.png`);
       const downloadUrl = await getDownloadURL(fileRef);
-      console.log('Icon URL scaricata da Firebase:', downloadUrl);
       await this.cacheService.setJSON(iconName, downloadUrl, {
         category: category,
         ttl: 60 * 24 * 60 * 60 * 1000 // 60 giorni

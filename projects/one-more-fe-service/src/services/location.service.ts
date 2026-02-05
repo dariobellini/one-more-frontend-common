@@ -31,7 +31,6 @@ export class LocationService {
     // 1. Controlla la cache
     const cachedLocation = await this.getCachedLocation();
     if (cachedLocation) {
-      console.log('📦 Posizione recuperata dalla cache');
       return cachedLocation;
     }
 
@@ -47,7 +46,6 @@ export class LocationService {
               timestamp: Date.now()
             };
             await this.setCachedLocation(newLocation);
-            console.log('🌐 Posizione ottenuta dal browser');
             resolve({ 
               latitudine: newLocation. latitudine, 
               longitudine: newLocation.longitudine 
@@ -75,7 +73,6 @@ export class LocationService {
             timestamp: Date.now()
           };
           await this.setCachedLocation(newLocation);
-          console.log('📱 Posizione ottenuta dal dispositivo mobile');
           return { 
             latitudine: newLocation. latitudine, 
             longitudine: newLocation.longitudine 
@@ -87,7 +84,6 @@ export class LocationService {
     }
 
     // 3. Fallback su Roma
-    console.log('⚠️ Uso posizione fallback (Roma)');
     return this.getFallbackLocation();
   }
 
@@ -133,7 +129,6 @@ export class LocationService {
           };
         } else {
           // Cache scaduta, rimuovila
-          console.log('⏰ Cache posizione scaduta');
           await this.cacheService.remove(this.CACHE_KEY, this.CACHE_CATEGORY);
         }
       }
@@ -156,7 +151,6 @@ export class LocationService {
           ttl: this.CACHE_TTL
         }
       );
-      console.log('💾 Posizione salvata in cache');
     } catch (error) {
       console.error('Errore nel salvataggio della cache:', error);
     }
@@ -181,6 +175,5 @@ export class LocationService {
    */
   async clearLocationCache(): Promise<void> {
     await this.cacheService.remove(this.CACHE_KEY, this.CACHE_CATEGORY);
-    console.log('🗑️ Cache posizione pulita');
   }
 }

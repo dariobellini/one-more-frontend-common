@@ -327,8 +327,6 @@ export class GetApiAttivitaService {
           ttl: this. RECENT_VIEW_TTL
         }
       );
-
-      console.log(`✅ Attività ${attivita.idAttivita} aggiunta alle visualizzate di recente`);
     } catch (error) {
       console.error('❌ Errore nell\'aggiornamento delle attività recenti:', error);
     }
@@ -358,7 +356,6 @@ export class GetApiAttivitaService {
       this.RECENT_VIEW_KEY,
       this.RECENT_VIEW_CATEGORY
     );
-    console.log('🗑️ Cache attività recenti pulita');
   }
 
   async apiGetAttivitaAutocomplete(placeId: string): Promise<any> {

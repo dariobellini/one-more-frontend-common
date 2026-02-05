@@ -1,4 +1,5 @@
 export class GenericSearchReqDto {
+  searcghText?: string;
   cityCode?: string;
   idShopType?: number;
   idPromoDays?: number[];
