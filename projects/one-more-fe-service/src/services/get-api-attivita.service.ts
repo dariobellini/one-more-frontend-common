@@ -466,6 +466,7 @@ export class GetApiAttivitaService {
   }
 
   apiDeleteAttivita(idAttivita: number): Observable<number> {
+    this.cacheService.clearCategory('api-cache');
     const attivita = new DeleteAttivita();
     attivita.idAttivita = idAttivita || 0;
     
