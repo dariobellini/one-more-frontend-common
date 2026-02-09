@@ -62,7 +62,7 @@ export class PromoApiService {
         return this.http.delete<PromoDeleteResDto>(this.constants.BasePath() + '/promo/delete?promoId=' + promoId);
     }
 
-    List(shopId:number): Observable<PromoListResDto> {
-        return this.http.get<PromoListResDto>(this.constants.BasePath() + '/promo/list?shopId=' + shopId);
+    List(shopId:number, isForShop: boolean): Observable<PromoListResDto> {
+        return this.http.get<PromoListResDto>(this.constants.BasePath() + '/promo/list?shopId=' + shopId + '&isForShop=' + isForShop);
     }
 }
