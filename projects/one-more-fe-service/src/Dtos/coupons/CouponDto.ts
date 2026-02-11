@@ -4,6 +4,7 @@ export class CouponDto {
     userId!: number;
     statusId!: number;
     jwt!: string;
+    manualCode?: string;
     insertTime?: Date;
     updateTime?: Date;
 
@@ -14,6 +15,7 @@ export class CouponDto {
             this.userId = data.userId!;
             this.statusId = data.statusId!;
             this.jwt = data.jwt!;
+            this.manualCode = data.manualCode;
             this.insertTime = data.insertTime;
             this.updateTime = data.updateTime;
         }
