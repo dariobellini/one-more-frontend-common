@@ -3,6 +3,7 @@ import { inject, Injectable } from "@angular/core";
 import { Constants } from "../Constants";
 import { firstValueFrom } from "rxjs";
 import { ShopTypeDto } from "../Dtos/ShopTypeDto";
+import { ShopTypesResDto } from "../Dtos/Responses/shoptypes/ShopTypesResDto";
 
 @Injectable({
     providedIn: 'root'
@@ -15,7 +16,7 @@ export class ShopTypeApiService {
 
     constructor() { }
 
-    async List(): Promise<ShopTypeDto[]> {
-        return await firstValueFrom(this.http.get<ShopTypeDto[]>(this.constants.BasePath() + '/shoptype/list'));
+    async List(): Promise<ShopTypesResDto> {
+        return await firstValueFrom(this.http.get<ShopTypesResDto>(this.constants.BasePath() + '/shoptype/list'));
     }
 }

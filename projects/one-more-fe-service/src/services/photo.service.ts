@@ -37,12 +37,16 @@ export class PhotoService {
    * @param fileName Nome del file della foto
    * @returns URL della foto o null in caso di errore
    */
-  async getPhotoUrl(fileName: string | undefined): Promise<string | null> {
+  async getPhotoUrl(fileName: string | undefined, noFormat: boolean | undefined = false): Promise<string | null> {
     if (!fileName) {
       return null;
     }
 
     try {
+      if(noFormat){
+        const fileRef = ref(this.storage, fileName);
+        return await getDownloadURL(fileRef);
+      }
       const fileRef = ref(this.storage, fileName+ this.constants.Suffix_Photo_Detail());
       return await getDownloadURL(fileRef);
     } catch (err) {
