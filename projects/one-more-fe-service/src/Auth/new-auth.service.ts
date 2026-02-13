@@ -34,7 +34,6 @@ export class NewAuthService {
   googleProvider = new GoogleAuthProvider();
   facebookProvider = new FacebookAuthProvider();
   private loggedIn$ = new BehaviorSubject<boolean>(this.tokenService.hasValidToken());
-  private isUser$ = new BehaviorSubject<boolean>(this.isUser());
   private isVerified$ = new BehaviorSubject<boolean>(this.isVerified());
   private isShop$ = new BehaviorSubject<boolean>(this.isShop());
   esito!: string;
@@ -49,16 +48,11 @@ export class NewAuthService {
 
   setStatusUserVerified(): void {
     this.loggedIn$.next(this.tokenService.hasValidToken());
-    this.isUser$.next(this.isUser());
     this.isShop$.next(this.isShop());
   }
 
   isLoggedIn(): Observable<boolean> {
     return this.loggedIn$.asObservable();
-  }
-
-  loggedUserIsUser(): Observable<boolean> {
-    return this.isUser$.asObservable();
   }
 
   loggedUserIsVerified(): Observable<boolean> {
@@ -77,40 +71,16 @@ export class NewAuthService {
     // rimuovi token
     localStorage.removeItem(this.constants.UserApiJwt());
     localStorage.removeItem(this.constants.UserApiRefreshToken());
-
     // aggiorna stati osservabili
     this.loggedIn$.next(false);
-    this.isUser$.next(false);
     this.isShop$.next(false);
 
     signOut(this.firebaseAut);
   }
 
-  saveUserSession(userSession: UserSession) {
-    localStorage.setItem('userSession', JSON.stringify(userSession));
-  }
-
   getUserSession(): UserSession | null {
     const userSessionString = localStorage.getItem('userSession');
     return userSessionString ? JSON.parse(userSessionString) : null;
-  }
-
-  createUserSession(email: string, uid: string, token: string, idAttivita: number, idUser: number, photoURL: string, typeLog: number, displayName: string, nome: string, cognome: string) {
-    this.userSession = new UserSession(uid, email, idAttivita, idUser, token, photoURL, typeLog, displayName, nome, cognome);
-    this.saveUserSession(this.userSession);
-    this.loggedIn$.next(true);
-  }
-
-  setIdAttivitaUserSession(id: number) {
-    if (this.userSession != null && this.userSession != undefined) {
-      this.userSession.idAttivita = id;
-      try {
-        this.saveUserSession(this.userSession);
-        this.loggedIn$.next(true);
-      } catch (error) {
-        console.error('Errore durante il salvataggio della sessione:', error);
-      }
-    }
   }
 
   GetUserJwt(uId: string): Observable<string> {
@@ -119,32 +89,9 @@ export class NewAuthService {
     });
   }
 
-  apiCheckUtenteByProvider(utente: Utente): Observable<any> {
-    return new Observable((observer: Observer<Utente>) => {
-      this.http.post<Utente>(this.constants.BasePath() + '/Soggetto/check-utente', utente)
-        .subscribe({
-          next: (response: Utente) => {
-            observer.next(response);
-            observer.complete();
-          },
-          error: (err: any) => {
-            observer.error(err);
-          }
-        });
-    });
-  }
-
   private UsernamePasswordLogin(idToken: string): Observable<JwtResponseDto> {
     return this.http.get<JwtResponseDto>(this.constants.BasePath() + '/auth/username-password-login?idToken=' + idToken);
   }
-
-  // signUp(email: string, password: string): Promise<{ userCredential: UserCredential, token: string }> {
-  //   return createUserWithEmailAndPassword(this.firebaseAut, email, password)
-  //     .then(async (userCredential: UserCredential) => {
-  //       const token = await userCredential.user.getIdToken();
-  //       return { userCredential, token };
-  //     });
-  // }
 
   signUp(req: SignUpReqDto): Observable<CommonResDto> {
     return this.http.post<CommonResDto>(
@@ -165,17 +112,6 @@ export class NewAuthService {
     }
 
     return Promise.resolve(readealJwt);
-  }
-
-  addUser(user: ProfileUser): Promise<void> {
-    return setDoc(doc(this.firestore, "users", user.uid), {
-      displayName: user.displayName,
-      email: user.email,
-      uid: user.uid,
-      photoURL: user.photoURL ?? '',
-      nome: user.nome ?? '',
-      cognome: user.cognome ?? '',
-    });
   }
 
   passwordReset(email: string): Promise<void> {
@@ -239,10 +175,7 @@ export class NewAuthService {
   //#region  private methods
 
 
-  private isUser(): boolean {
-    const roles = this.tokenService.getRolesFromToken();
-    return roles.includes(Role[Role.user]);
-  }
+  
   private isVerified(): boolean {
     const token = this.tokenService.getToken();
     if (!token) return false;

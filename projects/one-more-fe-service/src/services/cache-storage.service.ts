@@ -62,7 +62,7 @@ export class CacheStorageService {
   private readonly DEFAULT_TTL = 7 * 24 * 60 * 60 * 1000; // 7 giorni
 
   constructor() {
-    this.initialize();
+    void this.initialize();
   }
 
   /**
@@ -533,26 +533,34 @@ export class CacheStorageService {
     options: CacheOptions & { path?: string },
     size: number
   ): Promise<void> {
-    const index = await this.getIndex();
-    
-    // Rimuovi entry esistente
-    const filtered = index.filter(
-      e => !(e.key === key && e.category === options.category)
-    );
+    await this.withIndexLock(async () => {
+      const index = await this.getIndex();
+      
+      // Rimuovi entry esistente
+      const filtered = index.filter(
+        e => !(e.key === key && e.category === options.category)
+      );
 
-    // Aggiungi nuova entry
-    filtered.push({
-      key,
-      type: options.type,
-      category: options.category || 'default',
-      timestamp:  Date.now(),
-      ttl: options.ttl || this.DEFAULT_TTL,
-      size,
-      path: options. path,
-      compressed: options.compress || false
+      // Aggiungi nuova entry
+      filtered.push({
+        key,
+        type: options.type,
+        category: options.category || 'default',
+        timestamp:  Date.now(),
+        ttl: options.ttl || this.DEFAULT_TTL,
+        size,
+        path: options. path,
+        compressed: options.compress || false
+      });
+      await this.saveIndex(filtered);
     });
+  }
 
-    await this.saveIndex(filtered);
+  private indexLock: Promise<void> = Promise.resolve();
+
+  private async withIndexLock(fn: () => Promise<void>): Promise<void> {
+    this.indexLock = this.indexLock.then(fn).catch(() => {});
+    return this.indexLock;
   }
 
   private async removeFromIndex(key: string, category: string): Promise<void> {
@@ -598,7 +606,7 @@ export class CacheStorageService {
   private generateFileName(key: string, extension: string): string {
     const hash = this.simpleHash(key);
     const timestamp = Date.now();
-    return `${hash}_${timestamp}. ${extension}`;
+    return `${hash}_${timestamp}.${extension}`;
   }
 
   private simpleHash(str: string): string {

@@ -5,9 +5,10 @@ import { OneMoreFeServiceComponent } from './one-more-fe-service.component';
 
 @NgModule({
   declarations: [
-    OneMoreFeServiceComponent
+    
   ],
   imports: [
+    OneMoreFeServiceComponent
   ],
   exports: [
     OneMoreFeServiceComponent

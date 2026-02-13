@@ -29,9 +29,6 @@ export class TokenService {
         // this.tokenChanged.emit(jwt.jwt);
         localStorage.setItem(this.constants.UserApiJwt(), jwt.jwt);
         localStorage.setItem(this.constants.UserApiRefreshToken(), jwt.refreshToken);
-
-
-        //   this.newAuthService.setStatusUserVerified();
     }
 
     getDecodedToken(token: string): ApiJwtPayload | null {
