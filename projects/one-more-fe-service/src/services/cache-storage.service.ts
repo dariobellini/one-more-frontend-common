@@ -26,6 +26,7 @@ export interface CacheOptions {
   category?: string;
   /** Se true, comprime i dati JSON */
   compress?: boolean;
+  mimeType?: string;
 }
 
 /**
