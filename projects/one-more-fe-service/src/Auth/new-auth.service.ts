@@ -67,15 +67,15 @@ export class NewAuthService {
     return this.isShop$.asObservable();
   }
 
-  logOut(): void {
+  async logOut(): Promise<void> {
     // rimuovi token
     localStorage.removeItem(this.constants.UserApiJwt());
     localStorage.removeItem(this.constants.UserApiRefreshToken());
     // aggiorna stati osservabili
     this.loggedIn$.next(false);
     this.isShop$.next(false);
-
-    signOut(this.firebaseAut);
+    this.isVerified$.next(false);
+    await signOut(this.firebaseAut);
   }
 
   getUserSession(): UserSession | null {
@@ -156,8 +156,7 @@ export class NewAuthService {
         await signOut(this.firebaseAut);
         await deleteUser(user);
 
-        // Elimina la sessione se tutto è andato a buon fine
-        this.getUserSession();
+        this.logOut();
       } else {
         throw new Error('Errore: Nessun utente autenticato.');
       }
