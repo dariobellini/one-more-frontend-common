@@ -1,5 +1,5 @@
 import { HttpClient } from "@angular/common/http";
-import { Injectable } from "@angular/core";
+import { inject, Injectable } from "@angular/core";
 import { Constants } from "../Constants";
 import { Observable } from "rxjs";
 import { ShopAddResDto } from "../Dtos/Responses/shops/ShopAddResDto";
@@ -15,14 +15,17 @@ import { ShopUpdateResDto } from "../Dtos/Responses/shops/ShopUpdateResDto";
 export class ShopApiService {
 
     language: string | undefined;
-    constructor(private http: HttpClient,
-        private constants: Constants,) { }
+    http = inject(HttpClient);
+    constants = inject(Constants);
+    
+    constructor() { }
 
     Get(shopId: number): Observable<ShopDetailResDto> {
         return this.http.get<ShopDetailResDto>(this.constants.BasePath() + '/shop/get?shopId=' + shopId);
     }
 
     Add(shopAddReqDto: ShopAddReqDto): Observable<ShopAddResDto> {
+        console.log('ShopAddReqDto:', shopAddReqDto);
         return this.http.post<ShopAddResDto>(this.constants.BasePath() + '/shop/add', shopAddReqDto);
     }
     Update(shopUpdateReqDto: ShopUpdateReqDto): Observable<ShopUpdateResDto> {

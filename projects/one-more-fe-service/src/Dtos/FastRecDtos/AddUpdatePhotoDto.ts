@@ -1,4 +1,4 @@
-export class PhotoFormDto {
+export class AddUpdatePhotoDto {
     id?: number;          // presente solo se già salvata
     title?: string;
     fileName?: string;         // per preview immagini esistenti
@@ -7,7 +7,7 @@ export class PhotoFormDto {
     isNew: boolean = false;       // discriminante
     isDeleted?: boolean = false; // per marcare le foto da eliminare
 
-    constructor(data?: Partial<PhotoFormDto>) {
+    constructor(data?: Partial<AddUpdatePhotoDto>) {
         if (data) {
             this.id = data.id;
             this.title = data.title;
