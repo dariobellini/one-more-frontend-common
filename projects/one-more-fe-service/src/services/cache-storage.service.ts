@@ -380,41 +380,6 @@ export class CacheStorageService {
     return data;
   }
 
-  // ========== METODI DI GESTIONE ==========
-
-  /**
-   * Rimuove un elemento dalla cache
-   */
-  async remove(key: string, category: string = 'default'): Promise<void> {
-    try {
-      const entry = await this.getEntry(key, category);
-      
-      if (!entry) return;
-
-      // Se è un file, eliminalo dal filesystem
-      if (entry.path) {
-        try {
-          await Filesystem.deleteFile({
-            path: `${this.CACHE_DIR}/${entry.path}`,
-            directory: Directory.Cache
-          });
-        } catch {
-          // File già eliminato
-        }
-      } else {
-        // Altrimenti rimuovilo da Preferences
-        await Preferences. remove({
-          key: this.getPrefixedKey(key, category)
-        });
-      }
-
-      // Rimuovi dall'indice
-      await this.removeFromIndex(key, category);
-    } catch (error) {
-      console.error('Errore nella rimozione:', error);
-    }
-  }
-
   /**
    * Pulisce tutta la cache
    */
@@ -448,13 +413,226 @@ export class CacheStorageService {
    * Pulisce la cache per categoria
    */
   async clearCategory(category: string): Promise<void> {
-    const index = await this.getIndex();
-    const entries = index.filter(e => e.category === category);
+  try {
+    console.log('🗑️ Inizio pulizia categoria:', category);
+    
+    await this.withIndexLock(async () => {
+      const index = await this.getIndex();
+      console.log('📋 Index totale:', index.length, 'entries');
+      
+      const entries = index.filter(e => e.category === category);
+      console.log('🎯 Entries da rimuovere:', entries.length);
 
-    for (const entry of entries) {
-      await this.remove(entry.key, entry.category);
+      // Rimuovi fisicamente i file/preferences
+      for (const entry of entries) {
+        try {
+          // Se è un file, eliminalo dal filesystem
+          if (entry.path) {
+            try {
+              await Filesystem.deleteFile({
+                path: `${this.CACHE_DIR}/${entry.path}`,
+                directory: Directory.Cache
+              });
+              console.log('✅ File rimosso:', entry.path);
+            } catch (err) {
+              console.warn('⚠️ File già eliminato o non trovato:', entry.path);
+            }
+          } else {
+            // Altrimenti rimuovilo da Preferences
+            await Preferences.remove({
+              key: this.getPrefixedKey(entry.key, entry.category)
+            });
+            console.log('✅ Preference rimossa:', entry.key);
+          }
+        } catch (err) {
+          console.error('❌ Errore rimozione entry:', entry.key, err);
+        }
+      }
+
+      // Aggiorna l'indice rimuovendo tutte le entries della categoria
+      const newIndex = index.filter(e => e.category !== category);
+      console.log('📝 Nuovo index:', newIndex.length, 'entries');
+      await this.saveIndex(newIndex);
+    });
+
+    console.log('✅ Categoria pulita:', category);
+  } catch (error) {
+    console.error('💥 Errore nella pulizia della categoria:', category, error);
+    throw error;
+  }
+}
+
+/**
+ * Rimuove un elemento dalla cache
+ */
+async remove(key: string, category: string = 'default'): Promise<void> {
+  try {
+    console.log('🗑️ Rimozione:', key, 'categoria:', category);
+    
+    await this.withIndexLock(async () => {
+      const entry = await this.getEntry(key, category);
+      
+      if (!entry) {
+        console.warn('⚠️ Entry non trovata:', key);
+        return;
+      }
+
+      // Se è un file, eliminalo dal filesystem
+      if (entry.path) {
+        try {
+          await Filesystem.deleteFile({
+            path: `${this.CACHE_DIR}/${entry.path}`,
+            directory: Directory.Cache
+          });
+          console.log('✅ File rimosso:', entry.path);
+        } catch (err) {
+          console.warn('⚠️ File già eliminato:', entry.path);
+        }
+      } else {
+        // Altrimenti rimuovilo da Preferences
+        await Preferences.remove({
+          key: this.getPrefixedKey(key, category)
+        });
+        console.log('✅ Preference rimossa:', key);
+      }
+
+      // Rimuovi dall'indice
+      const index = await this.getIndex();
+      const newIndex = index.filter(
+        e => !(e.key === key && e.category === category)
+      );
+      await this.saveIndex(newIndex);
+      console.log('✅ Index aggiornato');
+    });
+  } catch (error) {
+    console.error('💥 Errore nella rimozione:', key, error);
+    throw error;
+  }
+}
+
+/**
+ * Aggiorna l'indice in modo thread-safe
+ */
+private async updateIndex(
+  key: string,
+  options: CacheOptions & { path?: string },
+  size: number
+): Promise<void> {
+  await this.withIndexLock(async () => {
+    try {
+      const index = await this.getIndex();
+      
+      // Rimuovi entry esistente
+      const filtered = index.filter(
+        e => !(e.key === key && e.category === (options.category || 'default'))
+      );
+
+      // Aggiungi nuova entry
+      const newEntry: CacheEntry = {
+        key,
+        type: options.type,
+        category: options.category || 'default',
+        timestamp: Date.now(),
+        ttl: options.ttl || this.DEFAULT_TTL,
+        size,
+        path: options.path,
+        compressed: options.compress || false
+      };
+
+      filtered.push(newEntry);
+      await this.saveIndex(filtered);
+      
+      console.log('✅ Index aggiornato per:', key);
+    } catch (error) {
+      console.error('💥 Errore aggiornamento index:', error);
+      throw error;
+    }
+  });
+}
+
+/**
+ * Lock per accesso concorrente all'indice
+ */
+private indexLock: Promise<void> = Promise.resolve();
+
+private async withIndexLock<T>(fn: () => Promise<T>): Promise<T> {
+  const currentLock = this.indexLock;
+  
+  let resolveLock: () => void;
+  this.indexLock = new Promise(resolve => {
+    resolveLock = resolve;
+  });
+
+  try {
+    await currentLock;
+    return await fn();
+  } catch (error) {
+    throw error;
+  } finally {
+    resolveLock!();
+  }
+}
+
+/**
+ * Salva l'indice con retry in caso di errore
+ */
+private async saveIndex(index: CacheEntry[]): Promise<void> {
+  const maxRetries = 3;
+  let lastError: any;
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      await Preferences.set({
+        key: this.INDEX_KEY,
+        value: JSON.stringify(index)
+      });
+      return;
+    } catch (error) {
+      console.warn(`⚠️ Tentativo ${i + 1}/${maxRetries} fallito nel salvataggio index:`, error);
+      lastError = error;
+      
+      // Attendi un po' prima di ritentare
+      await new Promise(resolve => setTimeout(resolve, 100 * (i + 1)));
     }
   }
+
+  throw new Error(`Impossibile salvare l'indice dopo ${maxRetries} tentativi: ${lastError}`);
+}
+
+/**
+ * Recupera l'indice con fallback
+ */
+private async getIndex(): Promise<CacheEntry[]> {
+  try {
+    const { value } = await Preferences.get({ key: this.INDEX_KEY });
+    
+    if (!value) {
+      console.log('📋 Index vuoto, ritorno array vuoto');
+      return [];
+    }
+
+    const parsed = JSON.parse(value);
+    
+    if (!Array.isArray(parsed)) {
+      console.error('❌ Index corrotto, resetto');
+      await this.saveIndex([]);
+      return [];
+    }
+
+    return parsed;
+  } catch (error) {
+    console.error('💥 Errore nel recupero index, resetto:', error);
+    
+    // In caso di errore, resetta l'indice
+    try {
+      await this.saveIndex([]);
+    } catch (saveError) {
+      console.error('💥 Impossibile resettare index:', saveError);
+    }
+    
+    return [];
+  }
+}
 
   /**
    * Pulisce le entry scadute
@@ -511,58 +689,6 @@ export class CacheStorageService {
     return entry !== null && ! this.isExpired(entry);
   }
 
-  // ========== METODI PRIVATI ==========
-
-  private async getIndex(): Promise<CacheEntry[]> {
-    try {
-      const { value } = await Preferences.get({ key: this.INDEX_KEY });
-      return value ? JSON.parse(value) : [];
-    } catch {
-      return [];
-    }
-  }
-
-  private async saveIndex(index: CacheEntry[]): Promise<void> {
-    await Preferences.set({
-      key: this.INDEX_KEY,
-      value: JSON. stringify(index)
-    });
-  }
-
-  private async updateIndex(
-    key: string,
-    options: CacheOptions & { path?: string },
-    size: number
-  ): Promise<void> {
-    await this.withIndexLock(async () => {
-      const index = await this.getIndex();
-      
-      // Rimuovi entry esistente
-      const filtered = index.filter(
-        e => !(e.key === key && e.category === options.category)
-      );
-
-      // Aggiungi nuova entry
-      filtered.push({
-        key,
-        type: options.type,
-        category: options.category || 'default',
-        timestamp:  Date.now(),
-        ttl: options.ttl || this.DEFAULT_TTL,
-        size,
-        path: options. path,
-        compressed: options.compress || false
-      });
-      await this.saveIndex(filtered);
-    });
-  }
-
-  private indexLock: Promise<void> = Promise.resolve();
-
-  private async withIndexLock(fn: () => Promise<void>): Promise<void> {
-    this.indexLock = this.indexLock.then(fn).catch(() => {});
-    return this.indexLock;
-  }
 
   private async removeFromIndex(key: string, category: string): Promise<void> {
     const index = await this. getIndex();
