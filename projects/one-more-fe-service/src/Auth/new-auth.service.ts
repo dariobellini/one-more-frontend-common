@@ -173,8 +173,6 @@ export class NewAuthService {
 
   //#region  private methods
 
-
-  
   private isVerified(): boolean {
     const token = this.tokenService.getToken();
     if (!token) return false;
