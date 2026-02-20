@@ -8,6 +8,7 @@ import { ShopAddReqDto } from "../Dtos/Requests/shops/ShopAddReqDto";
 import { ShopDetailResDto } from "../Dtos/Responses/shops/ShopDetailResDto";
 import { ShopUpdateReqDto } from "../Dtos/Requests/shops/ShopUpdateReqDto";
 import { ShopUpdateResDto } from "../Dtos/Responses/shops/ShopUpdateResDto";
+import { DeleteReasonDto } from "../Dtos/DeleteReasonDto";
 
 @Injectable({
     providedIn: 'root'
@@ -34,5 +35,9 @@ export class ShopApiService {
 
     List(): Observable<ShopListDto[]> {
         return this.http.get<ShopListDto[]>(this.constants.BasePath() + '/shop/list');
+    }
+
+    ListDeleteReasons(): Observable<DeleteReasonDto[]> {
+        return this.http.get<DeleteReasonDto[]>(this.constants.BasePath() + '/shop/get-reason-shop-delete');
     }
 }
