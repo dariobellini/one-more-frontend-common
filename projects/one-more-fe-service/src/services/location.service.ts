@@ -27,66 +27,65 @@ export class LocationService {
   }
 
   async getCurrentLocation(): Promise<{ latitudine: number; longitudine: number } | null> {
-  console.log('[Location] platform =', Capacitor.getPlatform());
 
-  const cachedLocation = await this.getCachedLocation();
-  if (cachedLocation) {
-    console.log('[Location] using cached location');
-    return cachedLocation;
-  }
-
-  const isNative = Capacitor.isNativePlatform();
-  console.log('[Location] isNative =', isNative);
-
-  if (!isNative) {
-    // WEB
-    return new Promise((resolve) => {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => { /* ... */ },
-        (err) => {
-          console.error('[Location] browser geolocation error:', err);
-          resolve(this.getFallbackLocation());
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    });
-  }
-
-  // MOBILE
-  try {
-    const status = await Geolocation.checkPermissions();
-    console.log('[Location] checkPermissions', status);
-
-    let perm = status;
-    if (perm.location !== 'granted') {
-      perm = await Geolocation.requestPermissions();
-      console.log('[Location] requestPermissions', perm);
+    // 1. Controlla la cache
+    const cachedLocation = await this.getCachedLocation();
+    if (cachedLocation) {
+      return cachedLocation;
     }
 
-    if (perm.location === 'granted') {
-      const position = await Geolocation.getCurrentPosition({
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
+    // 2. Gestione per piattaforma
+    if (Capacitor.getPlatform() === 'web') {
+      // Browser: usa navigator.geolocation
+      return new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            const newLocation:  CachedLocation = {
+              latitudine: pos.coords.latitude,
+              longitudine: pos.coords.longitude,
+              timestamp: Date.now()
+            };
+            await this.setCachedLocation(newLocation);
+            resolve({ 
+              latitudine: newLocation. latitudine, 
+              longitudine: newLocation.longitudine 
+            });
+          },
+          (err) => {
+            console. error('Errore geolocalizzazione browser:', err);
+            resolve(this.getFallbackLocation());
+          }
+        );
       });
+    } else {
+      // Mobile: usa Capacitor Geolocation
+      try {
+        let permStatus = await Geolocation.checkPermissions();
+        if (permStatus.location !== 'granted') {
+          permStatus = await Geolocation.requestPermissions();
+        }
 
-      const newLocation: CachedLocation = {
-        latitudine: position.coords.latitude,
-        longitudine: position.coords.longitude,
-        timestamp: Date.now()
-      };
-
-      await this.setCachedLocation(newLocation);
-      return { latitudine: newLocation.latitudine, longitudine: newLocation.longitudine };
+        if (permStatus.location === 'granted') {
+          const position = await Geolocation.getCurrentPosition();
+          const newLocation: CachedLocation = {
+            latitudine: position.coords.latitude,
+            longitudine: position.coords.longitude,
+            timestamp: Date.now()
+          };
+          await this.setCachedLocation(newLocation);
+          return { 
+            latitudine: newLocation. latitudine, 
+            longitudine: newLocation.longitudine 
+          };
+        }
+      } catch (error) {
+        console.error('Errore durante il recupero della posizione mobile:', error);
+      }
     }
 
-    console.warn('[Location] permission not granted, fallback');
-    return this.getFallbackLocation();
-  } catch (e) {
-    console.error('[Location] mobile geolocation error:', e);
+    // 3. Fallback su Roma
     return this.getFallbackLocation();
   }
-}
 
   public async calculateDistance(lat: number, lon: number): Promise<number> {
     const location = await this.getCachedLocation();
