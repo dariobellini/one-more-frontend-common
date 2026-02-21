@@ -1,4 +1,4 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { Constants } from "../Constants";
 import { Observable } from "rxjs";
@@ -9,6 +9,7 @@ import { ShopDetailResDto } from "../Dtos/Responses/shops/ShopDetailResDto";
 import { ShopUpdateReqDto } from "../Dtos/Requests/shops/ShopUpdateReqDto";
 import { ShopUpdateResDto } from "../Dtos/Responses/shops/ShopUpdateResDto";
 import { DeleteReasonDto } from "../Dtos/DeleteReasonDto";
+import { CommonResDto } from "../Dtos/Responses/CommonResDto";
 
 @Injectable({
     providedIn: 'root'
@@ -40,4 +41,12 @@ export class ShopApiService {
     ListDeleteReasons(): Observable<DeleteReasonDto[]> {
         return this.http.get<DeleteReasonDto[]>(this.constants.BasePath() + '/shop/get-reason-shop-delete');
     }
+
+    Delete(shopId: number, idReason: number): Observable<CommonResDto> {
+    const params = new HttpParams()
+      .set('shopId', shopId)
+      .set('idReason', idReason);
+
+    return this.http.delete<CommonResDto>(this.constants.BasePath() + '/shop/delete', { params });
+  }
 }
