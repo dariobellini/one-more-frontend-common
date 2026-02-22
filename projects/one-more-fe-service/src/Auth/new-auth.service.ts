@@ -69,14 +69,22 @@ export class NewAuthService {
   }
 
   async logOut(): Promise<void> {
+
+    console.log('Logout iniziato'); // Log per debug
     // rimuovi token
-    localStorage.removeItem(this.constants.UserApiJwt());
-    localStorage.removeItem(this.constants.UserApiRefreshToken());
     // aggiorna stati osservabili
     this.loggedIn$.next(false);
     this.isShop$.next(false);
     this.isVerified$.next(false);
+    //chiama API logout
+
+    await this.logoutApi().toPromise();
+
+    localStorage.removeItem(this.constants.UserApiJwt());
+    localStorage.removeItem(this.constants.UserApiRefreshToken());
     await signOut(this.firebaseAuth);
+
+    console.log('Logout finito'); // Log per debug
   }
 
   getUserSession(): UserSession | null {
@@ -264,6 +272,17 @@ export class NewAuthService {
       );
 
     return this.refreshInFlight$;
+  }
+
+  logoutApi(): Observable<CommonResDto> {
+    const refreshToken = localStorage.getItem(this.constants.UserApiRefreshToken());
+
+    console.log('Logout API chiamato. Refresh token:', refreshToken); // Log per debug
+    if (!refreshToken) {
+      return throwError(() => new Error('Refresh token not found'));
+    }
+
+    return this.http.post<CommonResDto>(`${this.constants.BasePath()}/Auth/logout`, { refreshToken });
   }
 
   private apiServiceLogin(idToken: string, userType: number): Observable<JwtResponseDto> {
