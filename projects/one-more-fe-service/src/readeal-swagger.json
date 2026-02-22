@@ -111,54 +111,6 @@
         }
       }
     },
-    "/Admin/promo": {
-      "post": {
-        "tags": [
-          "Admin"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CheckPromoReqDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CheckPromoReqDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/CheckPromoReqDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/CommonResApiDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CommonResApiDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CommonResApiDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/Auth/service-login": {
       "get": {
         "tags": [
@@ -276,6 +228,54 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CommonResApiDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Auth/refresh-jwt": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshJwtRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshJwtRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshJwtRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/JwtResponseDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JwtResponseDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JwtResponseDto"
                 }
               }
             }
@@ -856,6 +856,85 @@
         }
       }
     },
+    "/Maps/Get-In-Bounds": {
+      "get": {
+        "tags": [
+          "Maps"
+        ],
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "swLat",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "swLng",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "neLat",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "neLng",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapResDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapResDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapResDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/Maps/Get": {
       "get": {
         "tags": [
@@ -1109,6 +1188,13 @@
             "schema": {
               "type": "integer",
               "format": "int32"
+            }
+          },
+          {
+            "name": "isForShop",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
             }
           }
         ],
@@ -1608,6 +1694,14 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "idReason",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
           }
         ],
         "responses": {
@@ -1703,6 +1797,44 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/ShopListDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/Shop/get-reason-shop-delete": {
+      "get": {
+        "tags": [
+          "Shop"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeleteReasonDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeleteReasonDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeleteReasonDto"
                   }
                 }
               }
@@ -1821,17 +1953,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ShopAddResDto"
+                  "$ref": "#/components/schemas/ShopTypesResDto"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ShopAddResDto"
+                  "$ref": "#/components/schemas/ShopTypesResDto"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ShopAddResDto"
+                  "$ref": "#/components/schemas/ShopTypesResDto"
                 }
               }
             }
@@ -1857,6 +1989,44 @@
         "responses": {
           "200": {
             "description": "Success"
+          }
+        }
+      }
+    },
+    "/User/get-reason-user-delete": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeleteReasonDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeleteReasonDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeleteReasonDto"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1948,11 +2118,7 @@
         "additionalProperties": false
       },
       "AdminCheckShopTextualFieldType": {
-        "enum": [
-          0,
-          1,
-          2
-        ],
+        "enum": [0, 1, 2],
         "type": "integer",
         "format": "int32"
       },
@@ -1991,24 +2157,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RedeemCheckOutcomeType"
-            },
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CheckPromoReqDto": {
-        "type": "object",
-        "properties": {
-          "textsId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "photoIds": {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int32"
             },
             "nullable": true
           }
@@ -2134,6 +2282,10 @@
             "type": "string",
             "nullable": true
           },
+          "manualCode": {
+            "type": "string",
+            "nullable": true
+          },
           "insertTime": {
             "type": "string",
             "format": "date-time",
@@ -2232,17 +2384,24 @@
         "additionalProperties": false
       },
       "DayOfWeek": {
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6
-        ],
+        "enum": [0, 1, 2, 3, 4, 5, 6],
         "type": "integer",
         "format": "int32"
+      },
+      "DeleteReasonDto": {
+        "type": "object",
+        "properties": {
+          "idReasonDelete": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
       },
       "FavoritesAddRemoveReqDto": {
         "type": "object",
@@ -2312,6 +2471,10 @@
       "GenericSearchReqDto": {
         "type": "object",
         "properties": {
+          "searchText": {
+            "type": "string",
+            "nullable": true
+          },
           "cityCode": {
             "type": "string",
             "nullable": true
@@ -2425,11 +2588,7 @@
         "additionalProperties": false
       },
       "PeriodOfDay": {
-        "enum": [
-          1,
-          2,
-          3
-        ],
+        "enum": [1, 2, 3],
         "type": "integer",
         "format": "int32"
       },
@@ -2438,7 +2597,8 @@
         "properties": {
           "id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "fileName": {
             "type": "string",
@@ -2446,14 +2606,17 @@
           },
           "piority": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "timeStamp": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "isMain": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -2663,6 +2826,18 @@
           "numUsesPerPersonMax": {
             "type": "integer",
             "format": "int32"
+          },
+          "numCouponRemaining": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "numCouponUsed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "numCouponBooked": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -2733,6 +2908,13 @@
           },
           "shop": {
             "$ref": "#/components/schemas/ShopListDto"
+          },
+          "matchScore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "matchTitle": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -2880,18 +3062,19 @@
         "additionalProperties": false
       },
       "RedeemCheckOutcomeType": {
-        "enum": [
-          0,
-          1,
-          2,
-          3,
-          4,
-          5,
-          6,
-          7
-        ],
+        "enum": [0, 1, 2, 3, 4, 5, 6, 7, 8],
         "type": "integer",
         "format": "int32"
+      },
+      "RefreshJwtRequestDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
       },
       "SearchItemDto": {
         "type": "object",
@@ -2915,11 +3098,7 @@
         "additionalProperties": false
       },
       "searchItemType": {
-        "enum": [
-          1,
-          2,
-          3
-        ],
+        "enum": [1, 2, 3],
         "type": "integer",
         "format": "int32"
       },
@@ -2946,6 +3125,10 @@
               "$ref": "#/components/schemas/PromoListDto"
             },
             "nullable": true
+          },
+          "totalFiltersApplied": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -3019,6 +3202,10 @@
             "type": "string",
             "nullable": true
           },
+          "vatCountry": {
+            "type": "string",
+            "nullable": true
+          },
           "vatNumber": {
             "type": "string",
             "nullable": true
@@ -3029,23 +3216,28 @@
           },
           "longitude": {
             "type": "number",
-            "format": "double"
+            "format": "double",
+            "nullable": true
           },
           "latitude": {
             "type": "number",
-            "format": "double"
+            "format": "double",
+            "nullable": true
           },
           "rating": {
             "type": "number",
-            "format": "double"
+            "format": "double",
+            "nullable": true
           },
           "ratingCount": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "lastUpdateRating": {
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "nullable": true
           },
           "telephone": {
             "type": "string",
@@ -3175,7 +3367,8 @@
         "properties": {
           "id": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "nullable": true
           },
           "title": {
             "type": "string",
@@ -3191,7 +3384,18 @@
             "$ref": "#/components/schemas/PhotoDto"
           },
           "isPromoPresente": {
-            "type": "boolean"
+            "type": "boolean",
+            "nullable": true
+          },
+          "matchScore": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "distance": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -3269,6 +3473,34 @@
           },
           "description": {
             "type": "string",
+            "nullable": true
+          },
+          "fileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "style": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ShopTypesResDto": {
+        "type": "object",
+        "properties": {
+          "outcome": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopTypeDto"
+            },
             "nullable": true
           }
         },
