@@ -69,22 +69,15 @@ export class NewAuthService {
   }
 
   async logOut(): Promise<void> {
-
-    console.log('Logout iniziato'); // Log per debug
-    // rimuovi token
     // aggiorna stati osservabili
     this.loggedIn$.next(false);
     this.isShop$.next(false);
     this.isVerified$.next(false);
-    //chiama API logout
 
     await this.logoutApi().toPromise();
 
-    localStorage.removeItem(this.constants.UserApiJwt());
-    localStorage.removeItem(this.constants.UserApiRefreshToken());
+    await this.tokenService.clearToken();
     await signOut(this.firebaseAuth);
-
-    console.log('Logout finito'); // Log per debug
   }
 
   getUserSession(): UserSession | null {
@@ -255,7 +248,7 @@ export class NewAuthService {
       return this.refreshInFlight$;
     }
 
-    const refreshToken = localStorage.getItem(this.constants.UserApiRefreshToken());
+    const refreshToken = this.tokenService.getRefreshToken();
 
     if (!refreshToken) {
       return throwError(() => new Error('Refresh token not found'));
@@ -275,9 +268,7 @@ export class NewAuthService {
   }
 
   logoutApi(): Observable<CommonResDto> {
-    const refreshToken = localStorage.getItem(this.constants.UserApiRefreshToken());
-
-    console.log('Logout API chiamato. Refresh token:', refreshToken); // Log per debug
+    const refreshToken = this.tokenService.getRefreshToken();
     if (!refreshToken) {
       return throwError(() => new Error('Refresh token not found'));
     }

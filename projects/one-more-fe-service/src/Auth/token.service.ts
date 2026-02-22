@@ -3,6 +3,7 @@ import { ApiJwtPayload } from '../EntityInterface/ApiJwtPayload';
 import { Constants } from '../Constants';
 import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
 import { jwtDecode } from 'jwt-decode';
+import { TokenStorageService } from './token-storage.service';
 
 @Injectable({
     providedIn: 'root'
@@ -10,12 +11,21 @@ import { jwtDecode } from 'jwt-decode';
 export class TokenService {
 
     constants = inject(Constants);
+    tokenStorage = inject(TokenStorageService);
     constructor() { }
 
     public tokenChanged: EventEmitter<string> = new EventEmitter();
 
+    async initializeTokenStorage(): Promise<void> {
+        await this.tokenStorage.init();
+    }
+
     getToken(): string | null {
-        return localStorage.getItem(this.constants.UserApiJwt());
+        return this.tokenStorage.getJwtSync();
+    }
+
+    getRefreshToken(): string | null {
+        return this.tokenStorage.getRefreshTokenSync();
     }
 
     getTokenPayload(): ApiJwtPayload | null {
@@ -27,8 +37,11 @@ export class TokenService {
 
     setToken(jwt: JwtResponseDto) {
         // this.tokenChanged.emit(jwt.jwt);
-        localStorage.setItem(this.constants.UserApiJwt(), jwt.jwt);
-        localStorage.setItem(this.constants.UserApiRefreshToken(), jwt.refreshToken);
+        void this.tokenStorage.setTokens(jwt.jwt, jwt.refreshToken);
+    }
+
+    async clearToken(): Promise<void> {
+        await this.tokenStorage.clearTokens();
     }
 
     getDecodedToken(token: string): ApiJwtPayload | null {
