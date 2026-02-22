@@ -1,18 +1,18 @@
 import { inject, Injectable } from '@angular/core';
-import { createUserWithEmailAndPassword, deleteUser, EmailAuthProvider, FacebookAuthProvider, getAdditionalUserInfo, GoogleAuthProvider, reauthenticateWithCredential, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, User, UserCredential } from 'firebase/auth';
+import { deleteUser, EmailAuthProvider, FacebookAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, User, UserCredential } from 'firebase/auth';
 import { Auth, authState, signOut } from '@angular/fire/auth';
-import { BehaviorSubject, filter, firstValueFrom, Observable, Observer, tap } from 'rxjs';
+import { BehaviorSubject, filter, finalize, firstValueFrom, Observable, shareReplay, tap, throwError } from 'rxjs';
 import { Constants } from '../Constants';
 import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
 import { Role } from '../Enum/Role';
-import { DeleteUtente, ProfileUser, UserSession, Utente } from '../EntityInterface/Utente';
+import { DeleteUtente, UserSession, Utente } from '../EntityInterface/Utente';
 import { deleteDoc, doc, Firestore, getDoc, setDoc } from '@angular/fire/firestore';
 
 import { HttpClient } from '@angular/common/http';
 import { TokenService } from './token.service';
 import { FavoritesApiService } from '../services/favorites-api.service';
 import { CommonResDto } from '../Dtos/Responses/CommonResDto';
-import { SignUpReqDto } from '../Dtos/Requests/auth/signUpReqDto';
+import { SignUpReqDto } from '../Dtos/Requests/auth/SignUpReqDto';
 
 @Injectable({
   providedIn: 'root'
@@ -22,12 +22,12 @@ export class NewAuthService {
 
   constants = inject(Constants);
   firestore = inject(Firestore);
-  firebaseAut = inject(Auth);
+  firebaseAuth = inject(Auth);
   http = inject(HttpClient);
   tokenService = inject(TokenService);
   favoritesApiService = inject(FavoritesApiService);
 
-  private currentUser$ = authState(this.firebaseAut).pipe(
+  private currentUser$ = authState(this.firebaseAuth).pipe(
     filter(u => !!u)
   )
 
@@ -43,6 +43,7 @@ export class NewAuthService {
   utente!: DeleteUtente;
   isReautenticated: boolean = false;
   idPage!: number;
+  private refreshInFlight$: Observable<JwtResponseDto> | null = null;
 
   constructor() { }
 
@@ -60,7 +61,7 @@ export class NewAuthService {
   }
 
   async getCurrentUserFromAuth(): Promise<User | null> {
-    return await this.firebaseAut.currentUser;
+    return await this.firebaseAuth.currentUser;
   }
 
   loggedUserIsShop(): Observable<boolean> {
@@ -75,7 +76,7 @@ export class NewAuthService {
     this.loggedIn$.next(false);
     this.isShop$.next(false);
     this.isVerified$.next(false);
-    await signOut(this.firebaseAut);
+    await signOut(this.firebaseAuth);
   }
 
   getUserSession(): UserSession | null {
@@ -101,7 +102,7 @@ export class NewAuthService {
   }
 
   async login(email: string, password: string): Promise<JwtResponseDto | undefined> {
-    const userCredential = await signInWithEmailAndPassword(this.firebaseAut, email, password);
+    const userCredential = await signInWithEmailAndPassword(this.firebaseAuth, email, password);
     const token = await userCredential.user.getIdToken();
     const readealJwt = await firstValueFrom(this.UsernamePasswordLogin(token));
 
@@ -115,11 +116,11 @@ export class NewAuthService {
   }
 
   passwordReset(email: string): Promise<void> {
-    return sendPasswordResetEmail(this.firebaseAut, email);
+    return sendPasswordResetEmail(this.firebaseAuth, email);
   }
 
   async reauthenticateUser(userEmail: string, userPassword: string): Promise<boolean> {
-    const user = this.firebaseAut.currentUser;
+    const user = this.firebaseAuth.currentUser;
     this.isReautenticated = false;
     if (user) {
       const credential = EmailAuthProvider.credential(userEmail, userPassword);
@@ -135,7 +136,7 @@ export class NewAuthService {
   }
 
   async deleteUserAccount(): Promise<void> {
-    const user = this.firebaseAut.currentUser;
+    const user = this.firebaseAuth.currentUser;
     let userDocData: any; // Variabile per tenere i dati del documento utente
     try {
       if (user) {
@@ -153,7 +154,7 @@ export class NewAuthService {
         await deleteDoc(userDocRef);
 
         // Prova a fare il signOut e a eliminare l'utente
-        await signOut(this.firebaseAut);
+        await signOut(this.firebaseAuth);
         await deleteUser(user);
 
         this.logOut();
@@ -205,7 +206,7 @@ export class NewAuthService {
       throw new Error('Provider non gestito!');
     }
 
-    const userCredential = await signInWithPopup(this.firebaseAut, chosenProvider);
+    const userCredential = await signInWithPopup(this.firebaseAuth, chosenProvider);
 
     const idToken = await userCredential.user.getIdToken();
 
@@ -239,6 +240,30 @@ export class NewAuthService {
     };
 
     return this.http.delete<DeleteUtente>(this.constants.BasePath() + '/Soggetto/delete-utente', options);
+  }
+
+  refreshJwt(): Observable<JwtResponseDto> {
+    if (this.refreshInFlight$) {
+      return this.refreshInFlight$;
+    }
+
+    const refreshToken = localStorage.getItem(this.constants.UserApiRefreshToken());
+
+    if (!refreshToken) {
+      return throwError(() => new Error('Refresh token not found'));
+    }
+
+    this.refreshInFlight$ = this.http
+      .post<JwtResponseDto>(`${this.constants.BasePath()}/Auth/refresh-jwt`, { refreshToken })
+      .pipe(
+        tap((jwt) => this.tokenService.setToken(jwt)),
+        finalize(() => {
+          this.refreshInFlight$ = null;
+        }),
+        shareReplay(1)
+      );
+
+    return this.refreshInFlight$;
   }
 
   private apiServiceLogin(idToken: string, userType: number): Observable<JwtResponseDto> {
