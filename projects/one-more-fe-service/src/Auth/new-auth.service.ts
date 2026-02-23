@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { deleteUser, EmailAuthProvider, FacebookAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, User, UserCredential } from 'firebase/auth';
+import { deleteUser, EmailAuthProvider, FacebookAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, User, UserCredential } from 'firebase/auth';
 import { Auth, authState, signOut } from '@angular/fire/auth';
 import { BehaviorSubject, filter, finalize, firstValueFrom, Observable, shareReplay, tap, throwError } from 'rxjs';
 import { Constants } from '../Constants';
@@ -8,7 +8,7 @@ import { Role } from '../Enum/Role';
 import { DeleteUtente, UserSession, Utente } from '../EntityInterface/Utente';
 import { deleteDoc, doc, Firestore, getDoc, setDoc } from '@angular/fire/firestore';
 
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { TokenService } from './token.service';
 import { FavoritesApiService } from '../services/favorites-api.service';
 import { CommonResDto } from '../Dtos/Responses/CommonResDto';
@@ -69,15 +69,29 @@ export class NewAuthService {
   }
 
   async logOut(): Promise<void> {
-    // aggiorna stati osservabili
-    this.loggedIn$.next(false);
-    this.isShop$.next(false);
-    this.isVerified$.next(false);
+  // aggiorna stati osservabili
+  this.loggedIn$.next(false);
+  this.isShop$.next(false);
+  this.isVerified$.next(false);
 
-    await this.logoutApi().toPromise();
+  // best effort: può fallire se refresh token mancante o già revocato
+    try {
+      await firstValueFrom(this.logoutApi());
+    } catch (e) {
+      console.warn('logoutApi failed (ignored):', e);
+    }
 
-    await this.tokenService.clearToken();
-    await signOut(this.firebaseAuth);
+    try {
+      await this.tokenService.clearToken();
+    } catch (e) {
+      console.warn('clearToken failed (ignored):', e);
+    }
+
+    try {
+      await signOut(this.firebaseAuth);
+    } catch (e) {
+      console.warn('firebase signOut failed (ignored):', e);
+    }
   }
 
   getUserSession(): UserSession | null {
@@ -120,58 +134,72 @@ export class NewAuthService {
     return sendPasswordResetEmail(this.firebaseAuth, email);
   }
 
-  async reauthenticateUser(userEmail: string, userPassword: string): Promise<boolean> {
-    const user = this.firebaseAuth.currentUser;
-    this.isReautenticated = false;
-    if (user) {
-      const credential = EmailAuthProvider.credential(userEmail, userPassword);
-      try {
-        await reauthenticateWithCredential(user, credential);
-        this.isReautenticated = true;
-      } catch (error) {
-        console.error('Errore durante la ri-autenticazione:', error);
-        this.isReautenticated = false;
-      }
-    }
-    return this.isReautenticated;
+  async reauthenticateWithPassword(userEmail: string, userPassword: string): Promise<boolean> {
+  const user = this.firebaseAuth.currentUser;
+  if (!user) return false;
+
+  try {
+    const credential = EmailAuthProvider.credential(userEmail, userPassword);
+    await reauthenticateWithCredential(user, credential);
+    return true;
+  } catch (error) {
+    console.error('Errore reauth password:', error);
+    return false;
+  }
+}
+
+async reauthenticateWithGooglePopup(): Promise<boolean> {
+  const user = this.firebaseAuth.currentUser;
+  if (!user) return false;
+
+  try {
+    const provider = new GoogleAuthProvider();
+    await reauthenticateWithPopup(user, provider);
+    return true;
+  } catch (error) {
+    console.error('Errore reauth google:', error);
+    return false;
+  }
+}
+
+async reauthenticateWithFacebookPopup(): Promise<boolean> {
+  const user = this.firebaseAuth.currentUser;
+  if (!user) return false;
+
+  try {
+    const provider = new FacebookAuthProvider();
+    await reauthenticateWithPopup(user, provider);
+    return true;
+  } catch (error) {
+    console.error('Errore reauth facebook:', error);
+    return false;
+  }
+}
+
+/**
+ * Fallback: se typeLog non c’è o non torna, prova dai providerId di Firebase.
+ * Se è password, non può chiedere qui la password -> ritorna false.
+ */
+async reauthenticateBestEffort(): Promise<boolean> {
+  const user = this.firebaseAuth.currentUser;
+  if (!user) return false;
+
+  const providerIds = (user.providerData ?? []).map(p => p.providerId);
+
+  if (providerIds.includes('google.com')) {
+    return this.reauthenticateWithGooglePopup();
   }
 
-  async deleteUserAccount(): Promise<void> {
-    const user = this.firebaseAuth.currentUser;
-    let userDocData: any; // Variabile per tenere i dati del documento utente
-    try {
-      if (user) {
-        const userDocRef = doc(this.firestore, `users/${user.uid}`);
-
-        // Controlla se il documento esiste e ottieni i dati per un possibile ripristino
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          userDocData = userDocSnap.data(); // Salva i dati in caso di rollback
-        } else {
-          throw new Error('Documento utente non trovato.');
-        }
-
-        // Elimina il documento
-        await deleteDoc(userDocRef);
-
-        // Prova a fare il signOut e a eliminare l'utente
-        await signOut(this.firebaseAuth);
-        await deleteUser(user);
-
-        this.logOut();
-      } else {
-        throw new Error('Errore: Nessun utente autenticato.');
-      }
-    } catch (error) {
-
-      // Rollback: ripristina il documento se il deleteUser fallisce
-      if (user && userDocData) {
-        const userDocRef = doc(this.firestore, `users/${user.uid}`);
-        await setDoc(userDocRef, userDocData);
-      }
-      throw error; // Rilancia l'errore per gestirlo nel metodo chiamante
-    }
+  if (providerIds.includes('facebook.com')) {
+    return this.reauthenticateWithFacebookPopup();
   }
+
+  if (providerIds.includes('password')) {
+    return false;
+  }
+
+  return false;
+}
 
   //#region  private methods
 
@@ -223,26 +251,6 @@ export class NewAuthService {
     return Promise.resolve(readealJwt);
   }
 
-  apiInsertNewUtente(utente: Utente): Observable<any> {
-    return this.http.post<Utente>(this.constants.BasePath() + '/Soggetto/insert-utente', utente);
-  }
-
-  apiDeleteUtente(user: UserSession | null, reason: string | null): Observable<any> {
-    const utente = new DeleteUtente();
-    if (user) {
-      utente.email = user.email ? user.email : '';
-      utente.id = user.idSoggetto ? user.idSoggetto : 0;
-      utente.uid = user.uid ? user.uid : '';
-      utente.reason = reason ? reason : '';
-    }
-
-    const options = {
-      body: utente
-    };
-
-    return this.http.delete<DeleteUtente>(this.constants.BasePath() + '/Soggetto/delete-utente', options);
-  }
-
   refreshJwt(): Observable<JwtResponseDto> {
     if (this.refreshInFlight$) {
       return this.refreshInFlight$;
@@ -279,5 +287,11 @@ export class NewAuthService {
   private apiServiceLogin(idToken: string, userType: number): Observable<JwtResponseDto> {
     const url = `${this.constants.BasePath()}/auth/service-login?idToken=${idToken}&userType=${userType}`;
     return this.http.get<JwtResponseDto>(url);
+  }
+
+  Delete(idReason: number): Observable<CommonResDto> {
+      const params = new HttpParams()
+        .set('idReason', idReason);
+      return this.http.delete<CommonResDto>(this.constants.BasePath() + '/auth/delete', { params });
   }
 }

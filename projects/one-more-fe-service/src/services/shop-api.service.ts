@@ -42,10 +42,10 @@ export class ShopApiService {
     }
 
     Delete(shopId: number, idReason: number): Observable<CommonResDto> {
-    const params = new HttpParams()
-      .set('shopId', shopId)
-      .set('idReason', idReason);
-
-    return this.http.delete<CommonResDto>(this.constants.BasePath() + '/shop/delete', { params });
-  }
+        const params = new HttpParams()
+          .set('shopId', shopId)
+          .set('idReason', idReason);
+        
+        return this.http.delete<CommonResDto>(this.constants.BasePath() + '/shop/delete', { params });
+    }
 }
