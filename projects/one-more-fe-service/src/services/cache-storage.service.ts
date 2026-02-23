@@ -414,14 +414,11 @@ export class CacheStorageService {
    */
   async clearCategory(category: string): Promise<void> {
   try {
-    console.log('🗑️ Inizio pulizia categoria:', category);
     
     await this.withIndexLock(async () => {
       const index = await this.getIndex();
-      console.log('📋 Index totale:', index.length, 'entries');
       
       const entries = index.filter(e => e.category === category);
-      console.log('🎯 Entries da rimuovere:', entries.length);
 
       // Rimuovi fisicamente i file/preferences
       for (const entry of entries) {
@@ -433,7 +430,6 @@ export class CacheStorageService {
                 path: `${this.CACHE_DIR}/${entry.path}`,
                 directory: Directory.Cache
               });
-              console.log('✅ File rimosso:', entry.path);
             } catch (err) {
               console.warn('⚠️ File già eliminato o non trovato:', entry.path);
             }
@@ -442,7 +438,6 @@ export class CacheStorageService {
             await Preferences.remove({
               key: this.getPrefixedKey(entry.key, entry.category)
             });
-            console.log('✅ Preference rimossa:', entry.key);
           }
         } catch (err) {
           console.error('❌ Errore rimozione entry:', entry.key, err);
@@ -451,11 +446,8 @@ export class CacheStorageService {
 
       // Aggiorna l'indice rimuovendo tutte le entries della categoria
       const newIndex = index.filter(e => e.category !== category);
-      console.log('📝 Nuovo index:', newIndex.length, 'entries');
       await this.saveIndex(newIndex);
     });
-
-    console.log('✅ Categoria pulita:', category);
   } catch (error) {
     console.error('💥 Errore nella pulizia della categoria:', category, error);
     throw error;
@@ -467,8 +459,6 @@ export class CacheStorageService {
  */
 async remove(key: string, category: string = 'default'): Promise<void> {
   try {
-    console.log('🗑️ Rimozione:', key, 'categoria:', category);
-    
     await this.withIndexLock(async () => {
       const entry = await this.getEntry(key, category);
       
@@ -484,7 +474,6 @@ async remove(key: string, category: string = 'default'): Promise<void> {
             path: `${this.CACHE_DIR}/${entry.path}`,
             directory: Directory.Cache
           });
-          console.log('✅ File rimosso:', entry.path);
         } catch (err) {
           console.warn('⚠️ File già eliminato:', entry.path);
         }
@@ -493,7 +482,6 @@ async remove(key: string, category: string = 'default'): Promise<void> {
         await Preferences.remove({
           key: this.getPrefixedKey(key, category)
         });
-        console.log('✅ Preference rimossa:', key);
       }
 
       // Rimuovi dall'indice
@@ -502,7 +490,6 @@ async remove(key: string, category: string = 'default'): Promise<void> {
         e => !(e.key === key && e.category === category)
       );
       await this.saveIndex(newIndex);
-      console.log('✅ Index aggiornato');
     });
   } catch (error) {
     console.error('💥 Errore nella rimozione:', key, error);
@@ -541,8 +528,6 @@ private async updateIndex(
 
       filtered.push(newEntry);
       await this.saveIndex(filtered);
-      
-      console.log('✅ Index aggiornato per:', key);
     } catch (error) {
       console.error('💥 Errore aggiornamento index:', error);
       throw error;
@@ -606,11 +591,7 @@ private async getIndex(): Promise<CacheEntry[]> {
   try {
     const { value } = await Preferences.get({ key: this.INDEX_KEY });
     
-    if (!value) {
-      console.log('📋 Index vuoto, ritorno array vuoto');
-      return [];
-    }
-
+    if (!value) { return []; }
     const parsed = JSON.parse(value);
     
     if (!Array.isArray(parsed)) {

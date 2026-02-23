@@ -27,7 +27,6 @@ export class ShopApiService {
     }
 
     Add(shopAddReqDto: ShopAddReqDto): Observable<ShopAddResDto> {
-        console.log('ShopAddReqDto:', shopAddReqDto);
         return this.http.post<ShopAddResDto>(this.constants.BasePath() + '/shop/add', shopAddReqDto);
     }
     Update(shopUpdateReqDto: ShopUpdateReqDto): Observable<ShopUpdateResDto> {
