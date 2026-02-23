@@ -384,29 +384,36 @@ export class CacheStorageService {
    * Pulisce tutta la cache
    */
   async clearAll(): Promise<void> {
-    try {
-      // Rimuovi tutti i file
-      await Filesystem.rmdir({
-        path: this.CACHE_DIR,
-        directory: Directory.Cache,
-        recursive: true
-      });
-
-      // Rimuovi tutte le preferences con il prefisso cache
+    await this.withIndexLock(async () => {
+      // 1) elimina cartella file
+      try {
+        await Filesystem.rmdir({
+          path: this.CACHE_DIR,
+          directory: Directory.Cache,
+          recursive: true
+        });
+      } catch (e) {
+        // ok se non esiste
+        console.warn('CACHE rmdir warning:', e);
+      }
+    
+      // 2) elimina tutte le preferences note dall'indice
       const index = await this.getIndex();
       for (const entry of index) {
-        if (! entry.path) {
-          await Preferences.remove({
-            key: this.getPrefixedKey(entry.key, entry.category)
-          });
+        if (!entry.path) {
+          try {
+            await Preferences.remove({
+              key: this.getPrefixedKey(entry.key, entry.category)
+            });
+          } catch (e) {
+            console.warn('Pref remove warning:', entry.key, e);
+          }
         }
       }
-
-      // Pulisci l'indice
+    
+      // 3) reset indice
       await Preferences.remove({ key: this.INDEX_KEY });
-    } catch (error) {
-      console.error('Errore nella pulizia della cache:', error);
-    }
+    });
   }
 
   /**

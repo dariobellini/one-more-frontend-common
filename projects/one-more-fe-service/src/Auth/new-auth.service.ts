@@ -94,10 +94,7 @@ export class NewAuthService {
     }
   }
 
-  getUserSession(): UserSession | null {
-    const userSessionString = localStorage.getItem('userSession');
-    return userSessionString ? JSON.parse(userSessionString) : null;
-  }
+  
 
   GetUserJwt(uId: string): Observable<string> {
     return this.http.get(this.constants.BasePath() + '/auth/get-jwt?uId=' + uId, {
@@ -114,6 +111,18 @@ export class NewAuthService {
       this.constants.BasePath() + '/auth/sign-up',
       req
     );
+  }
+
+  async checkEmailVerification(): Promise<boolean> {
+
+    const user = await this.getCurrentUserFromAuth();
+    console.log('Utente corrente:', user);
+    if (!user) return false;
+    
+    else if((user && user?.emailVerified == true && user.providerData[0].providerId == "password") || (user && user.providerData[0].providerId != "password"))
+      return true;
+    
+    else return false;
   }
 
   async login(email: string, password: string): Promise<JwtResponseDto | undefined> {
