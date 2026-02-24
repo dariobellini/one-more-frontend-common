@@ -50,6 +50,7 @@ export class NewAuthService {
   setStatusUserVerified(): void {
     this.loggedIn$.next(this.tokenService.hasValidToken());
     this.isShop$.next(this.isShop());
+    this.isVerified$.next(this.isVerified());
   }
 
   isLoggedIn(): Observable<boolean> {
@@ -116,13 +117,25 @@ export class NewAuthService {
   async checkEmailVerification(): Promise<boolean> {
 
     const user = await this.getCurrentUserFromAuth();
-    console.log('Utente corrente:', user);
-    if (!user) return false;
     
-    else if((user && user?.emailVerified == true && user.providerData[0].providerId == "password") || (user && user.providerData[0].providerId != "password"))
+    if(user)
+      await user.reload();
+    else 
+      return false;
+
+    if(user.providerData.length == 0) 
+      return false;
+    
+    if(user.providerData.length == 1 && user.providerData[0].providerId == "password" && user.emailVerified)
       return true;
     
-    else return false;
+    else return true;
+  }
+
+  async getEmail(): Promise<string | null> {
+    const user = await this.getCurrentUserFromAuth();
+    console.log('Current user:', user);
+    return user?.email || null;
   }
 
   async login(email: string, password: string): Promise<JwtResponseDto | undefined> {
@@ -147,6 +160,8 @@ export class NewAuthService {
   const user = this.firebaseAuth.currentUser;
   if (!user) return false;
 
+  await user.reload();
+
   try {
     const credential = EmailAuthProvider.credential(userEmail, userPassword);
     await reauthenticateWithCredential(user, credential);
@@ -161,6 +176,8 @@ async reauthenticateWithGooglePopup(): Promise<boolean> {
   const user = this.firebaseAuth.currentUser;
   if (!user) return false;
 
+  await user.reload();
+
   try {
     const provider = new GoogleAuthProvider();
     await reauthenticateWithPopup(user, provider);
@@ -174,6 +191,8 @@ async reauthenticateWithGooglePopup(): Promise<boolean> {
 async reauthenticateWithFacebookPopup(): Promise<boolean> {
   const user = this.firebaseAuth.currentUser;
   if (!user) return false;
+
+  await user.reload();
 
   try {
     const provider = new FacebookAuthProvider();
@@ -192,6 +211,8 @@ async reauthenticateWithFacebookPopup(): Promise<boolean> {
 async reauthenticateBestEffort(): Promise<boolean> {
   const user = this.firebaseAuth.currentUser;
   if (!user) return false;
+
+  await user.reload();
 
   const providerIds = (user.providerData ?? []).map(p => p.providerId);
 

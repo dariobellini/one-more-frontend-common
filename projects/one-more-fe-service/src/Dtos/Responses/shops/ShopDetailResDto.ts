@@ -1,3 +1,4 @@
+import { ShopVisibilityStatus } from "../../../Enum/ShopVisibilityStatus";
 import { AddressDto } from "../../AddressDto";
 import { AddUpdatePhotoDto } from "../../FastRecDtos/AddUpdatePhotoDto";
 import { HourDto } from "../../HourDto";
@@ -15,4 +16,6 @@ export interface ShopDetailResDto extends CommonResDto {
     detail: ShopDetailDto;
     types: ShopTypeDto[];
     photos: AddUpdatePhotoDto[];
+    status?: ShopVisibilityStatus;
+    adminCheckOutcome?: string;
 }

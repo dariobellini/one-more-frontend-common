@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor } from '@angular/common/http';
 import { Observable, catchError, switchMap } from 'rxjs';
 import { TokenService } from '../Auth/token.service';
@@ -7,10 +7,10 @@ import { NewAuthService } from '../Auth/new-auth.service';
 @Injectable()
 export class TokenInterceptor implements HttpInterceptor {
 
-  constructor(
-    private tokenService: TokenService,
-    private newAuthService: NewAuthService
-  ) { }
+  tokenService = inject(TokenService);
+  newAuthService = inject(NewAuthService);
+
+  constructor() { }
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token = this.tokenService.getToken();

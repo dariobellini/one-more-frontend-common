@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpInterceptor, HttpRequest, HttpHandler, HttpEvent } from '@angular/common/http';
 import { Observable, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -6,7 +6,10 @@ import { LocationService } from '../services/location.service';
 
 @Injectable()
 export class LocationInterceptor implements HttpInterceptor {
-  constructor(private locationService: LocationService) {}
+
+  locationService = inject(LocationService);
+
+  constructor() {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Ottieni la location come Promise e trasformala in Observable
