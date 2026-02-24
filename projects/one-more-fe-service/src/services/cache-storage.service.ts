@@ -3,770 +3,544 @@ import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Preferences } from '@capacitor/preferences';
 import { Capacitor } from '@capacitor/core';
 
-/**
- * Tipi di dato supportati dalla cache
- */
-export enum CacheDataType {
-  JSON = 'json',
-  IMAGE = 'image',
-  FILE = 'file',
-  TEXT = 'text',
-  BINARY = 'binary'
-}
+export type CacheType = 'json' | 'text' | 'binary';
 
-/**
- * Opzioni di configurazione per ogni entry in cache
- */
 export interface CacheOptions {
-  /** Tipo di dato */
-  type: CacheDataType;
-  /** Time-to-live in millisecondi (0 = nessuna scadenza) */
-  ttl?: number;
-  /** Categoria per organizzare i dati (es: 'user-images', 'api-cache') */
-  category?: string;
-  /** Se true, comprime i dati JSON */
-  compress?: boolean;
-  mimeType?: string;
+  category?: string;     // default: 'default'
+  ttlMs?: number;        // default: 7 giorni, 0 = no scadenza
+  type?: CacheType;      // default: 'json'
+  mimeType?: string;     // utile per binary
+  forceFile?: boolean;   // forza Filesystem anche se piccolo
 }
 
-/**
- * Entry nella cache
- */
+type StorageKind = 'preferences' | 'file';
+
 interface CacheEntry {
+  id: string;            // category::key
   key: string;
-  type: CacheDataType;
   category: string;
-  timestamp: number;
-  ttl: number;
-  size: number;
-  path?:  string; // Per file/immagini
-  compressed:  boolean;
+  type: CacheType;
+
+  storage: StorageKind;
+  prefKey?: string;      // se preferences
+  filePath?: string;     // se file (relativo a CACHE_DIR)
+
+  size: number;          // bytes
+  mimeType?: string;
+
+  createdAt: number;
+  updatedAt: number;
+  lastAccessAt: number;
+
+  ttlMs: number;         // 0 = mai
 }
 
-/**
- * Statistiche della cache
- */
+interface CacheIndexV1 {
+  v: 1;
+  entries: Record<string, CacheEntry>;
+}
+
 export interface CacheStats {
   totalEntries: number;
   totalSizeMB: number;
   byCategory: Record<string, { count: number; sizeMB: number }>;
-  byType: Record<string, { count: number; sizeMB:  number }>;
+  byStorage: Record<StorageKind, { count: number; sizeMB: number }>;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
-export class CacheStorageService {
+class Mutex {
+  private lock: Promise<void> = Promise.resolve();
+
+  async run<T>(fn: () => Promise<T>): Promise<T> {
+    const prev = this.lock;
+    let release!: () => void;
+    this.lock = new Promise<void>(r => (release = r));
+    await prev;
+    try {
+      return await fn();
+    } finally {
+      release();
+    }
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class CacheServiceV2 {
   private readonly CACHE_DIR = 'app-cache';
-  private readonly INDEX_KEY = 'cache_index';
-  private readonly MAX_CACHE_SIZE_MB = 100; // Limite totale
+  private readonly INDEX_KEY = 'cache:index:v1';
+
   private readonly DEFAULT_TTL = 7 * 24 * 60 * 60 * 1000; // 7 giorni
+  private readonly MAX_CACHE_MB = 100;
+  private readonly EVICT_TO_RATIO = 0.8; // quando sfora, libera fino a 80%
+  private readonly PREFERENCES_MAX_BYTES = 50 * 1024; // soglia: 50KB (tuning)
+
+  private readonly mutex = new Mutex();
 
   constructor() {
     void this.initialize();
   }
 
-  /**
-   * Inizializza la cache
-   */
   private async initialize(): Promise<void> {
-    try {
-      await this.cleanExpiredEntries();
-    } catch (error) {
-      console.error('Errore nell\'inizializzazione della cache:', error);
-    }
+    await this.mutex.run(async () => {
+      await this.cleanupExpired();
+      await this.enforceSizeLimit();
+    });
   }
 
-  // ========== METODI PUBBLICI - SET ==========
+  // -------------------- PUBLIC API --------------------
 
-  /**
-   * Salva dati JSON nella cache (Preferences)
-   */
-  async setJSON<T>(key: string, data:  T, options?:  Partial<CacheOptions>): Promise<void> {
-    try {
-      const opts:  CacheOptions = {
-        type: CacheDataType.JSON,
-        ttl: options?.ttl ?? this.DEFAULT_TTL,
-        category: options?.category ?? 'default',
-        compress: options?.compress ?? false
-      };
+  async set<T>(key: string, value: T, options: CacheOptions = {}): Promise<void> {
+    const category = options.category ?? 'default';
+    const type: CacheType = options.type ?? 'json';
+    const ttlMs = options.ttlMs ?? this.DEFAULT_TTL;
 
-      let jsonString = JSON.stringify(data);
-      
-      // Compressione opzionale (usando LZ-String se disponibile)
-      if (opts.compress && typeof (window as any).LZString !== 'undefined') {
-        jsonString = (window as any).LZString.compress(jsonString);
+    await this.mutex.run(async () => {
+      const index = await this.loadIndex();
+
+      // Se esiste già, rimuoviamo prima (così non lasciamo file/preference orfani)
+      const existing = index.entries[this.makeId(category, key)];
+      if (existing) {
+        await this.deleteEntryPhysical(existing);
+        delete index.entries[existing.id];
       }
 
-      const size = new Blob([jsonString]).size;
+      const { dataBytes, prefValue, fileBase64, encoding, size, mimeType } =
+        await this.serialize(value, type, options.mimeType);
 
-      // Salva in Preferences
-      await Preferences.set({
-        key: this.getPrefixedKey(key, opts.category ?? 'default'),
-        value: jsonString
-      });
-
-      // Aggiorna indice
-      await this.updateIndex(key, opts, size);
-      await this.enforceSizeLimit();
-    } catch (error) {
-      console.error('Errore nel salvataggio JSON:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Salva un'immagine in cache (Filesystem)
-   */
-  async setImage(key: string, imageData: string | Blob, options?: Partial<CacheOptions>): Promise<void> {
-    try {
-      const opts: CacheOptions = {
-        type: CacheDataType.IMAGE,
-        ttl: options?.ttl ?? this.DEFAULT_TTL,
-        category: options?.category ?? 'images',
-        compress: false
+      const entry: CacheEntry = {
+        id: this.makeId(category, key),
+        key,
+        category,
+        type,
+        storage: 'preferences', // deciso sotto
+        size,
+        mimeType: mimeType ?? options.mimeType,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        lastAccessAt: Date.now(),
+        ttlMs: ttlMs ?? this.DEFAULT_TTL,
       };
 
-      let base64Data: string;
+      const shouldUseFile =
+        options.forceFile === true ||
+        size > this.PREFERENCES_MAX_BYTES ||
+        type === 'binary'; // di default binary su file
 
-      if (typeof imageData === 'string') {
-        // Se è già base64, rimuovi il prefixo data: image se presente
-        base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, '');
+      if (!shouldUseFile) {
+        entry.storage = 'preferences';
+        entry.prefKey = this.prefKey(entry);
+        await Preferences.set({ key: entry.prefKey, value: prefValue! });
       } else {
-        // Converti Blob in base64
-        base64Data = await this.blobToBase64(imageData);
-      }
-
-      const fileName = this.generateFileName(key, 'jpg');
-      const path = `${opts.category}/${fileName}`;
-
-      // Salva il file
-      await Filesystem.writeFile({
-        path: `${this.CACHE_DIR}/${path}`,
-        data: base64Data,
-        directory: Directory.Cache,
-        recursive: true
-      });
-
-      const size = Math.ceil((base64Data.length * 3) / 4);
-
-      // Aggiorna indice
-      await this.updateIndex(key, { ...opts, path }, size);
-      await this.enforceSizeLimit();
-    } catch (error) {
-      console.error('Errore nel salvataggio immagine:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Salva un file generico in cache (Filesystem)
-   */
-  async setFile(
-    key: string,
-    fileData: string,
-    extension: string,
-    options?:  Partial<CacheOptions>
-  ): Promise<void> {
-    try {
-      const opts:  CacheOptions = {
-        type: CacheDataType.FILE,
-        ttl: options?.ttl ?? this.DEFAULT_TTL,
-        category: options?.category ?? 'files',
-        compress: false
-      };
-
-      const fileName = this. generateFileName(key, extension);
-      const path = `${opts.category}/${fileName}`;
-
-      // Salva il file
-      await Filesystem.writeFile({
-        path: `${this.CACHE_DIR}/${path}`,
-        data: fileData,
-        directory: Directory.Cache,
-        recursive: true
-      });
-
-      const size = new Blob([fileData]).size;
-
-      // Aggiorna indice
-      await this.updateIndex(key, { ...opts, path }, size);
-      await this.enforceSizeLimit();
-    } catch (error) {
-      console.error('Errore nel salvataggio file:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Salva testo semplice (Preferences)
-   */
-  async setText(key: string, text: string, options?: Partial<CacheOptions>): Promise<void> {
-    try {
-      const opts: CacheOptions = {
-        type: CacheDataType.TEXT,
-        ttl: options?.ttl ?? this.DEFAULT_TTL,
-        category: options?.category ?? 'default',
-        compress: false
-      };
-
-      const size = new Blob([text]).size;
-
-      await Preferences.set({
-        key: this.getPrefixedKey(key, opts.category ?? 'default'),
-        value: text
-      });
-
-      await this.updateIndex(key, opts, size);
-      await this.enforceSizeLimit();
-    } catch (error) {
-      console.error('Errore nel salvataggio testo:', error);
-      throw error;
-    }
-  }
-
-  // ========== METODI PUBBLICI - GET ==========
-
-  /**
-   * Recupera dati JSON dalla cache
-   */
-  async getJSON<T>(key: string, category:  string = 'default'): Promise<T | null> {
-    try {
-      const entry = await this.getEntry(key, category);
-      
-      if (!entry || entry.type !== CacheDataType.JSON) {
-        return null;
-      }
-
-      // Verifica scadenza
-      if (this.isExpired(entry)) {
-        await this.remove(key, category);
-        return null;
-      }
-
-      const { value } = await Preferences.get({
-        key: this.getPrefixedKey(key, category)
-      });
-
-      if (!value) return null;
-
-      // Decompressione se necessario
-      let jsonString = value;
-      if (entry. compressed && typeof (window as any).LZString !== 'undefined') {
-        jsonString = (window as any).LZString.decompress(value);
-      }
-
-      return JSON.parse(jsonString) as T;
-    } catch (error) {
-      console.error('Errore nel recupero JSON:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Recupera un'immagine dalla cache
-   * @returns URI utilizzabile in <img> o null
-   */
-  async getImage(key: string, category: string = 'images'): Promise<string | null> {
-    try {
-      const entry = await this. getEntry(key, category);
-      
-      if (!entry || entry.type !== CacheDataType. IMAGE || !entry.path) {
-        return null;
-      }
-
-      // Verifica scadenza
-      if (this.isExpired(entry)) {
-        await this.remove(key, category);
-        return null;
-      }
-
-      // Verifica esistenza file
-      try {
-        await Filesystem.stat({
-          path: `${this.CACHE_DIR}/${entry. path}`,
-          directory: Directory.Cache
+        entry.storage = 'file';
+        entry.filePath = this.filePath(entry, type);
+        await Filesystem.writeFile({
+          path: `${this.CACHE_DIR}/${entry.filePath}`,
+          directory: Directory.Cache,
+          recursive: true,
+          data: fileBase64!,
         });
-      } catch {
-        await this.remove(key, category);
-        return null;
+        // Nota: Filesystem scrive base64, quindi size reale è size (calcolata prima)
+        // encoding serve solo in lettura per text/json
       }
 
-      return await this.getFileUri(entry.path);
-    } catch (error) {
-      console.error('Errore nel recupero immagine:', error);
-      return null;
-    }
+      index.entries[entry.id] = entry;
+      await this.saveIndex(index);
+
+      await this.enforceSizeLimit(); // eviction LRU semplice
+    });
   }
 
-  /**
-   * Recupera un file generico dalla cache
-   */
-  async getFile(key: string, category: string = 'files'): Promise<string | null> {
-    try {
-      const entry = await this.getEntry(key, category);
-      
-      if (! entry || entry.type !== CacheDataType.FILE || !entry. path) {
-        return null;
-      }
+  async get<T>(key: string, options: CacheOptions = {}): Promise<T | null> {
+    const category = options.category ?? 'default';
+
+    return this.mutex.run(async () => {
+      const index = await this.loadIndex();
+      const id = this.makeId(category, key);
+      const entry = index.entries[id];
+      if (!entry) return null;
 
       if (this.isExpired(entry)) {
-        await this.remove(key, category);
+        await this.deleteEntryPhysical(entry);
+        delete index.entries[id];
+        await this.saveIndex(index);
         return null;
       }
 
-      const result = await Filesystem.readFile({
-        path: `${this.CACHE_DIR}/${entry. path}`,
-        directory: Directory.Cache,
-        encoding: Encoding.UTF8
-      });
+      const value = await this.readEntryValue<T>(entry);
 
-      return result. data as string;
-    } catch (error) {
-      console.error('Errore nel recupero file:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Recupera testo dalla cache
-   */
-  async getText(key: string, category: string = 'default'): Promise<string | null> {
-    try {
-      const entry = await this.getEntry(key, category);
-      
-      if (!entry || entry.type !== CacheDataType.TEXT) {
-        return null;
-      }
-
-      if (this.isExpired(entry)) {
-        await this.remove(key, category);
-        return null;
-      }
-
-      const { value } = await Preferences. get({
-        key: this. getPrefixedKey(key, category)
-      });
+      // aggiorna last access (LRU)
+      entry.lastAccessAt = Date.now();
+      index.entries[id] = entry;
+      await this.saveIndex(index);
 
       return value;
-    } catch (error) {
-      console.error('Errore nel recupero testo:', error);
-      return null;
-    }
+    });
   }
 
-  /**
-   * Recupera o esegue una funzione se il dato non è in cache
-   */
+  async has(key: string, options: CacheOptions = {}): Promise<boolean> {
+    const category = options.category ?? 'default';
+    return this.mutex.run(async () => {
+      const index = await this.loadIndex();
+      const entry = index.entries[this.makeId(category, key)];
+      if (!entry) return false;
+      if (this.isExpired(entry)) return false;
+      return true;
+    });
+  }
+
+  async remove(key: string, options: CacheOptions = {}): Promise<void> {
+    const category = options.category ?? 'default';
+
+    await this.mutex.run(async () => {
+      const index = await this.loadIndex();
+      const id = this.makeId(category, key);
+      const entry = index.entries[id];
+      if (!entry) return;
+
+      await this.deleteEntryPhysical(entry);
+      delete index.entries[id];
+      await this.saveIndex(index);
+    });
+  }
+
   async getOrSet<T>(
     key: string,
     fetchFn: () => Promise<T>,
-    options?: Partial<CacheOptions>
+    options: CacheOptions = {}
   ): Promise<T> {
-    const category = options?.category || 'default';
-    
-    // Prova a recuperare dalla cache
-    const cached = await this.getJSON<T>(key, category);
-    if (cached !== null) {
-      return cached;
-    }
+    const cached = await this.get<T>(key, options);
+    if (cached !== null) return cached;
 
-    // Se non è in cache, esegui la funzione
-    const data = await fetchFn();
-    
-    // Salva in cache
-    await this.setJSON(key, data, options);
-    
-    return data;
+    const fresh = await fetchFn();
+    await this.set(key, fresh, { ...options, type: options.type ?? 'json' });
+    return fresh;
   }
 
-  /**
-   * Pulisce tutta la cache
-   */
   async clearAll(): Promise<void> {
-    await this.withIndexLock(async () => {
-      // 1) elimina cartella file
+    await this.mutex.run(async () => {
+      const index = await this.loadIndex();
+      const entries = Object.values(index.entries);
+
+      for (const e of entries) {
+        await this.deleteEntryPhysical(e);
+      }
+
+      // elimina cartella (best effort)
       try {
         await Filesystem.rmdir({
           path: this.CACHE_DIR,
           directory: Directory.Cache,
-          recursive: true
+          recursive: true,
         });
-      } catch (e) {
-        // ok se non esiste
-        console.warn('CACHE rmdir warning:', e);
+      } catch {
+        // ignore
       }
-    
-      // 2) elimina tutte le preferences note dall'indice
-      const index = await this.getIndex();
-      for (const entry of index) {
-        if (!entry.path) {
-          try {
-            await Preferences.remove({
-              key: this.getPrefixedKey(entry.key, entry.category)
-            });
-          } catch (e) {
-            console.warn('Pref remove warning:', entry.key, e);
-          }
-        }
-      }
-    
-      // 3) reset indice
-      await Preferences.remove({ key: this.INDEX_KEY });
+
+      await this.saveIndex({ v: 1, entries: {} });
     });
   }
 
-  /**
-   * Pulisce la cache per categoria
-   */
   async clearCategory(category: string): Promise<void> {
-  try {
-    
-    await this.withIndexLock(async () => {
-      const index = await this.getIndex();
-      
-      const entries = index.filter(e => e.category === category);
+    await this.mutex.run(async () => {
+      const index = await this.loadIndex();
 
-      // Rimuovi fisicamente i file/preferences
-      for (const entry of entries) {
-        try {
-          // Se è un file, eliminalo dal filesystem
-          if (entry.path) {
-            try {
-              await Filesystem.deleteFile({
-                path: `${this.CACHE_DIR}/${entry.path}`,
-                directory: Directory.Cache
-              });
-            } catch (err) {
-              console.warn('⚠️ File già eliminato o non trovato:', entry.path);
-            }
-          } else {
-            // Altrimenti rimuovilo da Preferences
-            await Preferences.remove({
-              key: this.getPrefixedKey(entry.key, entry.category)
-            });
-          }
-        } catch (err) {
-          console.error('❌ Errore rimozione entry:', entry.key, err);
+      for (const [id, entry] of Object.entries(index.entries)) {
+        if (entry.category === category) {
+          await this.deleteEntryPhysical(entry);
+          delete index.entries[id];
         }
       }
 
-      // Aggiorna l'indice rimuovendo tutte le entries della categoria
-      const newIndex = index.filter(e => e.category !== category);
-      await this.saveIndex(newIndex);
+      await this.saveIndex(index);
     });
-  } catch (error) {
-    console.error('💥 Errore nella pulizia della categoria:', category, error);
-    throw error;
   }
-}
 
-/**
- * Rimuove un elemento dalla cache
- */
-async remove(key: string, category: string = 'default'): Promise<void> {
-  try {
-    await this.withIndexLock(async () => {
-      const entry = await this.getEntry(key, category);
-      
-      if (!entry) {
-        console.warn('⚠️ Entry non trovata:', key);
-        return;
-      }
+  async stats(): Promise<CacheStats> {
+    return this.mutex.run(async () => {
+      const index = await this.loadIndex();
+      const entries = Object.values(index.entries);
 
-      // Se è un file, eliminalo dal filesystem
-      if (entry.path) {
-        try {
-          await Filesystem.deleteFile({
-            path: `${this.CACHE_DIR}/${entry.path}`,
-            directory: Directory.Cache
-          });
-        } catch (err) {
-          console.warn('⚠️ File già eliminato:', entry.path);
-        }
-      } else {
-        // Altrimenti rimuovilo da Preferences
-        await Preferences.remove({
-          key: this.getPrefixedKey(key, category)
-        });
-      }
-
-      // Rimuovi dall'indice
-      const index = await this.getIndex();
-      const newIndex = index.filter(
-        e => !(e.key === key && e.category === category)
-      );
-      await this.saveIndex(newIndex);
-    });
-  } catch (error) {
-    console.error('💥 Errore nella rimozione:', key, error);
-    throw error;
-  }
-}
-
-/**
- * Aggiorna l'indice in modo thread-safe
- */
-private async updateIndex(
-  key: string,
-  options: CacheOptions & { path?: string },
-  size: number
-): Promise<void> {
-  await this.withIndexLock(async () => {
-    try {
-      const index = await this.getIndex();
-      
-      // Rimuovi entry esistente
-      const filtered = index.filter(
-        e => !(e.key === key && e.category === (options.category || 'default'))
-      );
-
-      // Aggiungi nuova entry
-      const newEntry: CacheEntry = {
-        key,
-        type: options.type,
-        category: options.category || 'default',
-        timestamp: Date.now(),
-        ttl: options.ttl || this.DEFAULT_TTL,
-        size,
-        path: options.path,
-        compressed: options.compress || false
+      const stats: CacheStats = {
+        totalEntries: entries.length,
+        totalSizeMB: 0,
+        byCategory: {},
+        byStorage: {
+          preferences: { count: 0, sizeMB: 0 },
+          file: { count: 0, sizeMB: 0 },
+        },
       };
 
-      filtered.push(newEntry);
-      await this.saveIndex(filtered);
-    } catch (error) {
-      console.error('💥 Errore aggiornamento index:', error);
-      throw error;
-    }
-  });
-}
+      for (const e of entries) {
+        const mb = e.size / (1024 * 1024);
+        stats.totalSizeMB += mb;
 
-/**
- * Lock per accesso concorrente all'indice
- */
-private indexLock: Promise<void> = Promise.resolve();
+        stats.byStorage[e.storage].count += 1;
+        stats.byStorage[e.storage].sizeMB += mb;
 
-private async withIndexLock<T>(fn: () => Promise<T>): Promise<T> {
-  const currentLock = this.indexLock;
-  
-  let resolveLock: () => void;
-  this.indexLock = new Promise(resolve => {
-    resolveLock = resolve;
-  });
-
-  try {
-    await currentLock;
-    return await fn();
-  } catch (error) {
-    throw error;
-  } finally {
-    resolveLock!();
-  }
-}
-
-/**
- * Salva l'indice con retry in caso di errore
- */
-private async saveIndex(index: CacheEntry[]): Promise<void> {
-  const maxRetries = 3;
-  let lastError: any;
-
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      await Preferences.set({
-        key: this.INDEX_KEY,
-        value: JSON.stringify(index)
-      });
-      return;
-    } catch (error) {
-      console.warn(`⚠️ Tentativo ${i + 1}/${maxRetries} fallito nel salvataggio index:`, error);
-      lastError = error;
-      
-      // Attendi un po' prima di ritentare
-      await new Promise(resolve => setTimeout(resolve, 100 * (i + 1)));
-    }
-  }
-
-  throw new Error(`Impossibile salvare l'indice dopo ${maxRetries} tentativi: ${lastError}`);
-}
-
-/**
- * Recupera l'indice con fallback
- */
-private async getIndex(): Promise<CacheEntry[]> {
-  try {
-    const { value } = await Preferences.get({ key: this.INDEX_KEY });
-    
-    if (!value) { return []; }
-    const parsed = JSON.parse(value);
-    
-    if (!Array.isArray(parsed)) {
-      console.error('❌ Index corrotto, resetto');
-      await this.saveIndex([]);
-      return [];
-    }
-
-    return parsed;
-  } catch (error) {
-    console.error('💥 Errore nel recupero index, resetto:', error);
-    
-    // In caso di errore, resetta l'indice
-    try {
-      await this.saveIndex([]);
-    } catch (saveError) {
-      console.error('💥 Impossibile resettare index:', saveError);
-    }
-    
-    return [];
-  }
-}
-
-  /**
-   * Pulisce le entry scadute
-   */
-  async cleanExpiredEntries(): Promise<void> {
-    const index = await this. getIndex();
-    const expired = index.filter(e => this.isExpired(e));
-
-    for (const entry of expired) {
-      await this.remove(entry.key, entry.category);
-    }
-  }
-
-  /**
-   * Ottieni statistiche della cache
-   */
-  async getStats(): Promise<CacheStats> {
-    const index = await this.getIndex();
-    
-    const stats: CacheStats = {
-      totalEntries: index.length,
-      totalSizeMB: 0,
-      byCategory: {},
-      byType: {}
-    };
-
-    for (const entry of index) {
-      const sizeMB = entry.size / (1024 * 1024);
-      stats.totalSizeMB += sizeMB;
-
-      // Per categoria
-      if (! stats.byCategory[entry.category]) {
-        stats.byCategory[entry.category] = { count: 0, sizeMB: 0 };
+        if (!stats.byCategory[e.category]) {
+          stats.byCategory[e.category] = { count: 0, sizeMB: 0 };
+        }
+        stats.byCategory[e.category].count += 1;
+        stats.byCategory[e.category].sizeMB += mb;
       }
-      stats.byCategory[entry.category].count++;
-      stats.byCategory[entry.category]. sizeMB += sizeMB;
 
-      // Per tipo
-      if (!stats.byType[entry. type]) {
-        stats.byType[entry.type] = { count: 0, sizeMB: 0 };
+      return stats;
+    });
+  }
+
+  // -------------------- INTERNALS --------------------
+
+  private async cleanupExpired(): Promise<void> {
+    const index = await this.loadIndex();
+    let changed = false;
+
+    for (const [id, entry] of Object.entries(index.entries)) {
+      if (this.isExpired(entry)) {
+        await this.deleteEntryPhysical(entry);
+        delete index.entries[id];
+        changed = true;
       }
-      stats.byType[entry.type].count++;
-      stats.byType[entry.type]. sizeMB += sizeMB;
     }
 
-    return stats;
-  }
-
-  /**
-   * Verifica se una chiave esiste in cache
-   */
-  async has(key: string, category: string = 'default'): Promise<boolean> {
-    const entry = await this.getEntry(key, category);
-    return entry !== null && ! this.isExpired(entry);
-  }
-
-
-  private async removeFromIndex(key: string, category: string): Promise<void> {
-    const index = await this. getIndex();
-    const filtered = index.filter(
-      e => !(e.key === key && e.category === category)
-    );
-    await this.saveIndex(filtered);
-  }
-
-  private async getEntry(key: string, category:  string): Promise<CacheEntry | null> {
-    const index = await this.getIndex();
-    return index.find(e => e.key === key && e.category === category) || null;
-  }
-
-  private isExpired(entry: CacheEntry): boolean {
-    if (entry.ttl === 0) return false; // Nessuna scadenza
-    return (Date.now() - entry.timestamp) > entry.ttl;
+    if (changed) await this.saveIndex(index);
   }
 
   private async enforceSizeLimit(): Promise<void> {
-    const index = await this.getIndex();
-    const totalSizeMB = index.reduce((sum, e) => sum + e.size, 0) / (1024 * 1024);
+    const index = await this.loadIndex();
+    const entries = Object.values(index.entries);
 
-    if (totalSizeMB > this.MAX_CACHE_SIZE_MB) {
-      // Ordina per timestamp (più vecchie prima)
-      const sorted = [...index].sort((a, b) => a.timestamp - b.timestamp);
+    const totalBytes = entries.reduce((s, e) => s + e.size, 0);
+    const maxBytes = this.MAX_CACHE_MB * 1024 * 1024;
+    if (totalBytes <= maxBytes) return;
 
-      let currentSize = totalSizeMB;
-      for (const entry of sorted) {
-        if (currentSize <= this.MAX_CACHE_SIZE_MB * 0.8) break; // Libera il 20%
-        
-        await this.remove(entry. key, entry.category);
-        currentSize -= entry.size / (1024 * 1024);
+    const targetBytes = Math.floor(maxBytes * this.EVICT_TO_RATIO);
+
+    // LRU: più vecchio lastAccessAt fuori per primo
+    const sorted = [...entries].sort((a, b) => a.lastAccessAt - b.lastAccessAt);
+
+    let current = totalBytes;
+    for (const e of sorted) {
+      if (current <= targetBytes) break;
+      await this.deleteEntryPhysical(e);
+      delete index.entries[e.id];
+      current -= e.size;
+    }
+
+    await this.saveIndex(index);
+  }
+
+  private async readEntryValue<T>(entry: CacheEntry): Promise<T> {
+    if (entry.storage === 'preferences') {
+      const { value } = await Preferences.get({ key: entry.prefKey! });
+      if (!value) throw new Error(`Cache value missing in preferences: ${entry.id}`);
+
+      if (entry.type === 'json') return JSON.parse(value) as T;
+      if (entry.type === 'text') return value as unknown as T;
+
+      // binary su preferences non dovrebbe succedere, ma gestiamolo:
+      return this.base64ToArrayBuffer(value) as unknown as T;
+    }
+
+    // file
+    const fullPath = `${this.CACHE_DIR}/${entry.filePath!}`;
+    const res = await Filesystem.readFile({
+      path: fullPath,
+      directory: Directory.Cache,
+    });
+
+    if (entry.type === 'json') {
+      const text = this.base64ToUtf8(res.data as string);
+      return JSON.parse(text) as T;
+    }
+
+    if (entry.type === 'text') {
+      return this.base64ToUtf8(res.data as string) as unknown as T;
+    }
+
+    // binary
+    return this.base64ToArrayBuffer(res.data as string) as unknown as T;
+  }
+
+  private async deleteEntryPhysical(entry: CacheEntry): Promise<void> {
+    try {
+      if (entry.storage === 'preferences') {
+        if (entry.prefKey) await Preferences.remove({ key: entry.prefKey });
+        return;
       }
+
+      if (entry.storage === 'file' && entry.filePath) {
+        await Filesystem.deleteFile({
+          path: `${this.CACHE_DIR}/${entry.filePath}`,
+          directory: Directory.Cache,
+        });
+      }
+    } catch {
+      // best-effort: se è già sparito non ci interessa
     }
   }
 
-  private getPrefixedKey(key: string, category: string): string {
-    return `cache_${category}_${key}`;
-  }
+  private async loadIndex(): Promise<CacheIndexV1> {
+    try {
+      const { value } = await Preferences.get({ key: this.INDEX_KEY });
+      if (!value) return { v: 1, entries: {} };
 
-  private generateFileName(key: string, extension: string): string {
-    const hash = this.simpleHash(key);
-    const timestamp = Date.now();
-    return `${hash}_${timestamp}.${extension}`;
-  }
-
-  private simpleHash(str: string): string {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
+      const parsed = JSON.parse(value);
+      if (!parsed || parsed.v !== 1 || typeof parsed.entries !== 'object') {
+        // index corrotto → reset
+        return { v: 1, entries: {} };
+      }
+      return parsed as CacheIndexV1;
+    } catch {
+      return { v: 1, entries: {} };
     }
-    return Math.abs(hash).toString(36);
   }
 
-  private async blobToBase64(blob: Blob): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = (reader.result as string).split(',')[1];
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
+  private async saveIndex(index: CacheIndexV1): Promise<void> {
+    await Preferences.set({
+      key: this.INDEX_KEY,
+      value: JSON.stringify(index),
     });
   }
 
-  private async getFileUri(path: string): Promise<string> {
-    try {
-      const fullPath = `${this.CACHE_DIR}/${path}`;
-      
-      if (Capacitor.getPlatform() === 'web') {
-        const result = await Filesystem.readFile({
-          path: fullPath,
-          directory: Directory.Cache
-        });
-        return `data:image/jpeg;base64,${result.data}`;
-      }
+  private isExpired(entry: CacheEntry): boolean {
+    if (entry.ttlMs === 0) return false;
+    return Date.now() - entry.updatedAt > entry.ttlMs;
+  }
 
-      const stat = await Filesystem.getUri({
-        path: fullPath,
-        directory: Directory.Cache
-      });
-      
-      return Capacitor.convertFileSrc(stat.uri);
-    } catch (error) {
-      console.error('Errore nel recupero URI:', error);
-      throw error;
+  private makeId(category: string, key: string): string {
+    return `${category}::${key}`;
+  }
+
+  private prefKey(entry: CacheEntry): string {
+    // chiave stabile
+    return `cache:v2:${entry.category}:${this.hash(entry.key)}`;
+  }
+
+  private filePath(entry: CacheEntry, type: CacheType): string {
+    const ext = type === 'json' ? 'json' : type === 'text' ? 'txt' : 'bin';
+    return `${entry.category}/${this.hash(entry.key)}.${ext}`;
+  }
+
+  // -------------------- SERIALIZATION --------------------
+
+  private async serialize(
+    value: any,
+    type: CacheType,
+    mimeType?: string
+  ): Promise<{
+    dataBytes: Uint8Array;
+    prefValue?: string;
+    fileBase64?: string;
+    encoding?: Encoding;
+    size: number;
+    mimeType?: string;
+  }> {
+    if (type === 'json') {
+      const text = JSON.stringify(value);
+      const bytes = new TextEncoder().encode(text);
+      const base64 = this.utf8ToBase64(text);
+      return { dataBytes: bytes, prefValue: text, fileBase64: base64, encoding: Encoding.UTF8, size: bytes.length, mimeType: 'application/json' };
     }
+
+    if (type === 'text') {
+      const text = String(value ?? '');
+      const bytes = new TextEncoder().encode(text);
+      const base64 = this.utf8ToBase64(text);
+      return { dataBytes: bytes, prefValue: text, fileBase64: base64, encoding: Encoding.UTF8, size: bytes.length, mimeType: 'text/plain' };
+    }
+
+    // binary: accetta ArrayBuffer | Uint8Array | Blob | base64-string
+    if (value instanceof Blob) {
+      const ab = await value.arrayBuffer();
+      const bytes = new Uint8Array(ab);
+      const base64 = this.arrayBufferToBase64(ab);
+      return { dataBytes: bytes, fileBase64: base64, size: bytes.length, mimeType: mimeType ?? value.type ?? 'application/octet-stream' };
+    }
+
+    if (value instanceof ArrayBuffer) {
+      const bytes = new Uint8Array(value);
+      const base64 = this.arrayBufferToBase64(value);
+      return { dataBytes: bytes, fileBase64: base64, size: bytes.length, mimeType: mimeType ?? 'application/octet-stream' };
+    }
+
+    if (value instanceof Uint8Array) {
+      const base64 = this.uint8ToBase64(value);
+      return { dataBytes: value, fileBase64: base64, size: value.byteLength, mimeType: mimeType ?? 'application/octet-stream' };
+    }
+
+    if (typeof value === 'string') {
+      // assumiamo base64 “puro” per binary
+      const bytes = this.base64ToUint8(value);
+      return { dataBytes: bytes, prefValue: value, fileBase64: value, size: bytes.length, mimeType: mimeType ?? 'application/octet-stream' };
+    }
+
+    throw new Error('Unsupported binary value type');
+  }
+
+  // -------------------- HELPERS --------------------
+
+  private hash(str: string): string {
+    // hash semplice ma stabile
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return (h >>> 0).toString(36);
+  }
+
+  private utf8ToBase64(text: string): string {
+    const bytes = new TextEncoder().encode(text);
+    return this.uint8ToBase64(bytes);
+  }
+
+  private base64ToUtf8(b64: string): string {
+    const bytes = this.base64ToUint8(b64);
+    return new TextDecoder().decode(bytes);
+  }
+
+  private uint8ToBase64(bytes: Uint8Array): string {
+    let binary = '';
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+  }
+
+  private base64ToUint8(b64: string): Uint8Array {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+  }
+
+  private arrayBufferToBase64(ab: ArrayBuffer): string {
+    return this.uint8ToBase64(new Uint8Array(ab));
+  }
+
+  private base64ToArrayBuffer(b64: string): ArrayBufferLike {
+    return this.base64ToUint8(b64).buffer;
+  }
+
+  // Se ti serve una URI per mostrare un’immagine su native:
+  async getFileUri(key: string, options: CacheOptions = {}): Promise<string | null> {
+    const category = options.category ?? 'default';
+    const entry = await this.mutex.run(async () => {
+      const index = await this.loadIndex();
+      return index.entries[this.makeId(category, key)] ?? null;
+    });
+
+    if (!entry || entry.storage !== 'file' || !entry.filePath) return null;
+
+    const fullPath = `${this.CACHE_DIR}/${entry.filePath}`;
+    if (Capacitor.getPlatform() === 'web') {
+      const res = await Filesystem.readFile({ path: fullPath, directory: Directory.Cache });
+      // Qui non so se è immagine: restituisco data: con mimeType se presente
+      const mime = entry.mimeType ?? 'application/octet-stream';
+      return `data:${mime};base64,${res.data}`;
+    }
+
+    const uri = await Filesystem.getUri({ path: fullPath, directory: Directory.Cache });
+    return Capacitor.convertFileSrc(uri.uri);
   }
 }

@@ -4,7 +4,7 @@ import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, firstValueFrom, Observable } from 'rxjs';
 import { Constants } from '../Constants';
 import { LocationService } from './location.service';
-import { CacheStorageService } from './cache-storage.service';
+import { CacheServiceV2  } from './cache-storage.service';
 import { LanguageService } from './language.service';
 
 @Injectable({
@@ -39,7 +39,7 @@ export class GetApiAttivitaService {
   http = inject(HttpClient);
   constants = inject(Constants);
   locationService = inject(LocationService);
-  cacheService = inject(CacheStorageService);
+  cacheService = inject(CacheServiceV2);
   languageService = inject(LanguageService);
   
   constructor() { }
@@ -288,74 +288,56 @@ export class GetApiAttivitaService {
     return attivita;
   }
 
-  /**
-   * ✅ NUOVO METODO:  Aggiunge un'attività alle visualizzate di recente
-   */
   private async addToRecentView(attivita: Attivita): Promise<void> {
     try {
-      // Recupera la lista corrente dalla cache
-      let cachedData = await this.cacheService.getJSON<Attivita[]>(
-        this.RECENT_VIEW_KEY,
-        this.RECENT_VIEW_CATEGORY
-      ) || [];
-
-      // Rimuovi l'attività se già presente (evita duplicati)
-      cachedData = cachedData.filter(a => a.idAttivita !== attivita. idAttivita);
-
-      // Recupera l'immagine principale
-      const immaginePrincipale = attivita.immagini?. find(
+      const cachedData =
+        (await this.cacheService.get<Attivita[]>(
+          this.RECENT_VIEW_KEY,
+          { category: this.RECENT_VIEW_CATEGORY }
+        )) ?? [];
+      
+      // dedup
+      const withoutDup = cachedData.filter(a => a.idAttivita !== attivita.idAttivita);
+      
+      // immagine principale (NON mutare l’oggetto originale se puoi)
+      const immaginePrincipale = attivita.immagini?.find(
         img => (img.isImmaginePrincipale && img.isVerificata) || img.isImmaginePrincipaleTemp
       );
-      attivita.uploadImgPrincipale = immaginePrincipale 
-        ? immaginePrincipale.upload 
-        : 'URL_IMMAGINE_FALLBACK';
-
-      // Inserisci l'attività in testa
-      cachedData.unshift(attivita);
-
-      // Se superi il limite, rimuovi l'ultimo
-      if (cachedData.length > this.RECENT_VIEW_MAX_ITEMS) {
-        cachedData.pop();
-      }
-
-      // ✅ Salva nella cache con il nuovo servizio
-      await this.cacheService.setJSON(
-        this.RECENT_VIEW_KEY,
-        cachedData,
-        {
-          category: this.RECENT_VIEW_CATEGORY,
-          ttl: this. RECENT_VIEW_TTL
-        }
-      );
+    
+      const normalized: Attivita = {
+        ...attivita,
+        uploadImgPrincipale: immaginePrincipale?.upload ?? 'URL_IMMAGINE_FALLBACK',
+      };
+    
+      const next = [normalized, ...withoutDup].slice(0, this.RECENT_VIEW_MAX_ITEMS);
+    
+      await this.cacheService.set(this.RECENT_VIEW_KEY, next, {
+        category: this.RECENT_VIEW_CATEGORY,
+        ttlMs: this.RECENT_VIEW_TTL,
+        type: 'json',
+      });
     } catch (error) {
       console.error('❌ Errore nell\'aggiornamento delle attività recenti:', error);
     }
   }
 
-  /**
-   * ✅ NUOVO METODO: Recupera le attività visualizzate di recente dalla cache
-   */
   async getRecentViewedActivities(): Promise<Attivita[]> {
     try {
-      const cached = await this.cacheService. getJSON<Attivita[]>(
+      const cached = await this.cacheService.get<Attivita[]>(
         this.RECENT_VIEW_KEY,
-        this. RECENT_VIEW_CATEGORY
+        { category: this.RECENT_VIEW_CATEGORY }
       );
-      return cached || [];
+      return cached ?? [];
     } catch (error) {
       console.error('❌ Errore nel recupero delle attività recenti:', error);
       return [];
     }
   }
 
-  /**
-   * ✅ NUOVO METODO: Pulisce la cache delle attività visualizzate
-   */
   async clearRecentView(): Promise<void> {
-    await this.cacheService.remove(
-      this.RECENT_VIEW_KEY,
-      this.RECENT_VIEW_CATEGORY
-    );
+    await this.cacheService.remove(this.RECENT_VIEW_KEY, {
+      category: this.RECENT_VIEW_CATEGORY
+    });
   }
 
   async apiGetAttivitaAutocomplete(placeId: string): Promise<any> {
