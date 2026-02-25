@@ -216,6 +216,7 @@ export class CacheServiceV2 {
   }
 
   async clearAll(): Promise<void> {
+    console.log('CacheServiceV2: clearAll');
     await this.mutex.run(async () => {
       const index = await this.loadIndex();
       const entries = Object.values(index.entries);

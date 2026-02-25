@@ -45,13 +45,13 @@ export class NewAuthService {
   idPage!: number;
   private refreshInFlight$: Observable<JwtResponseDto> | null = null;
 
-  constructor() { }
+  constructor() {}
 
   setStatusUserVerified(): void {
-    this.loggedIn$.next(this.tokenService.hasValidToken());
-    this.isShop$.next(this.isShop());
-    this.isVerified$.next(this.isVerified());
-  }
+  this.loggedIn$.next(this.tokenService.hasValidToken());
+  this.isShop$.next(this.isShop());
+  this.isVerified$.next(this.isVerified());
+}
 
   isLoggedIn(): Observable<boolean> {
     return this.loggedIn$.asObservable();
@@ -115,21 +115,39 @@ export class NewAuthService {
   }
 
   async checkEmailVerification(): Promise<boolean> {
+    const user = await this.getCurrentUserFromAuth();
+    
+    if (!user) return false;
+    if (!user.providerData || user.providerData.length === 0) return false;
+    
+    const isPasswordProvider =
+      user.providerData.length === 1 &&
+      user.providerData[0].providerId === 'password';
+    
+    if (isPasswordProvider) {
+      return user.emailVerified === true;
+    }
+  
+    // google / facebook / multi-provider
+    return true;
+  }
+
+  async checkProviderLogin(): Promise<string> {
 
     const user = await this.getCurrentUserFromAuth();
     
-    if(user)
-      await user.reload();
-    else 
-      return false;
-
-    if(user.providerData.length == 0) 
-      return false;
-    
-    if(user.providerData.length == 1 && user.providerData[0].providerId == "password" && user.emailVerified)
-      return true;
-    
-    else return true;
+    if(user){
+      if(user && user.providerData.length == 0) 
+        return '';
+      if(user.providerData.length == 1 && user.providerData[0].providerId == "password")
+        return user.email ?? '';
+      else if(user.providerData.some(p => p.providerId === 'google.com'))
+        return 'google.com';
+      else if(user.providerData.some(p => p.providerId === 'facebook.com'))
+        return 'facebook.com';
+    }
+    else return '';
+    return '';
   }
 
   async getEmail(): Promise<string | null> {
@@ -144,7 +162,7 @@ export class NewAuthService {
     const readealJwt = await firstValueFrom(this.UsernamePasswordLogin(token));
 
     if (readealJwt) {
-      this.tokenService.setToken(readealJwt);
+      await this.tokenService.setToken(readealJwt);
       this.setStatusUserVerified();
       await this.favoritesApiService.Favorite();
     }
@@ -272,7 +290,7 @@ async reauthenticateBestEffort(): Promise<boolean> {
     const readealJwt = await firstValueFrom(this.apiServiceLogin(idToken, userType));
 
     if (readealJwt) {
-      this.tokenService.setToken(readealJwt);
+      await this.tokenService.setToken(readealJwt);
       this.setStatusUserVerified();
       await this.favoritesApiService.Favorite();
     }
@@ -295,7 +313,7 @@ async reauthenticateBestEffort(): Promise<boolean> {
     this.refreshInFlight$ = this.http
       .post<JwtResponseDto>(`${this.constants.BasePath()}/Auth/refresh-jwt`, { refreshToken })
       .pipe(
-        tap((jwt) => this.tokenService.setToken(jwt)),
+        tap(async (jwt) => await this.tokenService.setToken(jwt)),
         finalize(() => {
           this.refreshInFlight$ = null;
         }),
