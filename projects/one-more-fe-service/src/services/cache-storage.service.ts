@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
 import { Preferences } from '@capacitor/preferences';
 import { Capacitor } from '@capacitor/core';
-
 export type CacheType = 'json' | 'text' | 'binary';
 
 export interface CacheOptions {
@@ -216,7 +215,6 @@ export class CacheServiceV2 {
   }
 
   async clearAll(): Promise<void> {
-    console.log('CacheServiceV2: clearAll');
     await this.mutex.run(async () => {
       const index = await this.loadIndex();
       const entries = Object.values(index.entries);
@@ -225,7 +223,6 @@ export class CacheServiceV2 {
         await this.deleteEntryPhysical(e);
       }
 
-      // elimina cartella (best effort)
       try {
         await Filesystem.rmdir({
           path: this.CACHE_DIR,

@@ -1,13 +1,14 @@
 import { inject, Injectable } from '@angular/core';
-import { deleteUser, EmailAuthProvider, FacebookAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, User, UserCredential } from 'firebase/auth';
+import { EmailAuthProvider, FacebookAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, User, UserCredential } from 'firebase/auth';
 import { Auth, authState, signOut } from '@angular/fire/auth';
 import { BehaviorSubject, filter, finalize, firstValueFrom, Observable, shareReplay, tap, throwError } from 'rxjs';
 import { Constants } from '../Constants';
 import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
 import { Role } from '../Enum/Role';
-import { DeleteUtente, UserSession, Utente } from '../EntityInterface/Utente';
-import { deleteDoc, doc, Firestore, getDoc, setDoc } from '@angular/fire/firestore';
-
+import { DeleteUtente, UserSession } from '../EntityInterface/Utente';
+import { Firestore } from '@angular/fire/firestore';
+import { map, distinctUntilChanged } from 'rxjs/operators';
+import { ShopListDto } from '../Dtos/Responses/shops/ShopListDto'; 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { TokenService } from './token.service';
 import { FavoritesApiService } from '../services/favorites-api.service';
@@ -26,11 +27,9 @@ export class NewAuthService {
   http = inject(HttpClient);
   tokenService = inject(TokenService);
   favoritesApiService = inject(FavoritesApiService);
-
-  private currentUser$ = authState(this.firebaseAuth).pipe(
-    filter(u => !!u)
-  )
-
+  
+  private readonly shopsSubject = new BehaviorSubject<ShopListDto[] | null>(null);
+  shops$: Observable<ShopListDto[] | null> = this.shopsSubject.asObservable();
   googleProvider = new GoogleAuthProvider();
   facebookProvider = new FacebookAuthProvider();
   private loggedIn$ = new BehaviorSubject<boolean>(this.tokenService.hasValidToken());
@@ -74,6 +73,7 @@ export class NewAuthService {
   this.loggedIn$.next(false);
   this.isShop$.next(false);
   this.isVerified$.next(false);
+  this.clearShops();
 
   // best effort: può fallire se refresh token mancante o già revocato
     try {
@@ -248,6 +248,19 @@ async reauthenticateBestEffort(): Promise<boolean> {
 
   return false;
 }
+
+  hasShops$: Observable<boolean> = this.shops$.pipe(
+    map(list => (list?.length ?? 0) > 0),
+    distinctUntilChanged()
+  );
+
+  setShops(list: ShopListDto[]): void {
+    this.shopsSubject.next(list ?? []);
+  }
+
+  clearShops(): void {
+    this.shopsSubject.next([]);
+  }
 
   //#region  private methods
 

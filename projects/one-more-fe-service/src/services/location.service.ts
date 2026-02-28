@@ -12,7 +12,7 @@ interface CachedLocation {
 export class LocationService {
   private readonly CACHE_KEY = 'cached_location';
   private readonly CACHE_CATEGORY = 'location-data';
-  private readonly CACHE_TTL = 10 * 60 * 1000; // 10 minuti
+  private readonly CACHE_TTL = 15 * 60 * 1000; // 15 minuti
   private readonly EARTH_RADIUS_KM = 6371;
 
   private cache = inject(CacheServiceV2);
