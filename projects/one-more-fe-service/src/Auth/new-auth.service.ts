@@ -7,13 +7,14 @@ import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
 import { Role } from '../Enum/Role';
 import { DeleteUtente, UserSession } from '../EntityInterface/Utente';
 import { Firestore } from '@angular/fire/firestore';
-import { map, distinctUntilChanged } from 'rxjs/operators';
+import { map, distinctUntilChanged, take } from 'rxjs/operators';
 import { ShopListDto } from '../Dtos/Responses/shops/ShopListDto'; 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { TokenService } from './token.service';
 import { FavoritesApiService } from '../services/favorites-api.service';
 import { CommonResDto } from '../Dtos/Responses/CommonResDto';
 import { SignUpReqDto } from '../Dtos/Requests/auth/SignUpReqDto';
+import { CacheServiceV2 } from '../public-api';
 
 @Injectable({
   providedIn: 'root'
@@ -27,7 +28,7 @@ export class NewAuthService {
   http = inject(HttpClient);
   tokenService = inject(TokenService);
   favoritesApiService = inject(FavoritesApiService);
-  
+  cache = inject(CacheServiceV2);
   private readonly shopsSubject = new BehaviorSubject<ShopListDto[] | null>(null);
   shops$: Observable<ShopListDto[] | null> = this.shopsSubject.asObservable();
   googleProvider = new GoogleAuthProvider();
@@ -115,20 +116,24 @@ export class NewAuthService {
   }
 
   async checkEmailVerification(): Promise<boolean> {
-    const user = await this.getCurrentUserFromAuth();
-    
-    if (!user) return false;
+      const user = await firstValueFrom(
+      authState(this.firebaseAuth).pipe(
+        filter(u => u !== null), // aspetta che Firebase ripristini l'utente
+        take(1)
+      )
+    );
+  
     if (!user.providerData || user.providerData.length === 0) return false;
-    
+  
     const isPasswordProvider =
       user.providerData.length === 1 &&
       user.providerData[0].providerId === 'password';
-    
+  
     if (isPasswordProvider) {
+      await user.reload();              // ✅ prende emailVerified aggiornato
       return user.emailVerified === true;
     }
   
-    // google / facebook / multi-provider
     return true;
   }
 
@@ -165,6 +170,7 @@ export class NewAuthService {
       await this.tokenService.setToken(readealJwt);
       this.setStatusUserVerified();
       await this.favoritesApiService.Favorite();
+      await this.initFromCache();
     }
 
     return Promise.resolve(readealJwt);
@@ -248,6 +254,15 @@ async reauthenticateBestEffort(): Promise<boolean> {
 
   return false;
 }
+
+ async initFromCache(): Promise<void> {
+    const cached = await this.cache.get<ShopListDto[]>(
+      'user_shops',
+      { category: 'api-cache' }
+    );
+
+    this.shopsSubject.next(cached ?? []);
+  }
 
   hasShops$: Observable<boolean> = this.shops$.pipe(
     map(list => (list?.length ?? 0) > 0),
