@@ -4,6 +4,7 @@ import { HourDto } from "../../HourDto";
 import { OfferTypeDto } from "../../OfferTypeDto";
 import { ShopDetailDto } from "../../ShopDetail";
 import { ShopTypeDto } from "../../ShopTypeDto";
+import { StaffDto } from "../../StaffDto";
 
 export interface ShopAddReqDto {
     title: string;
@@ -13,4 +14,5 @@ export interface ShopAddReqDto {
     detail: ShopDetailDto;
     types: ShopTypeDto[];
     photos: AddUpdatePhotoDto[];
+    staff: StaffDto[];
 }   

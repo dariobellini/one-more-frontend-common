@@ -5,6 +5,7 @@ import { HourDto } from "../../HourDto";
 import { OfferTypeDto } from "../../OfferTypeDto";
 import { ShopDetailDto } from "../../ShopDetail";
 import { ShopTypeDto } from "../../ShopTypeDto";
+import { StaffDto } from "../../StaffDto";
 import { CommonResDto } from "../CommonResDto";
 
 export interface ShopDetailResDto extends CommonResDto {
@@ -18,4 +19,5 @@ export interface ShopDetailResDto extends CommonResDto {
     photos: AddUpdatePhotoDto[];
     status?: ShopVisibilityStatus;
     adminCheckOutcome?: string;
+    staff: StaffDto[];
 }

@@ -277,6 +277,12 @@ async reauthenticateBestEffort(): Promise<boolean> {
     this.shopsSubject.next([]);
   }
 
+  async apiCheckisPresent(email: string): Promise<any> {
+    return await firstValueFrom(
+      this.http.get(this.constants.BasePath() + '/Auth/check-isPresent', { params: { email: email } })
+    );
+  }
+
   //#region  private methods
 
   private isVerified(): boolean {
