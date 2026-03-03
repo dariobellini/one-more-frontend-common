@@ -1,5 +1,8 @@
 export enum Role {
    unknown,
    user,
-   shop
+   shop,
+   staffPromo,
+   staffValidator,
+   staffBoth
   }

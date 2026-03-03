@@ -47,7 +47,7 @@ export class TokenService {
     getDecodedToken(token: string): ApiJwtPayload | null {
         try {
             const decoded: any = jwtDecode(token);
-            const idAttivitaList = (decoded["id-attivita-list"] as string).split("-").map(s => s.trim());
+            //const idAttivitaList = (decoded["id-attivita-list"] as string).split("-").map(s => s.trim());
 
             const jwt: ApiJwtPayload = {
                 sub: decoded.sub,
@@ -57,8 +57,8 @@ export class TokenService {
                     ? decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]
                     : [decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]].filter(Boolean),
                 isVerified: decoded["is-verified"] === "true" || decoded["is-verified"] === true || decoded["is-verified"] === "True",
-                idSoggetto: decoded["id-soggetto"],
-                idAttivitaList: idAttivitaList.map(num => parseInt(num.trim(), 10))
+                idSoggetto: decoded["id-soggetto"]
+                //idAttivitaList: idAttivitaList.map(num => parseInt(num.trim(), 10))
             };
             return jwt;
         } catch (error) {

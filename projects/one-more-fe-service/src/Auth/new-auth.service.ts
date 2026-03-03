@@ -283,6 +283,12 @@ async reauthenticateBestEffort(): Promise<boolean> {
     );
   }
 
+  async apiCheckHaveRequest(): Promise<CommonResDto> {
+    return await firstValueFrom(
+      this.http.get<CommonResDto>(this.constants.BasePath() + '/Auth/check-have-request')
+    );
+  }
+
   //#region  private methods
 
   private isVerified(): boolean {

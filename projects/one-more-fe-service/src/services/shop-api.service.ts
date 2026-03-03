@@ -26,15 +26,25 @@ export class ShopApiService {
         return this.http.get<ShopDetailResDto>(this.constants.BasePath() + '/shop/get?shopId=' + shopId);
     }
 
+    GetForShop(shopId: number): Observable<ShopDetailResDto> {
+        return this.http.get<ShopDetailResDto>(this.constants.BasePath() + '/shop/get-for-shop?shopId=' + shopId);
+    }
+
     Add(shopAddReqDto: ShopAddReqDto): Observable<ShopAddResDto> {
         return this.http.post<ShopAddResDto>(this.constants.BasePath() + '/shop/add', shopAddReqDto);
     }
+
     Update(shopUpdateReqDto: ShopUpdateReqDto): Observable<ShopUpdateResDto> {
         return this.http.put<ShopUpdateResDto>(this.constants.BasePath() + '/shop/update', shopUpdateReqDto);
     }
 
     List(): Observable<ShopListDto[]> {
+        console.log('Fetching shop list from API');
         return this.http.get<ShopListDto[]>(this.constants.BasePath() + '/shop/list');
+    }
+
+    ListForStaff(): Observable<ShopListDto[]> {
+        return this.http.get<ShopListDto[]>(this.constants.BasePath() + '/shop/list-for-staff');
     }
 
     ListDeleteReasons(): Observable<DeleteReasonDto[]> {
