@@ -11,4 +11,5 @@ export interface ShopDetailDto {
     lastUpdateRating?: string;
     telephone: string;
     distance?: number;
+    
 }
