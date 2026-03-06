@@ -47,7 +47,9 @@ export class NewAuthService {
 
   constructor() {
     // Kick off an async refresh check on startup to update observables if needed.
-    void this.refreshLoginState();
+    // Defer to next microtask to avoid change-detection timing issues during
+    // application bootstrap that can surface as runtime NG0200-like errors.
+    void Promise.resolve().then(() => void this.refreshLoginState());
   }
 
   setStatusUserVerified(): void {
@@ -58,7 +60,7 @@ export class NewAuthService {
 
     // Also attempt an async refresh in background and update state afterwards
     void (async () => {
-      const ok = await this.tokenService.hasValidTokenOrRefresh();
+      const ok = await this.ensureValidToken();
       this.loggedIn$.next(ok);
       this.isShop$.next(this.isShop());
       this.isVerified$.next(this.isVerified());
@@ -67,12 +69,44 @@ export class NewAuthService {
 
   private async refreshLoginState(): Promise<void> {
     try {
-      const ok = await this.tokenService.hasValidTokenOrRefresh();
+      const ok = await this.ensureValidToken();
       this.loggedIn$.next(ok);
       this.isShop$.next(this.isShop());
       this.isVerified$.next(this.isVerified());
     } catch (e) {
       // ignore
+    }
+  }
+
+  /**
+   * Ensure there is a valid JWT. If current token is near expiry or missing
+   * attempt to refresh it using refreshJwt(). Returns true when valid.
+   */
+  async ensureValidToken(thresholdSeconds = 30): Promise<boolean> {
+    const token = this.tokenService.getToken();
+    if (!token) return false;
+
+    try {
+      const decoded = this.tokenService.getDecodedToken(token);
+      const now = Math.floor(Date.now() / 1000);
+      if (decoded && decoded.exp > now + thresholdSeconds) return true;
+    } catch (e) {
+      // fallthrough to refresh
+    }
+
+    const refreshToken = this.tokenService.getRefreshToken();
+    if (!refreshToken) {
+      await this.tokenService.clearToken();
+      return false;
+    }
+
+    try {
+      // reuse existing refreshJwt which deduplicates concurrent calls
+      const jwt = await firstValueFrom(this.refreshJwt());
+      return !!(jwt && jwt.jwt);
+    } catch (err) {
+      await this.tokenService.clearToken();
+      return false;
     }
   }
 

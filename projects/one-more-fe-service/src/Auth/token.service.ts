@@ -4,8 +4,6 @@ import { Constants } from '../Constants';
 import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
 import { jwtDecode } from 'jwt-decode';
 import { TokenStorageService } from './token-storage.service';
-import { NewAuthService } from './new-auth.service';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable({
     providedIn: 'root'
@@ -14,7 +12,6 @@ export class TokenService {
 
     constants = inject(Constants);
     tokenStorage = inject(TokenStorageService);
-    newAuthService = inject(NewAuthService);
     constructor() { }
 
     public tokenChanged: EventEmitter<string> = new EventEmitter();
@@ -70,43 +67,9 @@ export class TokenService {
         }
     }
 
-    /**
-     * Check token validity and optionally refresh if it's about to expire.
-     * This is an async helper that callers should use when they can await
-     * (for example before performing important API calls). It will attempt
-     * a refresh only when the token expires within `thresholdSeconds`.
-     *
-     * @param thresholdSeconds seconds before expiry to trigger a refresh (default 30s)
-     */
-    async hasValidTokenOrRefresh(thresholdSeconds = 30): Promise<boolean> {
-        const token = this.getToken();
-        if (!token) return false;
-
-        try {
-            const decoded = jwtDecode<ApiJwtPayload>(token);
-            const now = Math.floor(Date.now() / 1000);
-
-            // If token is valid for longer than threshold, we're good.
-            if (decoded.exp > now + thresholdSeconds) return true;
-        } catch (e) {
-            // fallthrough to attempt refresh
-        }
-
-        // token missing or expiring soon/expired -> attempt refresh
-        const refreshToken = this.getRefreshToken();
-        if (!refreshToken) {
-            await this.clearToken();
-            return false;
-        }
-
-        try {
-            const jwt = await firstValueFrom(this.newAuthService.refreshJwt());
-            return !!(jwt && jwt.jwt);
-        } catch (err) {
-            await this.clearToken();
-            return false;
-        }
-    }
+    // NOTE: token refresh is handled by NewAuthService to avoid circular
+    // dependency between TokenService and NewAuthService. TokenService keeps
+    // only synchronous helpers for checking token presence/expiry.
 
     /**
      * Synchronous check whether the current JWT exists and is not expired.
