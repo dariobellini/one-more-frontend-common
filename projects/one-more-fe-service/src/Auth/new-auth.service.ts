@@ -45,12 +45,35 @@ export class NewAuthService {
   idPage!: number;
   private refreshInFlight$: Observable<JwtResponseDto> | null = null;
 
-  constructor() {}
+  constructor() {
+    // Kick off an async refresh check on startup to update observables if needed.
+    void this.refreshLoginState();
+  }
 
   setStatusUserVerified(): void {
-    this.loggedIn$.next(this.tokenService.hasValidToken());
+  // Quick synchronous update
+  this.loggedIn$.next(this.tokenService.hasValidToken());
     this.isShop$.next(this.isShop());
     this.isVerified$.next(this.isVerified());
+
+    // Also attempt an async refresh in background and update state afterwards
+    void (async () => {
+      const ok = await this.tokenService.hasValidTokenOrRefresh();
+      this.loggedIn$.next(ok);
+      this.isShop$.next(this.isShop());
+      this.isVerified$.next(this.isVerified());
+    })();
+  }
+
+  private async refreshLoginState(): Promise<void> {
+    try {
+      const ok = await this.tokenService.hasValidTokenOrRefresh();
+      this.loggedIn$.next(ok);
+      this.isShop$.next(this.isShop());
+      this.isVerified$.next(this.isVerified());
+    } catch (e) {
+      // ignore
+    }
   }
 
   isLoggedIn(): Observable<boolean> {
