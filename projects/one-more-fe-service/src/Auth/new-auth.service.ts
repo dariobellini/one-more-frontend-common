@@ -48,10 +48,10 @@ export class NewAuthService {
   constructor() {}
 
   setStatusUserVerified(): void {
-  this.loggedIn$.next(this.tokenService.hasValidToken());
-  this.isShop$.next(this.isShop());
-  this.isVerified$.next(this.isVerified());
-}
+    this.loggedIn$.next(this.tokenService.hasValidToken());
+    this.isShop$.next(this.isShop());
+    this.isVerified$.next(this.isVerified());
+  }
 
   isLoggedIn(): Observable<boolean> {
     return this.loggedIn$.asObservable();
@@ -96,7 +96,6 @@ export class NewAuthService {
     }
   }
 
-  
 
   GetUserJwt(uId: string): Observable<string> {
     return this.http.get(this.constants.BasePath() + '/auth/get-jwt?uId=' + uId, {
@@ -286,6 +285,17 @@ async reauthenticateBestEffort(): Promise<boolean> {
   async apiCheckHaveRequest(): Promise<CommonResDto> {
     return await firstValueFrom(
       this.http.get<CommonResDto>(this.constants.BasePath() + '/Auth/check-have-request')
+    );
+  }
+
+  async apiConfirmRequestStaff(shopId: number): Promise<CommonResDto> {
+  return await firstValueFrom(
+    this.http.post<CommonResDto>(`${this.constants.BasePath()}/Auth/confirm-request-staff`, {}, { params: { shopId: shopId.toString() }})
+  );
+}
+
+  async apiRejectRequestStaff(shopId: number): Promise<CommonResDto> {
+    return await firstValueFrom(this.http.post<CommonResDto>(`${this.constants.BasePath()}/Auth/reject-request-staff`, {}, { params: { shopId: shopId.toString() }})
     );
   }
 
