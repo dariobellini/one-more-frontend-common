@@ -69,6 +69,8 @@ export class NewAuthService {
       this.loggedIn$.next(ok);
       this.isShop$.next(this.isShop());
       this.isVerified$.next(this.isVerified());
+      this.canManagePromoSubject.next(this.canManagePromo());
+      this.canValidateCouponSubject.next(this.canValidateCoupon());
     })();
   }
 
@@ -439,7 +441,10 @@ async reauthenticateBestEffort(): Promise<boolean> {
     this.refreshInFlight$ = this.http
       .post<JwtResponseDto>(`${this.constants.BasePath()}/Auth/refresh-jwt`, { refreshToken })
       .pipe(
-        tap(async (jwt) => await this.tokenService.setToken(jwt)),
+        tap(async (jwt) => {
+          await this.tokenService.setToken(jwt);
+          this.setStatusUserVerified();
+        }),
         finalize(() => {
           this.refreshInFlight$ = null;
         }),

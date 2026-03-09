@@ -38,9 +38,9 @@ export class ShopApiService {
         return this.http.put<ShopUpdateResDto>(this.constants.BasePath() + '/shop/update', shopUpdateReqDto);
     }
 
-    List(): Observable<ShopListDto[]> {
+    List(isForPromo: boolean): Observable<ShopListDto[]> {
         console.log('Fetching shop list from API');
-        return this.http.get<ShopListDto[]>(this.constants.BasePath() + '/shop/list');
+        return this.http.get<ShopListDto[]>(this.constants.BasePath() + '/shop/list?isForPromo=' + isForPromo);
     }
 
     ListForStaff(): Observable<ShopListDto[]> {

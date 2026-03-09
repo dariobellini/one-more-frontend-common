@@ -58,8 +58,16 @@ export class PromoApiService {
         return this.http.put<PromoUpdateResDto>(this.constants.BasePath() + '/promo/update', promoUpdateReqDto);
     }
 
-    Delete(promoId:number): Observable<PromoDeleteResDto> {
-        return this.http.delete<PromoDeleteResDto>(this.constants.BasePath() + '/promo/delete?promoId=' + promoId);
+    Delete(promoId: number, shopId: number): Observable<PromoDeleteResDto> {
+        return this.http.delete<PromoDeleteResDto>(
+            this.constants.BasePath() + '/promo/delete',
+            {
+                params: {
+                    promoId: promoId,
+                    shopId: shopId
+                }
+            }
+        );
     }
 
     List(shopId:number, isForShop: boolean): Observable<PromoListResDto> {
