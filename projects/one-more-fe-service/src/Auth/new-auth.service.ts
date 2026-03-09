@@ -36,6 +36,8 @@ export class NewAuthService {
   private loggedIn$ = new BehaviorSubject<boolean>(this.tokenService.hasValidToken());
   private isVerified$ = new BehaviorSubject<boolean>(this.isVerified());
   private isShop$ = new BehaviorSubject<boolean>(this.isShop());
+  private canManagePromoSubject = new BehaviorSubject<boolean>(this.canManagePromo());
+  private canValidateCouponSubject = new BehaviorSubject<boolean>(this.canValidateCoupon());
   esito!: string;
   userSession!: UserSession | null;
   language: string | undefined;
@@ -44,7 +46,8 @@ export class NewAuthService {
   isReautenticated: boolean = false;
   idPage!: number;
   private refreshInFlight$: Observable<JwtResponseDto> | null = null;
-
+  canManagePromo$ = this.canManagePromoSubject.asObservable();
+  canValidateCoupon$ = this.canValidateCouponSubject.asObservable();
   constructor() {
     // Kick off an async refresh check on startup to update observables if needed.
     // Defer to next microtask to avoid change-detection timing issues during
@@ -57,6 +60,8 @@ export class NewAuthService {
   this.loggedIn$.next(this.tokenService.hasValidToken());
     this.isShop$.next(this.isShop());
     this.isVerified$.next(this.isVerified());
+    this.canManagePromoSubject.next(this.canManagePromo());
+    this.canValidateCouponSubject.next(this.canValidateCoupon());
 
     // Also attempt an async refresh in background and update state afterwards
     void (async () => {
@@ -374,6 +379,20 @@ async reauthenticateBestEffort(): Promise<boolean> {
   private isShop(): boolean {
     const roles = this.tokenService.getRolesFromToken();
     return roles.includes(Role[Role.shop]);
+  }
+
+  private canManagePromo(): boolean {
+    const roles = this.tokenService.getRolesFromToken();
+    return roles.includes(Role[Role.shop]) ||
+           roles.includes(Role[Role.staffPromo]) ||
+           roles.includes(Role[Role.staffBoth]);
+  }
+  
+  private canValidateCoupon(): boolean {
+    const roles = this.tokenService.getRolesFromToken();
+    return roles.includes(Role[Role.shop]) ||
+           roles.includes(Role[Role.staffValidator]) ||
+           roles.includes(Role[Role.staffBoth]);
   }
 
   //#endregion
