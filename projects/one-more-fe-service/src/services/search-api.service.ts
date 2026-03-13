@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Constants } from '../Constants';
 import { SearchItemDto } from '../EntityInterface/SearchItemDto';
@@ -11,7 +11,10 @@ import { GenericSearchReqDto } from '../Dtos/Requests/search/GenericSearchReqDto
 })
 
 export class SearchApiService {
-  constructor(private http: HttpClient, private constants: Constants) { }
+  http = inject(HttpClient);
+  constants = inject(Constants);
+
+  constructor() { }
 
   async PreSearch(input: string): Promise<Observable<SearchItemDto[]>> {
     return this.http.get<SearchItemDto[]>(this.constants.BasePath() + '/search/pre-search?input=' + input);

@@ -4,7 +4,7 @@ import { Constants } from "../Constants";
 import { Observable } from "rxjs";
 import { ShopListResDto } from "../Dtos/Responses/shops/ShopListResDto";
 import { PromoListResDto } from "../Dtos/Responses/promos/PromoListResDto";
-
+import { SearchResDto } from "../Dtos/Responses/search/SearchResDto";
 @Injectable({
     providedIn: 'root'
 })
@@ -17,8 +17,8 @@ export class HomeApiService {
     constructor() { }
 
 
-    PromosByType(promoTypeId: number): Observable<PromoListResDto> {
-        return this.http.get<PromoListResDto>(this.constants.BasePath() + '/home/promos-by-type?promoTypeId=' + promoTypeId);
+    PromosByType(promoTypeId: number): Observable<SearchResDto> {
+        return this.http.get<SearchResDto>(this.constants.BasePath() + '/home/promos-by-type?promoTypeId=' + promoTypeId);
     }
 
     PromosByCategory(promoCategoryId: number): Observable<PromoListResDto> {

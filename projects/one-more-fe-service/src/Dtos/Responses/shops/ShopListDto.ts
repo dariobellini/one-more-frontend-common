@@ -11,6 +11,7 @@ export interface ShopListDto {
     detail: ShopDetailDto;
     address: AddressDto;
     photo: PhotoDto;
+    distance?: number;
     isPromoPresente: boolean;
     staff: ShopStaffDto;
     status?: ShopVisibilityStatus;
