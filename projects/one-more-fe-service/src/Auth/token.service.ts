@@ -36,8 +36,7 @@ export class TokenService {
     }
 
     async setToken(jwt: JwtResponseDto) {
-        // this.tokenChanged.emit(jwt.jwt);
-        await void this.tokenStorage.setTokens(jwt.jwt, jwt.refreshToken);
+        await this.tokenStorage.setTokens(jwt.jwt, jwt.refreshToken);
     }
 
     async clearToken(): Promise<void> {
