@@ -21,12 +21,12 @@ export class HomeApiService {
         return this.http.get<SearchResDto>(this.constants.BasePath() + '/home/promos-by-type?promoTypeId=' + promoTypeId);
     }
 
-    PromosByCategory(promoCategoryId: number): Observable<PromoListResDto> {
-        return this.http.get<PromoListResDto>(this.constants.BasePath() + '/home/promos-by-category?promoCategoryId=' + promoCategoryId);
+    ShopsByType(ShopTypeId: number): Observable<SearchResDto> {
+        return this.http.get<SearchResDto>(this.constants.BasePath() + '/home/shops-by-type?shopTypeId=' + ShopTypeId);
     }
 
-    ShopsByType(promoTypeId: number): Observable<ShopListResDto> {
-        return this.http.get<ShopListResDto>(this.constants.BasePath() + '/home/shops-by-type?promoTypeId=' + promoTypeId);
+    PromosByCategory(promoCategoryId: number): Observable<PromoListResDto> {
+        return this.http.get<PromoListResDto>(this.constants.BasePath() + '/home/promos-by-category?promoCategoryId=' + promoCategoryId);
     }
 
     ShopsByCategory(promoCategoryId: number): Observable<ShopListResDto> {
