@@ -22,8 +22,6 @@ export class MapsApiService {
 
   GetInBounds(swLat: number, swLng: number, neLat: number, neLng: number): Observable<MapResDto> {
     const params = {
-      latitude: '0', // non usato quando ci sono i bounds, ma il param è richiesto
-      longitude: '0',
       swLat: swLat.toString(),
       swLng: swLng.toString(),
       neLat: neLat.toString(),
