@@ -220,7 +220,6 @@ export class NewAuthService {
 
   async getEmail(): Promise<string | null> {
     const user = await this.getCurrentUserFromAuth();
-    console.log('Current user:', user);
     return user?.email || null;
   }
 

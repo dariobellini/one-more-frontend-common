@@ -39,7 +39,6 @@ export class ShopApiService {
     }
 
     List(isForPromo: boolean): Observable<ShopListDto[]> {
-        console.log('Fetching shop list from API');
         return this.http.get<ShopListDto[]>(this.constants.BasePath() + '/shop/list?isForPromo=' + isForPromo);
     }
 
