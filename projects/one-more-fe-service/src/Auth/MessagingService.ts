@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Constants } from '../Constants';
 import { environment } from '../../../../../src/environments/environment';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -26,11 +27,20 @@ export class MessagingService {
     } else {
       // ── Web browser ──
       try {
+        // ✅ Verifica che il browser supporti i Service Worker
+        if (!('serviceWorker' in navigator)) {
+          console.warn('Service Worker non supportato');
+          return null;
+        }
+      
+        // ✅ Attendi che il service worker sia pronto
+        await navigator.serviceWorker.ready;
+      
         const { receive } = await FirebaseMessaging.requestPermissions();
         if (receive !== 'granted') return null;
-
+      
         const { token } = await FirebaseMessaging.getToken({
-          vapidKey: environment.vapidKey  
+          vapidKey: environment.vapidKey
         });
         return token ?? null;
       } catch (e) {
