@@ -167,8 +167,10 @@ export class NewAuthService {
     });
   }
 
-  private UsernamePasswordLogin(idToken: string): Observable<JwtResponseDto> {
-    return this.http.get<JwtResponseDto>(this.constants.BasePath() + '/auth/username-password-login?idToken=' + idToken);
+  private UsernamePasswordLogin(idToken: string, fcmToken?: string): Observable<JwtResponseDto> {
+    let url = this.constants.BasePath() + '/auth/username-password-login?idToken=' + idToken;
+    if (fcmToken) url += '&fcmToken=' + encodeURIComponent(fcmToken);
+    return this.http.get<JwtResponseDto>(url);
   }
 
   signUp(req: SignUpReqDto): Observable<CommonResDto> {
@@ -223,10 +225,10 @@ export class NewAuthService {
     return user?.email || null;
   }
 
-  async login(email: string, password: string): Promise<JwtResponseDto | undefined> {
+  async login(email: string, password: string, fcmToken?: string): Promise<JwtResponseDto | undefined> {
     const userCredential = await signInWithEmailAndPassword(this.firebaseAuth, email, password);
     const token = await userCredential.user.getIdToken();
-    const readealJwt = await firstValueFrom(this.UsernamePasswordLogin(token));
+    const readealJwt = await firstValueFrom(this.UsernamePasswordLogin(token, fcmToken)); // ← passa fcmToken
 
     if (readealJwt) {
       await this.tokenService.setToken(readealJwt);
@@ -399,8 +401,7 @@ async reauthenticateBestEffort(): Promise<boolean> {
   //#endregion
 
 
-  async ServiceLogIn(userType: number): Promise<JwtResponseDto | undefined> {
-
+  async ServiceLogIn(userType: number, fcmToken?: string): Promise<JwtResponseDto | undefined> {
     let chosenProvider;
     if (userType === 2) {
       chosenProvider = this.googleProvider;
@@ -409,20 +410,17 @@ async reauthenticateBestEffort(): Promise<boolean> {
     } else {
       throw new Error('Provider non gestito!');
     }
-
+  
     const userCredential = await signInWithPopup(this.firebaseAuth, chosenProvider);
-
     const idToken = await userCredential.user.getIdToken();
-
-    const readealJwt = await firstValueFrom(this.apiServiceLogin(idToken, userType));
-
+    const readealJwt = await firstValueFrom(this.apiServiceLogin(idToken, userType, fcmToken)); // ← passa fcmToken
+  
     if (readealJwt) {
       await this.tokenService.setToken(readealJwt);
       this.setStatusUserVerified();
       await this.favoritesApiService.Favorite();
     }
-
-
+  
     return Promise.resolve(readealJwt);
   }
 
@@ -462,8 +460,9 @@ async reauthenticateBestEffort(): Promise<boolean> {
     return this.http.post<CommonResDto>(`${this.constants.BasePath()}/Auth/logout`, { refreshToken });
   }
 
-  private apiServiceLogin(idToken: string, userType: number): Observable<JwtResponseDto> {
-    const url = `${this.constants.BasePath()}/auth/service-login?idToken=${idToken}&userType=${userType}`;
+  private apiServiceLogin(idToken: string, userType: number, fcmToken?: string): Observable<JwtResponseDto> {
+    let url = `${this.constants.BasePath()}/auth/service-login?idToken=${idToken}&userType=${userType}`;
+    if (fcmToken) url += `&fcmToken=${encodeURIComponent(fcmToken)}`;
     return this.http.get<JwtResponseDto>(url);
   }
 
