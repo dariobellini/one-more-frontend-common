@@ -1,13 +1,13 @@
 import { inject, Injectable } from '@angular/core';
 import { EmailAuthProvider, FacebookAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, User, UserCredential } from 'firebase/auth';
 import { Auth, authState, signOut } from '@angular/fire/auth';
-import { BehaviorSubject, filter, finalize, firstValueFrom, Observable, shareReplay, tap, throwError } from 'rxjs';
+import { BehaviorSubject, filter, finalize, firstValueFrom, from, Observable, shareReplay, tap, throwError } from 'rxjs';
 import { Constants } from '../Constants';
 import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
 import { Role } from '../Enum/Role';
 import { DeleteUtente, UserSession } from '../EntityInterface/Utente';
 import { Firestore } from '@angular/fire/firestore';
-import { map, distinctUntilChanged, take } from 'rxjs/operators';
+import { map, distinctUntilChanged, take, switchMap } from 'rxjs/operators';
 import { ShopListDto } from '../Dtos/Responses/shops/ShopListDto'; 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { TokenService } from './token.service';
@@ -15,7 +15,7 @@ import { FavoritesApiService } from '../services/favorites-api.service';
 import { CommonResDto } from '../Dtos/Responses/CommonResDto';
 import { SignUpReqDto } from '../Dtos/Requests/auth/SignUpReqDto';
 import { CacheServiceV2 } from '../public-api';
-
+import { NotificationService} from '../../../../../src/app/services/notification.service';
 @Injectable({
   providedIn: 'root'
 })
@@ -28,6 +28,7 @@ export class NewAuthService {
   http = inject(HttpClient);
   tokenService = inject(TokenService);
   favoritesApiService = inject(FavoritesApiService);
+  notificationService = inject(NotificationService);
   cache = inject(CacheServiceV2);
   private readonly shopsSubject = new BehaviorSubject<ShopListDto[] | null>(null);
   shops$: Observable<ShopListDto[] | null> = this.shopsSubject.asObservable();
@@ -453,11 +454,20 @@ async reauthenticateBestEffort(): Promise<boolean> {
 
   logoutApi(): Observable<CommonResDto> {
     const refreshToken = this.tokenService.getRefreshToken();
+    
     if (!refreshToken) {
       return throwError(() => new Error('Refresh token not found'));
     }
 
-    return this.http.post<CommonResDto>(`${this.constants.BasePath()}/Auth/logout`, { refreshToken });
+    // from() trasforma la Promise del token in un Observable
+    return from(this.notificationService.requestPermissionAndGetToken()).pipe(
+      switchMap(fcmToken => {
+        return this.http.post<CommonResDto>(
+          `${this.constants.BasePath()}/Auth/logout`, 
+          { refreshToken, fcmToken }
+        );
+      })
+    );
   }
 
   private apiServiceLogin(idToken: string, userType: number, fcmToken?: string): Observable<JwtResponseDto> {
