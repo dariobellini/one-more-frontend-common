@@ -61,7 +61,6 @@ export class TokenService {
             };
             return jwt;
         } catch (error) {
-            console.error("Errore nella decodifica JWT:", error);
             return null;
         }
     }
