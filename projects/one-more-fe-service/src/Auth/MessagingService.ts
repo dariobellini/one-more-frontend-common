@@ -15,14 +15,4 @@ export class MessagingService {
     const url = `${this.constants.BasePath()}/user/update-fcm-token`;
     return firstValueFrom(this.http.put<void>(url, { fcmToken: token }));
   }
-
-  apiTestPush(title: string, message: string): Observable<any> {
-  const url = `${this.constants.BasePath()}/user/test-push`;
-  return this.http.post(url, {}, {
-    params: {
-      title: title,
-      message: message
-    }
-  });
-}
 }
