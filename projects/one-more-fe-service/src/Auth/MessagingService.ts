@@ -15,4 +15,9 @@ export class MessagingService {
     const url = `${this.constants.BasePath()}/user/update-fcm-token`;
     return firstValueFrom(this.http.put<void>(url, { fcmToken: token }));
   }
+
+  async deleteSpecificToken(token: string): Promise<void> {
+    const url = `${this.constants.BasePath()}/user/delete-fcm-token`;
+    return firstValueFrom(this.http.put<void>(url, { fcmToken: token }));
+  }
 }

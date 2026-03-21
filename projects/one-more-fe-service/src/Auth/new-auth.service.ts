@@ -16,6 +16,7 @@ import { CommonResDto } from '../Dtos/Responses/CommonResDto';
 import { SignUpReqDto } from '../Dtos/Requests/auth/SignUpReqDto';
 import { CacheServiceV2 } from '../public-api';
 import { NotificationService} from '../../../../../src/app/services/notification.service';
+import { Preferences } from '@capacitor/preferences';
 @Injectable({
   providedIn: 'root'
 })
@@ -140,7 +141,8 @@ export class NewAuthService {
   this.isShop$.next(false);
   this.isVerified$.next(false);
   this.clearShops();
-
+  await Preferences.remove({ key: 'last_fcm_token_sent' });
+  await this.cache.remove('fcm_token_temp', { category: 'auth' });
   // best effort: può fallire se refresh token mancante o già revocato
     try {
       await firstValueFrom(this.logoutApi());
