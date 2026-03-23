@@ -42,7 +42,6 @@ export class NewAuthService {
   private canValidateCouponSubject = new BehaviorSubject<boolean>(this.canValidateCoupon());
   esito!: string;
   userSession!: UserSession | null;
-  language: string | undefined;
   position !: GeolocationPosition;
   utente!: DeleteUtente;
   isReautenticated: boolean = false;
@@ -172,7 +171,6 @@ export class NewAuthService {
 
   private UsernamePasswordLogin(idToken: string, fcmToken?: string): Observable<JwtResponseDto> {
     let url = this.constants.BasePath() + '/auth/username-password-login?idToken=' + idToken;
-    if (fcmToken) url += '&fcmToken=' + encodeURIComponent(fcmToken);
     return this.http.get<JwtResponseDto>(url);
   }
 
@@ -474,7 +472,6 @@ async reauthenticateBestEffort(): Promise<boolean> {
 
   private apiServiceLogin(idToken: string, userType: number, fcmToken?: string): Observable<JwtResponseDto> {
     let url = `${this.constants.BasePath()}/auth/service-login?idToken=${idToken}&userType=${userType}`;
-    if (fcmToken) url += `&fcmToken=${encodeURIComponent(fcmToken)}`;
     return this.http.get<JwtResponseDto>(url);
   }
 
