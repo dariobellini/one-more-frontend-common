@@ -55,7 +55,6 @@ export class TokenService {
                 roles: Array.isArray(decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"])
                     ? decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]
                     : [decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]].filter(Boolean),
-                isVerified: decoded["is-verified"] === "true" || decoded["is-verified"] === true || decoded["is-verified"] === "True",
                 idSoggetto: decoded["id-soggetto"]
                 //idAttivitaList: idAttivitaList.map(num => parseInt(num.trim(), 10))
             };

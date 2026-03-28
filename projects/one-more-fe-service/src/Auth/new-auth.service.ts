@@ -370,16 +370,9 @@ async reauthenticateBestEffort(): Promise<boolean> {
   private isVerified(): boolean {
     const token = this.tokenService.getToken();
     if (!token) return false;
-
-    try {
-      const decoded = this.tokenService.getDecodedToken(token);
-      if (decoded?.isVerified) return decoded.isVerified;
-      else return false;
-
-    } catch {
-      return false;
-    }
+        return true;
   }
+
   private isShop(): boolean {
     const roles = this.tokenService.getRolesFromToken();
     return roles.includes(Role[Role.shop]);
