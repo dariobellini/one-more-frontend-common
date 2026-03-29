@@ -10,20 +10,15 @@ export class TokenStorageService {
   private constants = inject(Constants);
   private initialized = false;
   private jwtToken: string | null = null;
-  private refreshToken: string | null = null;
 
   async init(): Promise<void> {
     if (this.initialized) {
       return;
     }
 
-    const [jwtResult, refreshResult] = await Promise.all([
-      Preferences.get({ key: this.constants.UserApiJwt() }),
-      Preferences.get({ key: this.constants.UserApiRefreshToken() })
-    ]);
+    const jwtResult = await Preferences.get({ key: this.constants.UserApiJwt() });
 
     this.jwtToken = jwtResult.value;
-    this.refreshToken = refreshResult.value;
     this.initialized = true;
   }
 
@@ -31,26 +26,23 @@ export class TokenStorageService {
     return this.jwtToken;
   }
 
+  /** @deprecated Il refresh token è ora gestito tramite cookie HttpOnly. Restituisce sempre null. */
   getRefreshTokenSync(): string | null {
-    return this.refreshToken;
+    return null;
   }
 
-  async setTokens(jwt: string, refreshToken: string): Promise<void> {
+  async setTokens(jwt: string, refreshToken: string | null): Promise<void> {
     this.jwtToken = jwt;
-    this.refreshToken = refreshToken;
 
-    await Promise.all([
-      Preferences.set({ key: this.constants.UserApiJwt(), value: jwt }),
-      Preferences.set({ key: this.constants.UserApiRefreshToken(), value: refreshToken })
-    ]);
+    await Preferences.set({ key: this.constants.UserApiJwt(), value: jwt });
   }
 
   async clearTokens(): Promise<void> {
     this.jwtToken = null;
-    this.refreshToken = null;
 
     await Promise.all([
       Preferences.remove({ key: this.constants.UserApiJwt() }),
+      // Rimuove anche l'eventuale refresh token salvato da versioni precedenti
       Preferences.remove({ key: this.constants.UserApiRefreshToken() })
     ]);
   }

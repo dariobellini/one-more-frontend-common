@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { EmailAuthProvider, FacebookAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, User, UserCredential } from 'firebase/auth';
 import { Auth, authState, signOut } from '@angular/fire/auth';
-import { BehaviorSubject, filter, finalize, firstValueFrom, from, Observable, shareReplay, tap, throwError } from 'rxjs';
+import { BehaviorSubject, filter, finalize, firstValueFrom, from, Observable, shareReplay, tap } from 'rxjs';
 import { Constants } from '../Constants';
 import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
 import { Role } from '../Enum/Role';
@@ -102,14 +102,9 @@ export class NewAuthService {
       // fallthrough to refresh
     }
 
-    const refreshToken = this.tokenService.getRefreshToken();
-    if (!refreshToken) {
-      await this.tokenService.clearToken();
-      return false;
-    }
-
     try {
       // reuse existing refreshJwt which deduplicates concurrent calls
+      // Il refresh token arriva automaticamente via cookie HttpOnly
       const jwt = await firstValueFrom(this.refreshJwt());
       return !!(jwt && jwt.jwt);
     } catch (err) {
@@ -423,14 +418,9 @@ async reauthenticateBestEffort(): Promise<boolean> {
       return this.refreshInFlight$;
     }
 
-    const refreshToken = this.tokenService.getRefreshToken();
-
-    if (!refreshToken) {
-      return throwError(() => new Error('Refresh token not found'));
-    }
-
+    // Il refresh token viaggia automaticamente via cookie HttpOnly (withCredentials gestito dall'interceptor)
     this.refreshInFlight$ = this.http
-      .post<JwtResponseDto>(`${this.constants.BasePath()}/Auth/refresh-jwt`, { refreshToken })
+      .post<JwtResponseDto>(`${this.constants.BasePath()}/Auth/refresh-jwt`, {})
       .pipe(
         tap(async (jwt) => {
           await this.tokenService.setToken(jwt);
@@ -446,18 +436,12 @@ async reauthenticateBestEffort(): Promise<boolean> {
   }
 
   logoutApi(): Observable<CommonResDto> {
-    const refreshToken = this.tokenService.getRefreshToken();
-    
-    if (!refreshToken) {
-      return throwError(() => new Error('Refresh token not found'));
-    }
-
-    // from() trasforma la Promise del token in un Observable
+    // Il refresh token viaggia via cookie HttpOnly; inviamo solo il fcmToken nel body
     return from(this.notificationService.requestPermissionAndGetToken()).pipe(
       switchMap(fcmToken => {
         return this.http.post<CommonResDto>(
-          `${this.constants.BasePath()}/Auth/logout`, 
-          { refreshToken, fcmToken }
+          `${this.constants.BasePath()}/Auth/logout`,
+          { fcmToken }
         );
       })
     );
