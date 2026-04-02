@@ -1,21 +1,21 @@
 import { inject, Injectable } from '@angular/core';
 import { EmailAuthProvider, FacebookAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, User, UserCredential } from 'firebase/auth';
 import { Auth, authState, signOut } from '@angular/fire/auth';
-import { BehaviorSubject, filter, finalize, firstValueFrom, from, Observable, shareReplay, tap } from 'rxjs';
+import { BehaviorSubject, filter, finalize, firstValueFrom, from, lastValueFrom, Observable, shareReplay, tap, throwError } from 'rxjs';
 import { Constants } from '../Constants';
 import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
 import { Role } from '../Enum/Role';
 import { DeleteUtente, UserSession } from '../EntityInterface/Utente';
 import { Firestore } from '@angular/fire/firestore';
-import { map, distinctUntilChanged, take, switchMap } from 'rxjs/operators';
-import { ShopListDto } from '../Dtos/Responses/shops/ShopListDto'; 
+import { map, distinctUntilChanged, take, switchMap, catchError } from 'rxjs/operators';
+import { ShopListDto } from '../Dtos/Responses/shops/ShopListDto';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { TokenService } from './token.service';
 import { FavoritesApiService } from '../services/favorites-api.service';
 import { CommonResDto } from '../Dtos/Responses/CommonResDto';
 import { SignUpReqDto } from '../Dtos/Requests/auth/SignUpReqDto';
 import { CacheServiceV2 } from '../public-api';
-import { NotificationService} from '../../../../../src/app/services/notification.service';
+import { NotificationService } from '../../../../../src/app/services/notification.service';
 import { Preferences } from '@capacitor/preferences';
 @Injectable({
   providedIn: 'root'
@@ -57,8 +57,8 @@ export class NewAuthService {
   }
 
   setStatusUserVerified(): void {
-  // Quick synchronous update
-  this.loggedIn$.next(this.tokenService.hasValidToken());
+    // Quick synchronous update
+    this.loggedIn$.next(this.tokenService.hasValidToken());
     this.isShop$.next(this.isShop());
     this.isVerified$.next(this.isVerified());
     this.canManagePromoSubject.next(this.canManagePromo());
@@ -102,6 +102,11 @@ export class NewAuthService {
       // fallthrough to refresh
     }
 
+    const refreshToken = this.tokenService.getRefreshToken();
+    if (!refreshToken) {
+      await this.tokenService.clearToken();
+      return false;
+    }
     try {
       // reuse existing refreshJwt which deduplicates concurrent calls
       // Il refresh token arriva automaticamente via cookie HttpOnly
@@ -114,6 +119,7 @@ export class NewAuthService {
   }
 
   isLoggedIn(): Observable<boolean> {
+
     return this.loggedIn$.asObservable();
   }
 
@@ -130,14 +136,14 @@ export class NewAuthService {
   }
 
   async logOut(): Promise<void> {
-  // aggiorna stati osservabili
-  this.loggedIn$.next(false);
-  this.isShop$.next(false);
-  this.isVerified$.next(false);
-  this.clearShops();
-  await Preferences.remove({ key: 'last_fcm_token_sent' });
-  await this.cache.remove('fcm_token_temp', { category: 'auth' });
-  // best effort: può fallire se refresh token mancante o già revocato
+    // aggiorna stati osservabili
+    this.loggedIn$.next(false);
+    this.isShop$.next(false);
+    this.isVerified$.next(false);
+    this.clearShops();
+    await Preferences.remove({ key: 'last_fcm_token_sent' });
+    await this.cache.remove('fcm_token_temp', { category: 'auth' });
+    // best effort: può fallire se refresh token mancante o già revocato
     try {
       await firstValueFrom(this.logoutApi());
     } catch (e) {
@@ -177,39 +183,39 @@ export class NewAuthService {
   }
 
   async checkEmailVerification(): Promise<boolean> {
-      const user = await firstValueFrom(
+    const user = await firstValueFrom(
       authState(this.firebaseAuth).pipe(
         filter(u => u !== null), // aspetta che Firebase ripristini l'utente
         take(1)
       )
     );
-  
+
     if (!user.providerData || user.providerData.length === 0) return false;
-  
+
     const isPasswordProvider =
       user.providerData.length === 1 &&
       user.providerData[0].providerId === 'password';
-  
+
     if (isPasswordProvider) {
       await user.reload();              // ✅ prende emailVerified aggiornato
       return user.emailVerified === true;
     }
-  
+
     return true;
   }
 
   async checkProviderLogin(): Promise<string> {
 
     const user = await this.getCurrentUserFromAuth();
-    
-    if(user){
-      if(user && user.providerData.length == 0) 
+
+    if (user) {
+      if (user && user.providerData.length == 0)
         return '';
-      if(user.providerData.length == 1 && user.providerData[0].providerId == "password")
+      if (user.providerData.length == 1 && user.providerData[0].providerId == "password")
         return user.email ?? '';
-      else if(user.providerData.some(p => p.providerId === 'google.com'))
+      else if (user.providerData.some(p => p.providerId === 'google.com'))
         return 'google.com';
-      else if(user.providerData.some(p => p.providerId === 'facebook.com'))
+      else if (user.providerData.some(p => p.providerId === 'facebook.com'))
         return 'facebook.com';
     }
     else return '';
@@ -227,7 +233,7 @@ export class NewAuthService {
     const readealJwt = await firstValueFrom(this.UsernamePasswordLogin(token, fcmToken)); // ← passa fcmToken
 
     if (readealJwt) {
-      await this.tokenService.setToken(readealJwt);
+      await this.tokenService.setToken(readealJwt.jwt);
       this.setStatusUserVerified();
       await this.favoritesApiService.Favorite();
       await this.initFromCache();
@@ -241,81 +247,81 @@ export class NewAuthService {
   }
 
   async reauthenticateWithPassword(userEmail: string, userPassword: string): Promise<boolean> {
-  const user = this.firebaseAuth.currentUser;
-  if (!user) return false;
+    const user = this.firebaseAuth.currentUser;
+    if (!user) return false;
 
-  await user.reload();
+    await user.reload();
 
-  try {
-    const credential = EmailAuthProvider.credential(userEmail, userPassword);
-    await reauthenticateWithCredential(user, credential);
-    return true;
-  } catch (error) {
-    console.error('Errore reauth password:', error);
+    try {
+      const credential = EmailAuthProvider.credential(userEmail, userPassword);
+      await reauthenticateWithCredential(user, credential);
+      return true;
+    } catch (error) {
+      console.error('Errore reauth password:', error);
+      return false;
+    }
+  }
+
+  async reauthenticateWithGooglePopup(): Promise<boolean> {
+    const user = this.firebaseAuth.currentUser;
+    if (!user) return false;
+
+    await user.reload();
+
+    try {
+      const provider = new GoogleAuthProvider();
+      await reauthenticateWithPopup(user, provider);
+      return true;
+    } catch (error) {
+      console.error('Errore reauth google:', error);
+      return false;
+    }
+  }
+
+  async reauthenticateWithFacebookPopup(): Promise<boolean> {
+    const user = this.firebaseAuth.currentUser;
+    if (!user) return false;
+
+    await user.reload();
+
+    try {
+      const provider = new FacebookAuthProvider();
+      await reauthenticateWithPopup(user, provider);
+      return true;
+    } catch (error) {
+      console.error('Errore reauth facebook:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Fallback: se typeLog non c’è o non torna, prova dai providerId di Firebase.
+   * Se è password, non può chiedere qui la password -> ritorna false.
+   */
+  async reauthenticateBestEffort(): Promise<boolean> {
+    const user = this.firebaseAuth.currentUser;
+    if (!user) return false;
+
+    await user.reload();
+
+    const providerIds = (user.providerData ?? []).map(p => p.providerId);
+
+    if (providerIds.includes('google.com')) {
+      return this.reauthenticateWithGooglePopup();
+    }
+
+    if (providerIds.includes('facebook.com')) {
+      return this.reauthenticateWithFacebookPopup();
+    }
+
+    if (providerIds.includes('password')) {
+      return false;
+    }
+
     return false;
   }
-}
 
-async reauthenticateWithGooglePopup(): Promise<boolean> {
-  const user = this.firebaseAuth.currentUser;
-  if (!user) return false;
-
-  await user.reload();
-
-  try {
-    const provider = new GoogleAuthProvider();
-    await reauthenticateWithPopup(user, provider);
-    return true;
-  } catch (error) {
-    console.error('Errore reauth google:', error);
-    return false;
-  }
-}
-
-async reauthenticateWithFacebookPopup(): Promise<boolean> {
-  const user = this.firebaseAuth.currentUser;
-  if (!user) return false;
-
-  await user.reload();
-
-  try {
-    const provider = new FacebookAuthProvider();
-    await reauthenticateWithPopup(user, provider);
-    return true;
-  } catch (error) {
-    console.error('Errore reauth facebook:', error);
-    return false;
-  }
-}
-
-/**
- * Fallback: se typeLog non c’è o non torna, prova dai providerId di Firebase.
- * Se è password, non può chiedere qui la password -> ritorna false.
- */
-async reauthenticateBestEffort(): Promise<boolean> {
-  const user = this.firebaseAuth.currentUser;
-  if (!user) return false;
-
-  await user.reload();
-
-  const providerIds = (user.providerData ?? []).map(p => p.providerId);
-
-  if (providerIds.includes('google.com')) {
-    return this.reauthenticateWithGooglePopup();
-  }
-
-  if (providerIds.includes('facebook.com')) {
-    return this.reauthenticateWithFacebookPopup();
-  }
-
-  if (providerIds.includes('password')) {
-    return false;
-  }
-
-  return false;
-}
-
- async initFromCache(): Promise<void> {
+  async initFromCache(): Promise<void> {
     const cached = await this.cache.get<ShopListDto[]>(
       'user_shops',
       { category: 'api-cache' }
@@ -350,13 +356,13 @@ async reauthenticateBestEffort(): Promise<boolean> {
   }
 
   async apiConfirmRequestStaff(shopId: number): Promise<CommonResDto> {
-  return await firstValueFrom(
-    this.http.post<CommonResDto>(`${this.constants.BasePath()}/Auth/confirm-request-staff`, {}, { params: { shopId: shopId.toString() }})
-  );
-}
+    return await firstValueFrom(
+      this.http.post<CommonResDto>(`${this.constants.BasePath()}/Auth/confirm-request-staff`, {}, { params: { shopId: shopId.toString() } })
+    );
+  }
 
   async apiRejectRequestStaff(shopId: number): Promise<CommonResDto> {
-    return await firstValueFrom(this.http.post<CommonResDto>(`${this.constants.BasePath()}/Auth/reject-request-staff`, {}, { params: { shopId: shopId.toString() }})
+    return await firstValueFrom(this.http.post<CommonResDto>(`${this.constants.BasePath()}/Auth/reject-request-staff`, {}, { params: { shopId: shopId.toString() } })
     );
   }
 
@@ -365,7 +371,7 @@ async reauthenticateBestEffort(): Promise<boolean> {
   private isVerified(): boolean {
     const token = this.tokenService.getToken();
     if (!token) return false;
-        return true;
+    return true;
   }
 
   private isShop(): boolean {
@@ -376,21 +382,21 @@ async reauthenticateBestEffort(): Promise<boolean> {
   private canManagePromo(): boolean {
     const roles = this.tokenService.getRolesFromToken();
     return roles.includes(Role[Role.shop]) ||
-           roles.includes(Role[Role.staffPromo]) ||
-           roles.includes(Role[Role.staffBoth]);
+      roles.includes(Role[Role.staffPromo]) ||
+      roles.includes(Role[Role.staffBoth]);
   }
-  
+
   private canValidateCoupon(): boolean {
     const roles = this.tokenService.getRolesFromToken();
     return roles.includes(Role[Role.shop]) ||
-           roles.includes(Role[Role.staffValidator]) ||
-           roles.includes(Role[Role.staffBoth]);
+      roles.includes(Role[Role.staffValidator]) ||
+      roles.includes(Role[Role.staffBoth]);
   }
 
   //#endregion
 
 
-  async ServiceLogIn(userType: number, fcmToken?: string): Promise<JwtResponseDto | undefined> {
+  async ServiceLogIn(userType: number, fcmToken?: string){
     let chosenProvider;
     if (userType === 2) {
       chosenProvider = this.googleProvider;
@@ -399,18 +405,16 @@ async reauthenticateBestEffort(): Promise<boolean> {
     } else {
       throw new Error('Provider non gestito!');
     }
-  
+
     const userCredential = await signInWithPopup(this.firebaseAuth, chosenProvider);
     const idToken = await userCredential.user.getIdToken();
-    const readealJwt = await firstValueFrom(this.apiServiceLogin(idToken, userType, fcmToken)); // ← passa fcmToken
-  
-    if (readealJwt) {
-      await this.tokenService.setToken(readealJwt);
-      this.setStatusUserVerified();
-      await this.favoritesApiService.Favorite();
-    }
-  
-    return Promise.resolve(readealJwt);
+    await lastValueFrom(this.apiServiceLogin(idToken, userType));
+
+    const finalToken = await userCredential.user.getIdToken(true);
+
+    await this.tokenService.setToken(finalToken);
+    this.setStatusUserVerified();
+    await this.favoritesApiService.Favorite();
   }
 
   refreshJwt(): Observable<JwtResponseDto> {
@@ -418,12 +422,17 @@ async reauthenticateBestEffort(): Promise<boolean> {
       return this.refreshInFlight$;
     }
 
-    // Il refresh token viaggia automaticamente via cookie HttpOnly (withCredentials gestito dall'interceptor)
+    const refreshToken = this.tokenService.getRefreshToken();
+
+    if (!refreshToken) {
+      return throwError(() => new Error('Refresh token not found'));
+    }
+
     this.refreshInFlight$ = this.http
-      .post<JwtResponseDto>(`${this.constants.BasePath()}/Auth/refresh-jwt`, {})
+      .post<JwtResponseDto>(`${this.constants.BasePath()}/Auth/refresh-jwt`, { refreshToken })
       .pipe(
         tap(async (jwt) => {
-          await this.tokenService.setToken(jwt);
+          await this.tokenService.setToken(jwt.jwt);
           this.setStatusUserVerified();
         }),
         finalize(() => {
@@ -447,14 +456,28 @@ async reauthenticateBestEffort(): Promise<boolean> {
     );
   }
 
-  private apiServiceLogin(idToken: string, userType: number, fcmToken?: string): Observable<JwtResponseDto> {
+  private apiServiceLogin(idToken: string, userType: number): Observable<any> {
     let url = `${this.constants.BasePath()}/auth/service-login?idToken=${idToken}&userType=${userType}`;
-    return this.http.get<JwtResponseDto>(url);
-  }
 
+    return this.http.get(url).pipe(
+      tap(response => {
+        // Se arriva qui, lo stato è 2xx (Successo)
+        console.log('Login effettuato con successo');
+      }),
+      catchError(error => {
+        // Qui gestisci gli stati di errore
+        if (error.status === 401) {
+          console.error('Token non valido o scaduto');
+        } else if (error.status === 403) {
+          console.error('Non hai i permessi necessari');
+        }
+        return throwError(() => error);
+      })
+    );
+  }
   Delete(idReason: number): Observable<CommonResDto> {
-      const params = new HttpParams()
-        .set('idReason', idReason);
-      return this.http.delete<CommonResDto>(this.constants.BasePath() + '/auth/delete', { params });
+    const params = new HttpParams()
+      .set('idReason', idReason);
+    return this.http.delete<CommonResDto>(this.constants.BasePath() + '/auth/delete', { params });
   }
 }
