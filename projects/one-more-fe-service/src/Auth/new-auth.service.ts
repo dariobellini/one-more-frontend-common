@@ -1,15 +1,18 @@
 import { inject, Injectable } from '@angular/core';
-import { EmailAuthProvider, FacebookAuthProvider, GoogleAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, User, UserCredential } from 'firebase/auth';
-import { Auth, authState, signOut } from '@angular/fire/auth';
-import { BehaviorSubject, filter, finalize, firstValueFrom, from, lastValueFrom, Observable, shareReplay, tap, throwError } from 'rxjs';
-import { Constants } from '../Constants';
-import { JwtResponseDto } from '../EntityInterface/JwtResponseDto';
-import { Role } from '../Enum/Role';
-import { DeleteUtente, UserSession } from '../EntityInterface/Utente';
-import { Firestore } from '@angular/fire/firestore';
-import { map, distinctUntilChanged, take, switchMap, catchError } from 'rxjs/operators';
-import { ShopListDto } from '../Dtos/Responses/shops/ShopListDto';
+import { 
+  EmailAuthProvider, FacebookAuthProvider, GoogleAuthProvider, 
+  reauthenticateWithCredential, reauthenticateWithPopup, 
+  sendPasswordResetEmail, signInWithEmailAndPassword, 
+  signInWithPopup, User, signOut, getIdToken 
+} from 'firebase/auth';
+import { Auth, authState } from '@angular/fire/auth';
+import { BehaviorSubject, filter, firstValueFrom, from, Observable } from 'rxjs';
+import { map, distinctUntilChanged, take, switchMap } from 'rxjs/operators';
 import { HttpClient, HttpParams } from '@angular/common/http';
+
+import { Constants } from '../Constants';
+import { Role } from '../Enum/Role';
+import { ShopListDto } from '../Dtos/Responses/shops/ShopListDto';
 import { TokenService } from './token.service';
 import { FavoritesApiService } from '../services/favorites-api.service';
 import { CommonResDto } from '../Dtos/Responses/CommonResDto';
@@ -17,191 +20,152 @@ import { SignUpReqDto } from '../Dtos/Requests/auth/SignUpReqDto';
 import { CacheServiceV2 } from '../public-api';
 import { NotificationService } from '../../../../../src/app/services/notification.service';
 import { Preferences } from '@capacitor/preferences';
-@Injectable({
-  providedIn: 'root'
-})
 
+@Injectable({ providedIn: 'root' })
 export class NewAuthService {
+  // Iniezioni
+  private constants = inject(Constants);
+  private firebaseAuth = inject(Auth);
+  private http = inject(HttpClient);
+  private tokenService = inject(TokenService);
+  private favoritesApiService = inject(FavoritesApiService);
+  private notificationService = inject(NotificationService);
+  private cache = inject(CacheServiceV2);
 
-  constants = inject(Constants);
-  firestore = inject(Firestore);
-  firebaseAuth = inject(Auth);
-  http = inject(HttpClient);
-  tokenService = inject(TokenService);
-  favoritesApiService = inject(FavoritesApiService);
-  notificationService = inject(NotificationService);
-  cache = inject(CacheServiceV2);
+  // Observable di Stato
   private readonly shopsSubject = new BehaviorSubject<ShopListDto[] | null>(null);
-  shops$: Observable<ShopListDto[] | null> = this.shopsSubject.asObservable();
-  googleProvider = new GoogleAuthProvider();
-  facebookProvider = new FacebookAuthProvider();
+  shops$ = this.shopsSubject.asObservable();
+  
   private loggedIn$ = new BehaviorSubject<boolean>(this.tokenService.hasValidToken());
-  private isVerified$ = new BehaviorSubject<boolean>(this.isVerified());
   private isShop$ = new BehaviorSubject<boolean>(this.isShop());
   private canManagePromoSubject = new BehaviorSubject<boolean>(this.canManagePromo());
   private canValidateCouponSubject = new BehaviorSubject<boolean>(this.canValidateCoupon());
-  esito!: string;
-  userSession!: UserSession | null;
-  position !: GeolocationPosition;
-  utente!: DeleteUtente;
-  isReautenticated: boolean = false;
-  idPage!: number;
-  private refreshInFlight$: Observable<JwtResponseDto> | null = null;
+
   canManagePromo$ = this.canManagePromoSubject.asObservable();
   canValidateCoupon$ = this.canValidateCouponSubject.asObservable();
+
+  googleProvider = new GoogleAuthProvider();
+  facebookProvider = new FacebookAuthProvider();
+
   constructor() {
-    // Kick off an async refresh check on startup to update observables if needed.
-    // Defer to next microtask to avoid change-detection timing issues during
-    // application bootstrap that can surface as runtime NG0200-like errors.
-    void Promise.resolve().then(() => void this.refreshLoginState());
+    void this.refreshLoginState();
   }
 
+  // --- LOGICA DI LOGIN ---
+
+  async login(email: string, password: string): Promise<void> {
+    const userCredential = await signInWithEmailAndPassword(this.firebaseAuth, email, password);
+    await this.syncWithBackendAndRefresh(userCredential.user);
+  }
+
+  async ServiceLogIn(userType: number): Promise<void> {
+    let provider = userType === 2 ? this.googleProvider : this.facebookProvider;
+    const userCredential = await signInWithPopup(this.firebaseAuth, provider);
+    await this.syncWithBackendAndRefresh(userCredential.user);
+    await this.favoritesApiService.Favorite();
+  }
+
+  private async syncWithBackendAndRefresh(user: User): Promise<void> {
+    const idToken = await getIdToken(user);
+    // Chiamata al tuo nuovo endpoint C#
+    await firstValueFrom(
+      this.http.get(`${this.constants.BasePath()}/Auth/login`, { params: { idToken } })
+    );
+    // Forza il refresh per ottenere i ruoli (Custom Claims) iniettati dal backend
+    const updatedToken = await getIdToken(user, true);
+    await this.tokenService.setToken(updatedToken);
+    this.setStatusUserVerified();
+  }
+
+  // --- GESTIONE STATO ---
+
   setStatusUserVerified(): void {
-    // Quick synchronous update
-    this.loggedIn$.next(this.tokenService.hasValidToken());
+    const hasToken = this.tokenService.hasValidToken();
+    this.loggedIn$.next(hasToken);
     this.isShop$.next(this.isShop());
-    this.isVerified$.next(this.isVerified());
     this.canManagePromoSubject.next(this.canManagePromo());
     this.canValidateCouponSubject.next(this.canValidateCoupon());
-
-    // Also attempt an async refresh in background and update state afterwards
-    void (async () => {
-      const ok = await this.ensureValidToken();
-      this.loggedIn$.next(ok);
-      this.isShop$.next(this.isShop());
-      this.isVerified$.next(this.isVerified());
-      this.canManagePromoSubject.next(this.canManagePromo());
-      this.canValidateCouponSubject.next(this.canValidateCoupon());
-    })();
   }
 
   private async refreshLoginState(): Promise<void> {
-    try {
-      const ok = await this.ensureValidToken();
-      this.loggedIn$.next(ok);
-      this.isShop$.next(this.isShop());
-      this.isVerified$.next(this.isVerified());
-    } catch (e) {
-      // ignore
+    // Recupera l'utente corrente da Firebase all'avvio
+    const user = this.firebaseAuth.currentUser;
+    if (user) {
+      const token = await getIdToken(user);
+      await this.tokenService.setToken(token);
     }
+    this.setStatusUserVerified();
   }
 
-  /**
-   * Ensure there is a valid JWT. If current token is near expiry or missing
-   * attempt to refresh it using refreshJwt(). Returns true when valid.
-   */
-  async ensureValidToken(thresholdSeconds = 30): Promise<boolean> {
-    const token = this.tokenService.getToken();
-    if (!token) return false;
+  // --- OPERAZIONI UTENTE ---
 
-    try {
-      const decoded = this.tokenService.getDecodedToken(token);
-      const now = Math.floor(Date.now() / 1000);
-      if (decoded && decoded.exp > now + thresholdSeconds) return true;
-    } catch (e) {
-      // fallthrough to refresh
-    }
+  async logOut(): Promise<void> {
+    this.loggedIn$.next(false);
+    this.isShop$.next(false);
+    this.clearShops();
+    await Preferences.remove({ key: 'last_fcm_token_sent' });
+    
+    try { await firstValueFrom(this.logoutApi()); } catch {}
+    await this.tokenService.clearToken();
+    await signOut(this.firebaseAuth);
+  }
 
-    const refreshToken = this.tokenService.getRefreshToken();
-    if (!refreshToken) {
-      await this.tokenService.clearToken();
-      return false;
-    }
-    try {
-      // reuse existing refreshJwt which deduplicates concurrent calls
-      // Il refresh token arriva automaticamente via cookie HttpOnly
-      const jwt = await firstValueFrom(this.refreshJwt());
-      return !!(jwt && jwt.jwt);
-    } catch (err) {
-      await this.tokenService.clearToken();
-      return false;
-    }
+  private logoutApi(): Observable<CommonResDto> {
+    return from(this.notificationService.requestPermissionAndGetToken()).pipe(
+      switchMap(fcmToken => this.http.post<CommonResDto>(`${this.constants.BasePath()}/Auth/logout`, { fcmToken }))
+    );
+  }
+
+  signUp(req: SignUpReqDto): Observable<CommonResDto> {
+    return this.http.post<CommonResDto>(`${this.constants.BasePath()}/Auth/sign-up`, req);
+  }
+
+  passwordReset(email: string): Promise<void> {
+    return sendPasswordResetEmail(this.firebaseAuth, email);
+  }
+
+  // --- CONTROLLI RUOLI (Private) ---
+
+  private isShop(): boolean {
+    const roles = this.tokenService.getRolesFromToken();
+    return roles.includes(Role[Role.shop]);
+  }
+
+  private canManagePromo(): boolean {
+    const roles = this.tokenService.getRolesFromToken();
+    return roles.includes(Role[Role.shop]) || roles.includes(Role[Role.staffPromo]) || roles.includes(Role[Role.staffBoth]);
+  }
+
+  private canValidateCoupon(): boolean {
+    const roles = this.tokenService.getRolesFromToken();
+    return roles.includes(Role[Role.shop]) || roles.includes(Role[Role.staffValidator]) || roles.includes(Role[Role.staffBoth]);
+  }
+
+  // --- METODI DI UTILITÀ ---
+
+  async getCurrentUserFromAuth(): Promise<User | null> {
+    return this.firebaseAuth.currentUser;
   }
 
   isLoggedIn(): Observable<boolean> {
-
     return this.loggedIn$.asObservable();
-  }
-
-  loggedUserIsVerified(): Observable<boolean> {
-    return this.isVerified$.asObservable();
-  }
-
-  async getCurrentUserFromAuth(): Promise<User | null> {
-    return await this.firebaseAuth.currentUser;
   }
 
   loggedUserIsShop(): Observable<boolean> {
     return this.isShop$.asObservable();
   }
 
-  async logOut(): Promise<void> {
-    // aggiorna stati osservabili
-    this.loggedIn$.next(false);
-    this.isShop$.next(false);
-    this.isVerified$.next(false);
-    this.clearShops();
-    await Preferences.remove({ key: 'last_fcm_token_sent' });
-    await this.cache.remove('fcm_token_temp', { category: 'auth' });
-    // best effort: può fallire se refresh token mancante o già revocato
-    try {
-      await firstValueFrom(this.logoutApi());
-    } catch (e) {
-      console.warn('logoutApi failed (ignored):', e);
-    }
-
-    try {
-      await this.tokenService.clearToken();
-    } catch (e) {
-      console.warn('clearToken failed (ignored):', e);
-    }
-
-    try {
-      await signOut(this.firebaseAuth);
-    } catch (e) {
-      console.warn('firebase signOut failed (ignored):', e);
-    }
+  setShops(list: ShopListDto[]): void {
+    this.shopsSubject.next(list ?? []);
   }
 
-
-  GetUserJwt(uId: string): Observable<string> {
-    return this.http.get(this.constants.BasePath() + '/auth/get-jwt?uId=' + uId, {
-      responseType: 'text' // Specifica che la risposta è una stringa
-    });
+  clearShops(): void {
+    this.shopsSubject.next([]);
   }
 
-  private UsernamePasswordLogin(idToken: string, fcmToken?: string): Observable<JwtResponseDto> {
-    let url = this.constants.BasePath() + '/auth/username-password-login?idToken=' + idToken;
-    return this.http.get<JwtResponseDto>(url);
-  }
-
-  signUp(req: SignUpReqDto): Observable<CommonResDto> {
-    return this.http.post<CommonResDto>(
-      this.constants.BasePath() + '/auth/sign-up',
-      req
-    );
-  }
-
-  async checkEmailVerification(): Promise<boolean> {
-    const user = await firstValueFrom(
-      authState(this.firebaseAuth).pipe(
-        filter(u => u !== null), // aspetta che Firebase ripristini l'utente
-        take(1)
-      )
-    );
-
-    if (!user.providerData || user.providerData.length === 0) return false;
-
-    const isPasswordProvider =
-      user.providerData.length === 1 &&
-      user.providerData[0].providerId === 'password';
-
-    if (isPasswordProvider) {
-      await user.reload();              // ✅ prende emailVerified aggiornato
-      return user.emailVerified === true;
-    }
-
-    return true;
+  Delete(idReason: number): Observable<CommonResDto> {
+    const params = new HttpParams().set('idReason', idReason);
+    return this.http.delete<CommonResDto>(`${this.constants.BasePath()}/Auth/delete`, { params });
   }
 
   async checkProviderLogin(): Promise<string> {
@@ -222,29 +186,6 @@ export class NewAuthService {
     return '';
   }
 
-  async getEmail(): Promise<string | null> {
-    const user = await this.getCurrentUserFromAuth();
-    return user?.email || null;
-  }
-
-  async login(email: string, password: string, fcmToken?: string): Promise<JwtResponseDto | undefined> {
-    const userCredential = await signInWithEmailAndPassword(this.firebaseAuth, email, password);
-    const token = await userCredential.user.getIdToken();
-    const readealJwt = await firstValueFrom(this.UsernamePasswordLogin(token, fcmToken)); // ← passa fcmToken
-
-    if (readealJwt) {
-      await this.tokenService.setToken(readealJwt.jwt);
-      this.setStatusUserVerified();
-      await this.favoritesApiService.Favorite();
-      await this.initFromCache();
-    }
-
-    return Promise.resolve(readealJwt);
-  }
-
-  passwordReset(email: string): Promise<void> {
-    return sendPasswordResetEmail(this.firebaseAuth, email);
-  }
 
   async reauthenticateWithPassword(userEmail: string, userPassword: string): Promise<boolean> {
     const user = this.firebaseAuth.currentUser;
@@ -294,10 +235,21 @@ export class NewAuthService {
     }
   }
 
-  /**
-   * Fallback: se typeLog non c’è o non torna, prova dai providerId di Firebase.
-   * Se è password, non può chiedere qui la password -> ritorna false.
-   */
+  async forceRefresh(): Promise<void> {
+    const user = this.firebaseAuth.currentUser;
+    if (user) {
+      const { getIdToken } = await import('firebase/auth');
+      const newToken = await getIdToken(user, true); // 'true' forza il refresh dei Custom Claims
+      await this.tokenService.setToken(newToken);
+      this.setStatusUserVerified();
+    }
+  }
+
+  async getEmail(): Promise<string | null> {
+    const user = await this.getCurrentUserFromAuth();
+    return user?.email || null;
+  }
+
   async reauthenticateBestEffort(): Promise<boolean> {
     const user = this.firebaseAuth.currentUser;
     if (!user) return false;
@@ -321,32 +273,26 @@ export class NewAuthService {
     return false;
   }
 
-  async initFromCache(): Promise<void> {
-    const cached = await this.cache.get<ShopListDto[]>(
-      'user_shops',
-      { category: 'api-cache' }
+  async checkEmailVerification(): Promise<boolean> {
+    const user = await firstValueFrom(
+      authState(this.firebaseAuth).pipe(
+        filter(u => u !== null), // aspetta che Firebase ripristini l'utente
+        take(1)
+      )
     );
 
-    this.shopsSubject.next(cached ?? []);
-  }
+    if (!user.providerData || user.providerData.length === 0) return false;
 
-  hasShops$: Observable<boolean> = this.shops$.pipe(
-    map(list => (list?.length ?? 0) > 0),
-    distinctUntilChanged()
-  );
+    const isPasswordProvider =
+      user.providerData.length === 1 &&
+      user.providerData[0].providerId === 'password';
 
-  setShops(list: ShopListDto[]): void {
-    this.shopsSubject.next(list ?? []);
-  }
+    if (isPasswordProvider) {
+      await user.reload();              // ✅ prende emailVerified aggiornato
+      return user.emailVerified === true;
+    }
 
-  clearShops(): void {
-    this.shopsSubject.next([]);
-  }
-
-  async apiCheckisPresent(email: string): Promise<any> {
-    return await firstValueFrom(
-      this.http.get(this.constants.BasePath() + '/Auth/check-isPresent', { params: { email: email } })
-    );
+    return true;
   }
 
   async apiCheckHaveRequest(): Promise<CommonResDto> {
@@ -366,118 +312,18 @@ export class NewAuthService {
     );
   }
 
-  //#region  private methods
-
-  private isVerified(): boolean {
-    const token = this.tokenService.getToken();
-    if (!token) return false;
-    return true;
-  }
-
-  private isShop(): boolean {
-    const roles = this.tokenService.getRolesFromToken();
-    return roles.includes(Role[Role.shop]);
-  }
-
-  private canManagePromo(): boolean {
-    const roles = this.tokenService.getRolesFromToken();
-    return roles.includes(Role[Role.shop]) ||
-      roles.includes(Role[Role.staffPromo]) ||
-      roles.includes(Role[Role.staffBoth]);
-  }
-
-  private canValidateCoupon(): boolean {
-    const roles = this.tokenService.getRolesFromToken();
-    return roles.includes(Role[Role.shop]) ||
-      roles.includes(Role[Role.staffValidator]) ||
-      roles.includes(Role[Role.staffBoth]);
-  }
-
-  //#endregion
-
-
-  async ServiceLogIn(userType: number, fcmToken?: string){
-    let chosenProvider;
-    if (userType === 2) {
-      chosenProvider = this.googleProvider;
-    } else if (userType === 3) {
-      chosenProvider = this.facebookProvider;
-    } else {
-      throw new Error('Provider non gestito!');
-    }
-
-    const userCredential = await signInWithPopup(this.firebaseAuth, chosenProvider);
-    const idToken = await userCredential.user.getIdToken();
-    await lastValueFrom(this.apiServiceLogin(idToken, userType));
-
-    const finalToken = await userCredential.user.getIdToken(true);
-
-    await this.tokenService.setToken(finalToken);
-    this.setStatusUserVerified();
-    await this.favoritesApiService.Favorite();
-  }
-
-  refreshJwt(): Observable<JwtResponseDto> {
-    if (this.refreshInFlight$) {
-      return this.refreshInFlight$;
-    }
-
-    const refreshToken = this.tokenService.getRefreshToken();
-
-    if (!refreshToken) {
-      return throwError(() => new Error('Refresh token not found'));
-    }
-
-    this.refreshInFlight$ = this.http
-      .post<JwtResponseDto>(`${this.constants.BasePath()}/Auth/refresh-jwt`, { refreshToken })
-      .pipe(
-        tap(async (jwt) => {
-          await this.tokenService.setToken(jwt.jwt);
-          this.setStatusUserVerified();
-        }),
-        finalize(() => {
-          this.refreshInFlight$ = null;
-        }),
-        shareReplay(1)
-      );
-
-    return this.refreshInFlight$;
-  }
-
-  logoutApi(): Observable<CommonResDto> {
-    // Il refresh token viaggia via cookie HttpOnly; inviamo solo il fcmToken nel body
-    return from(this.notificationService.requestPermissionAndGetToken()).pipe(
-      switchMap(fcmToken => {
-        return this.http.post<CommonResDto>(
-          `${this.constants.BasePath()}/Auth/logout`,
-          { fcmToken }
-        );
-      })
+  async apiCheckisPresent(email: string): Promise<any> {
+    return await firstValueFrom(
+      this.http.get(this.constants.BasePath() + '/Auth/check-isPresent', { params: { email: email } })
     );
   }
 
-  private apiServiceLogin(idToken: string, userType: number): Observable<any> {
-    let url = `${this.constants.BasePath()}/auth/service-login?idToken=${idToken}&userType=${userType}`;
-
-    return this.http.get(url).pipe(
-      tap(response => {
-        // Se arriva qui, lo stato è 2xx (Successo)
-        console.log('Login effettuato con successo');
-      }),
-      catchError(error => {
-        // Qui gestisci gli stati di errore
-        if (error.status === 401) {
-          console.error('Token non valido o scaduto');
-        } else if (error.status === 403) {
-          console.error('Non hai i permessi necessari');
-        }
-        return throwError(() => error);
-      })
+  async initFromCache(): Promise<void> {
+    const cached = await this.cache.get<ShopListDto[]>(
+      'user_shops',
+      { category: 'api-cache' }
     );
-  }
-  Delete(idReason: number): Observable<CommonResDto> {
-    const params = new HttpParams()
-      .set('idReason', idReason);
-    return this.http.delete<CommonResDto>(this.constants.BasePath() + '/auth/delete', { params });
+
+    this.shopsSubject.next(cached ?? []);
   }
 }
