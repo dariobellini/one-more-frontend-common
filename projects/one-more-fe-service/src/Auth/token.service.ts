@@ -1,6 +1,5 @@
 import { Injectable, EventEmitter, inject } from '@angular/core';
 import { ApiJwtPayload } from '../EntityInterface/ApiJwtPayload';
-import { Constants } from '../Constants';
 import { jwtDecode } from 'jwt-decode';
 import { TokenStorageService } from './token-storage.service';
 
@@ -21,10 +20,6 @@ export class TokenService {
 
     async clearToken(): Promise<void> {
         await this.tokenStorage.clearTokens();
-    }
-
-    async initializeTokenStorage(): Promise<void> {
-        await this.tokenStorage.initialize();
     }
 
     getDecodedToken(token: string): ApiJwtPayload | null {
