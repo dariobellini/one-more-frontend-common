@@ -1,7 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable} from 'rxjs';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { Constants } from '../Constants';
 import { LanguageService } from './language.service';
 import { EsitoInsertPromo, InsertPromoReqDto, Promo } from '../EntityInterface/Promo';
@@ -11,15 +10,11 @@ import { TipoPeriodo } from '../EntityInterface/TipoPeriodo';
 })
 export class GetApiPromoService {
 
-  promo !: Promo;
   promoData !: Promo;
-  language : string | undefined;
 
-  http = inject(HttpClient);
-  constants = inject(Constants);
-  languageService = inject(LanguageService);
-  
-  constructor() { }
+  private readonly http = inject(HttpClient);
+  private readonly constants = inject(Constants);
+  private readonly languageService = inject(LanguageService);
   setPromoData(promo: Promo) {
     this.promoData = promo;
   }
@@ -28,23 +23,21 @@ export class GetApiPromoService {
     return this.promoData;
   }
 async apiGetListaTipoPeriodo(): Promise<TipoPeriodo[]>{
-    this.language = this.languageService.getCurrentLanguage() || 'it';
+    const lang = this.languageService.getCurrentLanguage()?.toUpperCase() ?? 'IT';
     return await firstValueFrom(
       this.http.get<TipoPeriodo[]>(this.constants.BasePath() + '/Promo/get-tipi-periodo', {
-          params: {
-              lang: this.language.toUpperCase()
-          }
+          params: { lang }
       })
     );
   }
 
-  async apiGetListaPromoByIdAttivita(idAttivita:number): Promise<Promo[]>{
-    this.language = this.languageService.getCurrentLanguage() || 'it';
+  async apiGetListaPromoByIdAttivita(idAttivita: number): Promise<Promo[]>{
+    const lang = this.languageService.getCurrentLanguage()?.toUpperCase() ?? 'IT';
     return await firstValueFrom(
       this.http.get<Promo[]>(this.constants.BasePath() + '/Promo/get-promo-attive-by-idattivita', {
           params: {
-              idAttivita: idAttivita?.toString() || '',
-              lang: this.language.toUpperCase()
+              idAttivita: idAttivita.toString(),
+              lang
           }
       })
     );

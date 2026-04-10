@@ -39,13 +39,11 @@ export class TokenService {
 
     hasValidToken(): boolean {
         const token = this.getToken();
-        console.log("token recuperato dall'apiiii -> ", token);
         if (!token) return false;
 
         try {
             const decoded = jwtDecode<ApiJwtPayload>(token);
-            const now = Math.floor(Date.now() / 1000); // in seconds
-            console.log("hasValidToken outcome ->" ,decoded.exp > now);
+            const now = Math.floor(Date.now() / 1000); 
             
             return decoded.exp > now;
         } catch (e) {
