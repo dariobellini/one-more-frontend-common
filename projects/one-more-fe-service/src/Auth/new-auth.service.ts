@@ -288,7 +288,7 @@ export class NewAuthService {
       user.providerData[0].providerId === 'password';
 
     if (isPasswordProvider) {
-      await user.reload();              // ✅ prende emailVerified aggiornato
+      await user.reload();
       return user.emailVerified === true;
     }
 

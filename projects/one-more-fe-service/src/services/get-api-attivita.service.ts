@@ -12,7 +12,6 @@ import { LanguageService } from './language.service';
 })
 export class GetApiAttivitaService {
  
-  // ✅ Costanti per la cache
   private readonly RECENT_VIEW_KEY = 'attivita_recent_view';
   private readonly RECENT_VIEW_CATEGORY = 'user-activity';
   private readonly RECENT_VIEW_MAX_ITEMS = 15;
@@ -263,10 +262,6 @@ export class GetApiAttivitaService {
     );
   }
 
-  /**
-   * ✅ METODO PRINCIPALE AGGIORNATO CON CACHE
-   * Recupera un'attività per ID e la salva nella lista "visualizzate di recente"
-   */
   async apiGetAttivitaByIdAttivita(id: number | undefined): Promise<Attivita> {
     this.language = this.languageService.getCurrentLanguage() || 'it';
   
@@ -282,7 +277,6 @@ export class GetApiAttivitaService {
       })
     );
   
-    // ✅ Aggiorna la cache "attivita_recent_view"
     await this.addToRecentView(attivita);
   
     return attivita;

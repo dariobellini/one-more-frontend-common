@@ -27,10 +27,8 @@ export class LanguageService {
       let lang: string;
     
       if (value) {
-        // ✅ lingua già salvata
         lang = this.normalizeLanguage(value);
       } else {
-        // 📱 lingua dispositivo
         const info = await Device.getLanguageCode();
         const deviceLang = info.value;
       
