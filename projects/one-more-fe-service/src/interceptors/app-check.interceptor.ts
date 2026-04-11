@@ -33,7 +33,7 @@ export class AppCheckInterceptor implements HttpInterceptor {
       }
     });
 
-    try { const response = await next.handle(modifiedReq).toPromise(); return response!; } catch (error) { console.error('Errore durante la richiesta HTTP:', error); throw error; }
+    try { const response = await next.handle(modifiedReq).toPromise(); return response!; } catch (error) { throw error; }
   }
 
   private async getAppCheckToken(): Promise<string> {

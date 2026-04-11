@@ -197,10 +197,7 @@ export class NewAuthService {
       const credential = EmailAuthProvider.credential(userEmail, userPassword);
       await reauthenticateWithCredential(user, credential);
       return true;
-    } catch (error) {
-      console.error('Errore reauth password:', error);
-      return false;
-    }
+    } catch (error) {return false;}
   }
 
   async reauthenticateWithGooglePopup(): Promise<boolean> {
@@ -213,10 +210,7 @@ export class NewAuthService {
       const provider = new GoogleAuthProvider();
       await reauthenticateWithPopup(user, provider);
       return true;
-    } catch (error) {
-      console.error('Errore reauth google:', error);
-      return false;
-    }
+    } catch (error) {return false;}
   }
 
   async reauthenticateWithFacebookPopup(): Promise<boolean> {
@@ -229,10 +223,7 @@ export class NewAuthService {
       const provider = new FacebookAuthProvider();
       await reauthenticateWithPopup(user, provider);
       return true;
-    } catch (error) {
-      console.error('Errore reauth facebook:', error);
-      return false;
-    }
+    } catch (error) {return false;}
   }
 
   async forceRefresh(): Promise<void> {

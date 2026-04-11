@@ -45,9 +45,6 @@ export class LanguageService {
       this.translate.use(lang);
     
     } catch (error) {
-      console.error('Errore init lingua:', error);
-    
-      // fallback sicuro
       this.languageSubject.next('it');
       this.translate.setDefaultLang('it');
       this.translate.use('it');
@@ -72,7 +69,6 @@ export class LanguageService {
       const lang = this.normalizeLanguage(value ?? this.DEFAULT_LANGUAGE);
       return lang;
     } catch (error) {
-      console.error('Errore nel recupero della lingua:', error);
       return this.DEFAULT_LANGUAGE;
     }
   }
@@ -102,8 +98,6 @@ export class LanguageService {
     try {
       await this.cache.clearCategory('api-cache');
       await this.cache.clearCategory('promo-icons');
-    } catch (error) {
-      console.error('❌ Errore nella pulizia della cache:', error);
-    }
+    } catch (error) {}
   }
 }

@@ -38,7 +38,6 @@ export class LocationService {
             resolve(loc);
           },
           (err) => {
-            console.error('Errore geolocalizzazione browser:', err);
             resolve(this.getFallbackLocation());
           }
         );
@@ -61,9 +60,7 @@ export class LocationService {
         await this.setCachedLocation(loc);
         return loc;
       }
-    } catch (error) {
-      console.error('Errore durante il recupero della posizione mobile:', error);
-    }
+    } catch (error) {}
 
     return this.getFallbackLocation();
   }
@@ -91,10 +88,7 @@ export class LocationService {
       return await this.cache.get<CachedLocation>(this.CACHE_KEY, {
         category: this.CACHE_CATEGORY,
       });
-    } catch (error) {
-      console.error('Errore nel recupero cache posizione:', error);
-      return null;
-    }
+    } catch (error) { return null; }
   }
 
   private async setCachedLocation(location: CachedLocation): Promise<void> {
@@ -104,9 +98,7 @@ export class LocationService {
         ttlMs: this.CACHE_TTL,
         type: 'json',
       });
-    } catch (error) {
-      console.error('Errore nel salvataggio cache posizione:', error);
-    }
+    } catch (error) { }
   }
 
   private getFallbackLocation(): CachedLocation {

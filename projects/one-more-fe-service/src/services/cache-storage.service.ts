@@ -73,6 +73,7 @@ export class CacheServiceV2 {
   private readonly PREFERENCES_MAX_BYTES = 50 * 1024; // soglia: 50KB (tuning)
 
   private readonly mutex = new Mutex();
+  private readonly inflight = new Map<string, Promise<unknown>>();
 
   constructor() {
     void this.initialize();
@@ -206,12 +207,28 @@ export class CacheServiceV2 {
     fetchFn: () => Promise<T>,
     options: CacheOptions = {}
   ): Promise<T> {
-    const cached = await this.get<T>(key, options);
-    if (cached !== null) return cached;
+    const category = options.category ?? 'default';
+    const id = this.makeId(category, key);
 
-    const fresh = await fetchFn();
-    await this.set(key, fresh, { ...options, type: options.type ?? 'json' });
-    return fresh;
+    // Return the in-flight promise if a concurrent request for the same key is already running
+    const existing = this.inflight.get(id) as Promise<T> | undefined;
+    if (existing) return existing;
+
+    // Build the operation promise and register it synchronously before the first await,
+    // so any concurrent call that arrives after this point will reuse the same promise.
+    const operation = (async () => {
+      const cached = await this.get<T>(key, options);
+      if (cached !== null) return cached;
+
+      const fresh = await fetchFn();
+      await this.set(key, fresh, { ...options, type: options.type ?? 'json' });
+      return fresh;
+    })().finally(() => {
+      this.inflight.delete(id);
+    }) as Promise<T>;
+
+    this.inflight.set(id, operation);
+    return operation;
   }
 
   async clearAll(): Promise<void> {

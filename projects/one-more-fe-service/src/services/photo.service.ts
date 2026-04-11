@@ -17,9 +17,7 @@ export class PhotoService {
     try {
       const fileRef = ref(this.storage, fileName + this.constants.Suffix_Photo_Thumbnail());
       return await getDownloadURL(fileRef);
-    } catch (err) {
-      console.error("Errore Firebase nel recupero della foto:", err);
-      return null;
+    } catch (err) { return null;
     }
   }
 
@@ -30,9 +28,7 @@ export class PhotoService {
       const path = noFormat ? fileName : fileName + this.constants.Suffix_Photo_Detail();
       const fileRef = ref(this.storage, path);
       return await getDownloadURL(fileRef);
-    } catch (err) {
-      console.error("Errore Firebase nel recupero della foto:", err);
-      return null;
+    } catch (err) { return null;
     }
   }
 
@@ -42,10 +38,7 @@ export class PhotoService {
     try {
       const fileRef = ref(this.storage, fileName + suffix);
       return await getDownloadURL(fileRef);
-    } catch (err) {
-      console.error("Errore Firebase nel recupero della foto:", err);
-      return null;
-    }
+    } catch (err) { return null; }
   }
 
   async getIconUrl(iconName: string | undefined, category: string): Promise<string | null> {
@@ -65,9 +58,6 @@ export class PhotoService {
       });
 
       return downloadUrl;
-    } catch (err) {
-      console.error(`❌ Errore caricamento icona ${iconName}:`, err);
-      return null;
-    }
+    } catch (err) { return null; }
   }
 }

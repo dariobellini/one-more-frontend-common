@@ -153,9 +153,8 @@ export class GetApiAttivitaService {
           params = params.set('latitudine', location.latitudine.toString());
           params = params.set('longitudine', location.longitudine.toString());
         }
-      } catch (error) {
-        console.error('Errore durante il recupero della posizione:', error);
-      }
+      } catch (error) {}
+
     } else if (filtro. latitudine && filtro.longitudine) {
       params = params.set('latitudine', filtro.latitudine);
       params = params.set('longitudine', filtro.longitudine);
@@ -265,7 +264,7 @@ export class GetApiAttivitaService {
   async apiGetAttivitaByIdAttivita(id: number | undefined): Promise<Attivita> {
     this.language = this.languageService.getCurrentLanguage() || 'it';
   
-    const params:  any = {
+    const params: { idAttivita: string; lang: string } = {
       idAttivita: id?.toString() || '',
       lang: this.language. toUpperCase()
     };
@@ -310,9 +309,7 @@ export class GetApiAttivitaService {
         ttlMs: this.RECENT_VIEW_TTL,
         type: 'json',
       });
-    } catch (error) {
-      console.error('❌ Errore nell\'aggiornamento delle attività recenti:', error);
-    }
+    } catch {}
   }
 
   async getRecentViewedActivities(): Promise<Attivita[]> {
@@ -322,8 +319,7 @@ export class GetApiAttivitaService {
         { category: this.RECENT_VIEW_CATEGORY }
       );
       return cached ?? [];
-    } catch (error) {
-      console.error('❌ Errore nel recupero delle attività recenti:', error);
+    } catch {
       return [];
     }
   }
