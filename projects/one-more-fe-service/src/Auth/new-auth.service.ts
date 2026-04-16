@@ -18,8 +18,10 @@ import { FavoritesApiService } from '../services/favorites-api.service';
 import { CommonResDto } from '../Dtos/Responses/CommonResDto';
 import { SignUpReqDto } from '../Dtos/Requests/auth/SignUpReqDto';
 import { CacheServiceV2 } from '../public-api';
-import { NotificationService } from '../../../../../src/app/services/notification.service';
+import { NotificationService } from '../services/notification.service';
 import { Preferences } from '@capacitor/preferences';
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 
 @Injectable({ providedIn: 'root' })
 export class NewAuthService {
@@ -59,11 +61,37 @@ export class NewAuthService {
   }
 
   async ServiceLogIn(userType: number): Promise<void> {
-    let provider = userType === 2 ? this.googleProvider : this.facebookProvider;
+  let userFirebase: User;
+
+  if (Capacitor.isNativePlatform()) {
+    let result;
+    if (userType === 2) {
+      result = await FirebaseAuthentication.signInWithGoogle();
+    } else {
+      result = await FirebaseAuthentication.signInWithFacebook();
+    }
+
+    // Autentica anche il Firebase JS SDK con le credenziali native
+    const { GoogleAuthProvider, FacebookAuthProvider, signInWithCredential, OAuthCredential } = await import('firebase/auth');
+    
+    let credential;
+    if (userType === 2) {
+      credential = GoogleAuthProvider.credential(result.credential?.idToken);
+    } else {
+      credential = FacebookAuthProvider.credential(result.credential?.accessToken!);
+    }
+    
+    const userCredential = await signInWithCredential(this.firebaseAuth, credential);
+    userFirebase = userCredential.user;
+  } else {
+    const provider = userType === 2 ? this.googleProvider : this.facebookProvider;
     const userCredential = await signInWithPopup(this.firebaseAuth, provider);
-    await this.syncWithBackendAndRefresh(userCredential.user);
-    await this.favoritesApiService.Favorite();
+    userFirebase = userCredential.user;
   }
+
+  await this.syncWithBackendAndRefresh(userFirebase);
+  await this.favoritesApiService.Favorite();
+}
 
   private async syncWithBackendAndRefresh(user: User): Promise<void> {
     const idToken = await getIdToken(user);
