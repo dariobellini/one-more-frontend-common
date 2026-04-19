@@ -15,4 +15,7 @@ export class PromoAddReqDto {
   limit!: PromoLimitDto;
   period!: PromoPeriodDto;
   photos!: AddUpdatePhotoDto[];
+  startDate!: Date;
+  endDate!: Date;
+  isActive!: boolean;
 }
