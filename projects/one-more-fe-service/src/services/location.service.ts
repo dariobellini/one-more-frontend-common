@@ -51,7 +51,7 @@ export class LocationService {
       }
 
       if (permStatus.location === 'granted') {
-        const position = await Geolocation.getCurrentPosition();
+        const position = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000 });
         const loc: CachedLocation = {
           latitudine: position.coords.latitude,
           longitudine: position.coords.longitude,
@@ -62,7 +62,7 @@ export class LocationService {
       }
     } catch (error) {}
 
-    return this.getFallbackLocation();
+    return null;
   }
 
   async calculateDistance(lat: number, lon: number): Promise<number> {
